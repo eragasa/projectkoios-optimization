@@ -1,0 +1,54 @@
+[build-system]
+requires = []
+build-backend = "backend"
+backend-path = ["build_backend"]
+
+[project]
+name = "projectkoios-optimization"
+version = "0.1.0.dev0"
+description = "Optimization contracts and algorithms for Project Koios"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+    { name = "Eugene Ragasa", email = "eugene@projectkoios.com" },
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/eragasa/projectkoios-optimization"
+Documentation = "https://github.com/eragasa/projectkoios-optimization/tree/main/docs"
+
+[project.optional-dependencies]
+development = [
+    "build>=1.3,<2",
+    "mypy>=2.3,<3",
+    "pytest>=9.1,<10",
+    "ruff>=0.16,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "numerical: bounded numerical verification without scientific-validation claims",
+    "property: deterministic generated-case software verification",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["projectkoios", "tests"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+explicit_package_bases = true
+files = ["src/python/projectkoios/optimization"]
+mypy_path = "src/python"

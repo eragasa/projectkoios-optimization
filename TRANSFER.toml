@@ -1,0 +1,120 @@
+schema_version = 1
+component = "projectkoios-optimization"
+repository = "https://github.com/eragasa/projectkoios-optimization"
+python_namespace = "projectkoios.optimization"
+license = "Apache-2.0"
+
+[[sources]]
+role = "recovery-primary"
+repository_path = "/Users/eugene/repos/ksdft2effmass"
+commit = "ff50d06e74ad094ec84e53149d1717d66e2154fa"
+root_tree = "0334951ad6f81c2e0afaab9611ec191183643fa4"
+relevant_tree = "9a58c5fa4ce0240c55377bf2347df492d101ff6a"
+status = "read-only recovery evidence; not canonical or release authority"
+
+[[sources]]
+role = "recovery-equivalent"
+repository_path = "/Users/eugene/repos/ksdft2effmass"
+commit = "151200940cb8c3d81f0acb4759d9879a6926a6d8"
+root_tree = "7977bd49cc79622b5da92f2476eccb430ac67fbf"
+relevant_tree = "9a58c5fa4ce0240c55377bf2347df492d101ff6a"
+status = "read-only recovery evidence; relevant tree identical to primary"
+
+[[files]]
+source_path = "python/src/ksdft2effmass/application/engines/base.py"
+blob = "33ca76648401deacf8938cca7e1ff910137f2c95"
+sha256 = "56023cc3232cf8d5d149a8000f714be3601f11d2fae5df8195115c3fe0d26f49"
+targets = ["src/python/projectkoios/optimization/identity.py", "src/python/projectkoios/optimization/ports.py"]
+adaptation = "Retained strict immutable identity concepts; replaced universal execute base with behaviorful ask/tell protocol."
+
+[[files]]
+source_path = "python/src/ksdft2effmass/application/engines/potential_fitting.py"
+blob = "d5fac55227e5c41fddd7855ddf135c00a0456c25"
+sha256 = "c457beb0507f575a3f03935037545d9983da63fbd63546dcdfe380eb89cabb1e"
+targets = [
+  "src/python/projectkoios/optimization/records.py",
+  "src/python/projectkoios/optimization/loss.py",
+  "src/python/projectkoios/optimization/uniform.py",
+  "src/python/projectkoios/optimization/pattern.py",
+  "src/python/projectkoios/optimization/reports.py",
+]
+adaptation = "Generalized potential-specific records; separated ask/tell from evaluation; added fixed/zero-dimensional support and checkpoints; retained SplitMix64 equations, weighted-square arithmetic, strict pattern-search improvement, and Pareto dominance."
+
+[[tests]]
+role = "software"
+tree = "c0c8557e424611ac8cfcec0ab01d958a3802fc1b"
+source_paths = [
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__BaseEngine.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__EngineDescriptor.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__EngineIdentity.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialFittingEngine.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialFittingAnalyticReportAssembler.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialSamplingAnalyticReportAssembler.py",
+  "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialFittingIterationSeriesReportAssembler.py",
+]
+targets = ["tests/unit", "tests/adversarial"]
+
+[[tests]]
+role = "numerical"
+tree = "fb98950834f18b4a92f74b872e418ea99a131929"
+source_paths = [
+  "python/tests/numerical_verification/ksdft2effmass/application/engines/test__BoundedUniformParameterSampler.py",
+  "python/tests/numerical_verification/ksdft2effmass/application/engines/test__BoundedCoordinatePatternLossMinimizer.py",
+]
+targets = ["tests/numerical", "tests/property"]
+
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "docs/architecture/decisions/0001-separate-optimizer-from-potential-problem.md"
+blob = "addf57563e61fc8b6200b14fc7f9e193206d2309"
+use = "Optimizer owns proposal, update, random state, and checkpoints only."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "docs/architecture/decisions/0006-solve-potential-fitting-as-forward-evaluated-inverse-problem.md"
+blob = "374446768b2c2c0de1b2f3d8a465161e1a2bb41e"
+use = "Accepted optimizer -> functional evaluator -> results handler split."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "docs/architecture/multi-objective-optimization"
+tree = "ec1c32a106a5fa8331966955b12fa27e17cde9c7"
+use = "Read-only multi-objective design context."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "docs/architecture/inverse-problem-forward-evaluation"
+tree = "ff193d1dea39018e4ade26a50a3275fa581c1b93"
+use = "Read-only forward-evaluation design context."
+
+[licensing]
+donor_license_path = "LICENSE"
+donor_license_blob = "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+donor_license_sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+destination_license = "Apache-2.0"
+third_party_source_vendored = false
+external_runtime_dependencies = []
+rightsholder_authorization = "Explicit operator authorization for this extraction."
+
+[exclusions]
+items = [
+  "atomistic models and adapters",
+  "potential-specific models and campaigns",
+  "GMM and sklearn",
+  "PyPosPack and PyPosMat",
+  "PyMatMC2",
+  "legacy launch adapters",
+  "universal behaviorless marker bases",
+  "calculator, filesystem, subprocess, and network execution",
+  "dispatch, retries, persistence, and workflow lifecycle",
+  "filesystem report writers and plot artifacts",
+]
+
+[claims]
+scientific_validation = false
+historical_byte_equivalence = false
+recovery_release_authority = false
