@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
-
+from ._validation import finite_float, integer
 from .checkpoint import JsonValue
 from .exceptions import CheckpointError
 from .records import (
@@ -34,15 +33,19 @@ def string_value(value: JsonValue, name: str) -> str:
 
 
 def integer_value(value: JsonValue, name: str) -> int:
-    if type(value) is not int:
-        raise CheckpointError(f"{name} must be an integer")
-    return value
+    try:
+        return integer(value, name)
+    except (TypeError, ValueError) as error:
+        raise CheckpointError(f"{name} must be an integer") from error
 
 
 def number_value(value: JsonValue, name: str) -> float:
     if type(value) not in (int, float):
         raise CheckpointError(f"{name} must be a number")
-    return float(cast(int | float, value))
+    try:
+        return finite_float(value, name)
+    except (TypeError, ValueError) as error:
+        raise CheckpointError(f"{name} must be a finite number") from error
 
 
 def required(

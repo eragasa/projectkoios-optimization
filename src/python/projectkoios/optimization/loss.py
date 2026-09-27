@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from ._validation import finite_float, measurement_name
 from .records import Measurement, ObjectiveValue, RawEvaluation
 
 
@@ -17,17 +18,9 @@ class WeightedLossTerm:
     weight: float
 
     def __post_init__(self) -> None:
-        if type(self.measurement) is not str:
-            raise TypeError("measurement must be a built-in string")
-        if not self.measurement or self.measurement.strip() != self.measurement:
-            raise ValueError("measurement must be nonempty trimmed text")
+        measurement_name(self.measurement, "measurement")
         for name, value in (("target", self.target), ("weight", self.weight)):
-            if type(value) not in (int, float):
-                raise TypeError(f"{name} must be a built-in int or float")
-            normalized = float(value)
-            if not math.isfinite(normalized):
-                raise ValueError(f"{name} must be finite")
-            object.__setattr__(self, name, normalized)
+            object.__setattr__(self, name, finite_float(value, name))
         if self.weight <= 0.0:
             raise ValueError("weight must be positive")
 
@@ -40,11 +33,9 @@ class WeightedLoss:
     objectives: tuple[ObjectiveValue, ...]
 
     def __post_init__(self) -> None:
-        if type(self.value) not in (int, float):
-            raise TypeError("value must be a built-in int or float")
-        value = float(self.value)
-        if not math.isfinite(value) or value < 0.0:
-            raise ValueError("value must be finite and nonnegative")
+        value = finite_float(self.value, "value")
+        if value < 0.0:
+            raise ValueError("value must be nonnegative")
         object.__setattr__(self, "value", value)
         if type(self.objectives) is not tuple or any(
             type(item) is not ObjectiveValue for item in self.objectives

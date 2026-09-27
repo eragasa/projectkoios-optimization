@@ -4,24 +4,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import cast
 
-
-def _text(name: str, value: object, *, maximum: int = 256) -> str:
-    if type(value) is not str:
-        raise TypeError(f"{name} must be a built-in string")
-    if not value or len(value) > maximum or value.strip() != value:
-        raise ValueError(f"{name} must be nonempty trimmed text")
-    return value
-
-
-def _finite(name: str, value: object) -> float:
-    if type(value) not in (int, float):
-        raise TypeError(f"{name} must be a built-in int or float")
-    result = float(cast(int | float, value))
-    if not math.isfinite(result):
-        raise ValueError(f"{name} must be finite")
-    return result
+from ._validation import finite_float, integer, measurement_name, text
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,11 +17,13 @@ class ParameterBound:
     upper: float
 
     def __post_init__(self) -> None:
-        _text("name", self.name)
-        lower = _finite("lower", self.lower)
-        upper = _finite("upper", self.upper)
+        text(self.name, "name")
+        lower = finite_float(self.lower, "lower")
+        upper = finite_float(self.upper, "upper")
         if lower > upper:
             raise ValueError("lower bound must not exceed upper bound")
+        if not math.isfinite(upper - lower):
+            raise ValueError("bound width must be representable as a finite float")
         object.__setattr__(self, "lower", lower)
         object.__setattr__(self, "upper", upper)
 
@@ -78,7 +64,7 @@ class ParameterSpace:
             raise TypeError("values must be a tuple")
         if len(values) != self.dimension:
             return False
-        normalized = tuple(_finite("coordinate", value) for value in values)
+        normalized = tuple(finite_float(value, "coordinate") for value in values)
         return all(
             bound.lower <= value <= bound.upper
             for bound, value in zip(self.bounds, normalized, strict=True)
@@ -95,18 +81,17 @@ class Candidate:
     values: tuple[float, ...]
 
     def __post_init__(self) -> None:
-        _text("candidate_id", self.candidate_id)
-        _text("optimizer_run_id", self.optimizer_run_id)
-        if type(self.sequence) is not int:
-            raise TypeError("sequence must be a built-in integer excluding bool")
-        if self.sequence < 0:
+        text(self.candidate_id, "candidate_id")
+        text(self.optimizer_run_id, "optimizer_run_id")
+        sequence = integer(self.sequence, "sequence")
+        if sequence < 0:
             raise ValueError("sequence must be nonnegative")
         if type(self.values) is not tuple:
             raise TypeError("values must be a tuple")
         object.__setattr__(
             self,
             "values",
-            tuple(_finite("candidate coordinate", value) for value in self.values),
+            tuple(finite_float(value, "candidate coordinate") for value in self.values),
         )
 
 
@@ -118,8 +103,8 @@ class Measurement:
     value: float
 
     def __post_init__(self) -> None:
-        _text("measurement name", self.name)
-        object.__setattr__(self, "value", _finite("measurement value", self.value))
+        measurement_name(self.name)
+        object.__setattr__(self, "value", finite_float(self.value, "measurement value"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,7 +115,7 @@ class RawEvaluation:
     measurements: tuple[Measurement, ...]
 
     def __post_init__(self) -> None:
-        _text("candidate_id", self.candidate_id)
+        text(self.candidate_id, "candidate_id")
         if type(self.measurements) is not tuple or any(
             type(value) is not Measurement for value in self.measurements
         ):
@@ -148,8 +133,8 @@ class ObjectiveValue:
     value: float
 
     def __post_init__(self) -> None:
-        _text("objective name", self.name)
-        value = _finite("objective value", self.value)
+        text(self.name, "objective name")
+        value = finite_float(self.value, "objective value")
         if value < 0.0:
             raise ValueError("objective value must be nonnegative")
         object.__setattr__(self, "value", value)
@@ -164,8 +149,8 @@ class ObjectiveFeedback:
     objectives: tuple[ObjectiveValue, ...] = ()
 
     def __post_init__(self) -> None:
-        _text("candidate_id", self.candidate_id)
-        loss = _finite("loss", self.loss)
+        text(self.candidate_id, "candidate_id")
+        loss = finite_float(self.loss, "loss")
         if loss < 0.0:
             raise ValueError("loss must be nonnegative")
         object.__setattr__(self, "loss", loss)
@@ -189,13 +174,14 @@ class OptimizerUpdate:
     termination: str | None
 
     def __post_init__(self) -> None:
-        _text("candidate_id", self.candidate_id)
-        if type(self.evaluations) is not int or self.evaluations < 1:
-            raise ValueError("evaluations must be a positive built-in integer")
-        _text("best_candidate_id", self.best_candidate_id)
+        text(self.candidate_id, "candidate_id")
+        evaluations = integer(self.evaluations, "evaluations")
+        if evaluations < 1:
+            raise ValueError("evaluations must be positive")
+        text(self.best_candidate_id, "best_candidate_id")
         if type(self.exhausted) is not bool:
             raise TypeError("exhausted must be a built-in bool")
         if self.termination is not None:
-            _text("termination", self.termination)
+            text(self.termination, "termination")
         if self.exhausted != (self.termination is not None):
             raise ValueError("exhausted and termination must agree")

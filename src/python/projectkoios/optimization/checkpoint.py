@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass
 from typing import cast
 
+from ._validation import integer, text
 from .exceptions import CheckpointError
 
 type JsonValue = (
@@ -58,14 +59,13 @@ class OptimizerCheckpoint:
     sha256: str
 
     def __post_init__(self) -> None:
-        if type(self.schema_version) is not int:
-            raise TypeError("schema_version must be a built-in integer")
+        integer(self.schema_version, "schema_version")
         if self.schema_version != 1:
             raise CheckpointError("unsupported checkpoint schema version")
-        if type(self.optimizer_identity) is not str:
-            raise TypeError("optimizer_identity must be a built-in string")
-        if not self.optimizer_identity:
-            raise CheckpointError("optimizer_identity must be nonempty")
+        try:
+            text(self.optimizer_identity, "optimizer_identity")
+        except ValueError as error:
+            raise CheckpointError("optimizer_identity is invalid") from error
         if type(self.payload) is not str:
             raise TypeError("payload must be a built-in string")
         parsed = parse_json(self.payload)

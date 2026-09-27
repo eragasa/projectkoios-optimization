@@ -12,6 +12,14 @@ from ._serialization import (
     required,
     string_value,
 )
+from ._validation import (
+    MAX_U64,
+    candidate_identifier,
+    integer,
+    run_identifier,
+    u32,
+    u64,
+)
 from .checkpoint import JsonValue, OptimizerCheckpoint
 from .exceptions import (
     CheckpointError,
@@ -26,8 +34,6 @@ from .records import (
     OptimizerUpdate,
     ParameterSpace,
 )
-
-_MAX_U64 = 18_446_744_073_709_551_615
 
 
 class BoundedUniformOptimizer:
@@ -66,22 +72,13 @@ class BoundedUniformOptimizer:
     ) -> None:
         if type(space) is not ParameterSpace:
             raise TypeError("space must be ParameterSpace")
-        if type(seed) is not int:
-            raise TypeError("seed must be a built-in integer excluding bool")
-        if not 0 <= seed <= _MAX_U64:
-            raise ValueError("seed must be in the unsigned u64 range")
-        if type(max_evaluations) is not int:
-            raise TypeError("max_evaluations must be a built-in integer")
-        if not 0 < max_evaluations <= 4_294_967_295:
-            raise ValueError("max_evaluations must be in the positive u32 range")
-        if type(run_id) is not str:
-            raise TypeError("run_id must be a built-in string")
-        if not run_id or run_id.strip() != run_id:
-            raise ValueError("run_id must be nonempty trimmed text")
+        normalized_seed = u64(seed, "seed")
+        budget = u32(max_evaluations, "max_evaluations", allow_zero=False)
+        normalized_run_id = run_identifier(run_id, budget - 1)
         self._space = space
-        self._seed = seed
-        self._max_evaluations = max_evaluations
-        self._run_id = run_id
+        self._seed = normalized_seed
+        self._max_evaluations = budget
+        self._run_id = normalized_run_id
         self._next_proposal = 0
         self._candidates: dict[str, Candidate] = {}
         self._outstanding: dict[str, Candidate] = {}
@@ -124,7 +121,7 @@ class BoundedUniformOptimizer:
             raise OptimizerExhaustedError("uniform proposal budget is exhausted")
         sequence = self._next_proposal
         candidate = Candidate(
-            f"{self._run_id}.candidate.{sequence:08d}",
+            candidate_identifier(self._run_id, sequence),
             self._run_id,
             sequence,
             self.sample_values(self._space, self._seed, sequence),
@@ -231,13 +228,15 @@ class BoundedUniformOptimizer:
     @staticmethod
     def unit_fraction(seed: int, counter: int) -> float:
         """Return one upper-53-bit binary64 SplitMix64 fraction in ``[0, 1)``."""
-        if type(seed) is not int or not 0 <= seed <= _MAX_U64:
-            raise ValueError("seed must be a built-in unsigned u64 integer")
-        if type(counter) is not int or counter < 0:
-            raise ValueError("counter must be a nonnegative built-in integer")
-        word = (seed + 0x9E3779B97F4A7C15 * (counter + 1)) & _MAX_U64
-        word = ((word ^ (word >> 30)) * 0xBF58476D1CE4E5B9) & _MAX_U64
-        word = ((word ^ (word >> 27)) * 0x94D049BB133111EB) & _MAX_U64
+        normalized_seed = u64(seed, "seed")
+        normalized_counter = integer(counter, "counter")
+        if normalized_counter < 0:
+            raise ValueError("counter must be nonnegative")
+        word = (
+            normalized_seed + 0x9E3779B97F4A7C15 * (normalized_counter + 1)
+        ) & MAX_U64
+        word = ((word ^ (word >> 30)) * 0xBF58476D1CE4E5B9) & MAX_U64
+        word = ((word ^ (word >> 27)) * 0x94D049BB133111EB) & MAX_U64
         word ^= word >> 31
         return float(word >> 11) / 9_007_199_254_740_992.0
 
@@ -248,11 +247,13 @@ class BoundedUniformOptimizer:
         """Map one sample-major counter block into the configured closed bounds."""
         if type(space) is not ParameterSpace:
             raise TypeError("space must be ParameterSpace")
-        if type(sample_index) is not int or sample_index < 0:
-            raise ValueError("sample_index must be a nonnegative built-in integer")
+        normalized_index = integer(sample_index, "sample_index")
+        if normalized_index < 0:
+            raise ValueError("sample_index must be nonnegative")
         dimension = space.dimension
         return tuple(
             bound.lower
-            + cls.unit_fraction(seed, sample_index * dimension + index) * bound.width
+            + cls.unit_fraction(seed, normalized_index * dimension + index)
+            * bound.width
             for index, bound in enumerate(space.bounds)
         )

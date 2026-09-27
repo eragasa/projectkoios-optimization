@@ -13,6 +13,14 @@ pair, derives declared feedback, and calls `tell` on that bound object.
 owns no persistence.
 
 Candidates carry run identity, stable candidate identity, proposal sequence,
-and finite coordinates. Optimizers enforce parameter-space dimension and
-bounds. Feedback carries finite nonnegative scalar loss and ordered finite
-nonnegative objectives.
+and finite coordinates. Text identifiers and measurement/objective names are
+nonempty, trimmed, and at most 256 characters; weighted-loss measurement names
+use the identical measurement-name contract. Optimizer families additionally
+use the portable lowercase family grammar and a 128-character maximum.
+
+Real-valued public fields reject booleans and non-real values, normalize to a
+built-in binary64 `float`, and reject conversion overflow or nonfinite results.
+Parameter bounds also require the representable width `upper - lower` to remain
+finite. Optimizers enforce parameter-space dimension and bounds. Feedback
+carries finite nonnegative scalar loss and ordered finite nonnegative
+objectives.

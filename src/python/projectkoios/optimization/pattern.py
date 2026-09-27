@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 
 from ._serialization import (
@@ -19,6 +18,7 @@ from ._serialization import (
     required,
     string_value,
 )
+from ._validation import candidate_identifier, finite_float, run_identifier, u32
 from .checkpoint import JsonValue, OptimizerCheckpoint
 from .exceptions import (
     CheckpointError,
@@ -41,22 +41,14 @@ class PatternSearchSettings:
     step_tolerance: float
 
     def __post_init__(self) -> None:
-        if type(self.max_evaluations) is not int or self.max_evaluations < 1:
-            raise ValueError("max_evaluations must be a positive built-in integer")
-        if type(self.max_iterations) is not int or self.max_iterations < 0:
-            raise ValueError("max_iterations must be a nonnegative built-in integer")
+        u32(self.max_evaluations, "max_evaluations", allow_zero=False)
+        u32(self.max_iterations, "max_iterations", allow_zero=True)
         for name in (
             "initial_step_fraction",
             "step_reduction",
             "step_tolerance",
         ):
-            value = getattr(self, name)
-            if type(value) not in (int, float):
-                raise TypeError(f"{name} must be a built-in int or float")
-            normalized = float(value)
-            if not math.isfinite(normalized):
-                raise ValueError(f"{name} must be finite")
-            object.__setattr__(self, name, normalized)
+            object.__setattr__(self, name, finite_float(getattr(self, name), name))
         if not 0.0 < self.initial_step_fraction <= 1.0:
             raise ValueError("initial_step_fraction must be in (0, 1]")
         if not 0.0 < self.step_reduction < 1.0:
@@ -118,14 +110,11 @@ class BoundedCoordinatePatternOptimizer:
             raise ValueError("initial_values must match dimensions and bounds")
         if type(settings) is not PatternSearchSettings:
             raise TypeError("settings must be PatternSearchSettings")
-        if type(run_id) is not str:
-            raise TypeError("run_id must be a built-in string")
-        if not run_id or run_id.strip() != run_id:
-            raise ValueError("run_id must be nonempty trimmed text")
+        normalized_run_id = run_identifier(run_id, settings.max_evaluations - 1)
         self._space = space
         self._initial = initial
         self._settings = settings
-        self._run_id = run_id
+        self._run_id = normalized_run_id
         self._history: list[Candidate] = []
         self._feedback: list[ObjectiveFeedback] = []
         self._outstanding: Candidate | None = None
@@ -197,7 +186,7 @@ class BoundedCoordinatePatternOptimizer:
     def _propose(self, values: tuple[float, ...]) -> Candidate:
         sequence = len(self._history)
         candidate = Candidate(
-            f"{self._run_id}.candidate.{sequence:08d}",
+            candidate_identifier(self._run_id, sequence),
             self._run_id,
             sequence,
             values,
@@ -302,10 +291,17 @@ class BoundedCoordinatePatternOptimizer:
                 continue
             for direction in (-1.0, 1.0):
                 values = list(self._incumbent.values)
-                values[index] = min(
-                    bound.upper,
-                    max(bound.lower, values[index] + direction * step),
-                )
+                coordinate = values[index]
+                if direction < 0.0:
+                    distance = coordinate - bound.lower
+                    values[index] = (
+                        bound.lower if step >= distance else coordinate - step
+                    )
+                else:
+                    distance = bound.upper - coordinate
+                    values[index] = (
+                        bound.upper if step >= distance else coordinate + step
+                    )
                 candidate = tuple(values)
                 if candidate != self._incumbent.values and candidate not in neighbors:
                     neighbors.append(candidate)
