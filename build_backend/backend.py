@@ -41,6 +41,11 @@ License-File: NOTICE
 Requires-Python: >=3.14
 Project-URL: Repository, https://github.com/eragasa/projectkoios-optimization
 Project-URL: Documentation, https://github.com/eragasa/projectkoios-optimization/tree/main/docs
+Provides-Extra: numpy
+Requires-Dist: numpy<3,>=2.3; extra == 'numpy'
+Provides-Extra: scipy
+Requires-Dist: numpy<3,>=2.3; extra == 'scipy'
+Requires-Dist: scipy<2,>=1.18; extra == 'scipy'
 Provides-Extra: development
 Requires-Dist: build<2,>=1.3; extra == 'development'
 Requires-Dist: mypy<3,>=2.3; extra == 'development'
@@ -89,9 +94,10 @@ def _source_files() -> tuple[Path, ...]:
 def _wheel_files() -> dict[str, bytes]:
     files: dict[str, bytes] = {}
     package = _ROOT / "src/python/projectkoios/optimization"
-    for path in sorted(package.iterdir(), key=lambda item: item.name):
+    for path in sorted(package.rglob("*"), key=lambda item: item.as_posix()):
         if path.is_file() and (path.suffix == ".py" or path.name == "py.typed"):
-            files[f"projectkoios/optimization/{path.name}"] = path.read_bytes()
+            relative = path.relative_to(package).as_posix()
+            files[f"projectkoios/optimization/{relative}"] = path.read_bytes()
     files[f"{_DIST_INFO}/licenses/LICENSE"] = (_ROOT / "LICENSE").read_bytes()
     files[f"{_DIST_INFO}/licenses/NOTICE"] = (_ROOT / "NOTICE").read_bytes()
     files[f"{_DIST_INFO}/TRANSFER.toml"] = (_ROOT / "TRANSFER.toml").read_bytes()

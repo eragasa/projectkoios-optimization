@@ -12,14 +12,7 @@ from ._serialization import (
     required,
     string_value,
 )
-from ._validation import (
-    MAX_U64,
-    candidate_identifier,
-    integer,
-    run_identifier,
-    u32,
-    u64,
-)
+from ._validation import candidate_identifier, integer, run_identifier, u32, u64
 from .checkpoint import JsonValue, OptimizerCheckpoint
 from .exceptions import (
     CheckpointError,
@@ -28,6 +21,7 @@ from .exceptions import (
     UnknownCandidateError,
 )
 from .identity import OptimizerDescriptor, OptimizerIdentity
+from .probability import SplitMix64UnitUniformSampler
 from .records import (
     Candidate,
     ObjectiveFeedback,
@@ -228,17 +222,7 @@ class BoundedUniformOptimizer:
     @staticmethod
     def unit_fraction(seed: int, counter: int) -> float:
         """Return one upper-53-bit binary64 SplitMix64 fraction in ``[0, 1)``."""
-        normalized_seed = u64(seed, "seed")
-        normalized_counter = integer(counter, "counter")
-        if normalized_counter < 0:
-            raise ValueError("counter must be nonnegative")
-        word = (
-            normalized_seed + 0x9E3779B97F4A7C15 * (normalized_counter + 1)
-        ) & MAX_U64
-        word = ((word ^ (word >> 30)) * 0xBF58476D1CE4E5B9) & MAX_U64
-        word = ((word ^ (word >> 27)) * 0x94D049BB133111EB) & MAX_U64
-        word ^= word >> 31
-        return float(word >> 11) / 9_007_199_254_740_992.0
+        return SplitMix64UnitUniformSampler.unit_fraction(seed, counter)
 
     @classmethod
     def sample_values(

@@ -17,6 +17,20 @@ from .ports import (
     ResultsHandler,
     WeightedResultsHandler,
 )
+from .probability import (
+    FunctionalProbabilityDistribution,
+    InverseProbabilityDistributionFunction,
+    ProbabilityDistribution,
+    ProbabilityDistributionFunction,
+    ProbabilityDistributionSampler,
+    ProbabilityError,
+    SplitMix64UnitUniformSampler,
+    UniformInverseProbabilityDistributionFunction,
+    UniformProbabilityDistribution,
+    UniformProbabilityDistributionFunction,
+    UniformProbabilityDistributionParameters,
+    UnitUniformSampler,
+)
 from .records import (
     Candidate,
     Measurement,
@@ -28,6 +42,7 @@ from .records import (
     RawEvaluation,
 )
 from .reports import OptimizationReport, ScoredResult, build_report
+from .sampling import Sampler, SamplingError
 from .uniform import BoundedUniformOptimizer
 
 __all__ = [
@@ -37,6 +52,8 @@ __all__ = [
     "CheckpointError",
     "DuplicateObservationError",
     "ForwardEvaluator",
+    "FunctionalProbabilityDistribution",
+    "InverseProbabilityDistributionFunction",
     "Measurement",
     "ObjectiveFeedback",
     "ObjectiveValue",
@@ -51,9 +68,21 @@ __all__ = [
     "ParameterBound",
     "ParameterSpace",
     "PatternSearchSettings",
+    "ProbabilityDistribution",
+    "ProbabilityDistributionFunction",
+    "ProbabilityDistributionSampler",
+    "ProbabilityError",
     "RawEvaluation",
     "ResultsHandler",
+    "Sampler",
+    "SamplingError",
     "ScoredResult",
+    "SplitMix64UnitUniformSampler",
+    "UniformInverseProbabilityDistributionFunction",
+    "UniformProbabilityDistribution",
+    "UniformProbabilityDistributionFunction",
+    "UniformProbabilityDistributionParameters",
+    "UnitUniformSampler",
     "UnknownCandidateError",
     "WeightedLoss",
     "WeightedLossTerm",

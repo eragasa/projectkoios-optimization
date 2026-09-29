@@ -34,6 +34,7 @@ sha256 = "c457beb0507f575a3f03935037545d9983da63fbd63546dcdfe380eb89cabb1e"
 targets = [
   "src/python/projectkoios/optimization/records.py",
   "src/python/projectkoios/optimization/loss.py",
+  "src/python/projectkoios/optimization/probability/base.py",
   "src/python/projectkoios/optimization/uniform.py",
   "src/python/projectkoios/optimization/pattern.py",
   "src/python/projectkoios/optimization/reports.py",
@@ -91,6 +92,22 @@ path = "docs/architecture/inverse-problem-forward-evaluation"
 tree = "ff193d1dea39018e4ade26a50a3275fa581c1b93"
 use = "Read-only forward-evaluation design context."
 
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "src/projectkoios/frankensteins/adapters/bindings/numpy/probability.py"
+blob = "92ae8ab087fa0e1fc85df49b6431910b634d9fac"
+sha256 = "8184ec4cf9e59085532d8f421d2146cda500eea21b25dcefb836ff1a93cc1d42"
+use = "Frozen compatibility evidence for isolated NumPy RandomState uniform sampling; API adapted to the optional adapters/numpy namespace."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
+commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
+path = "src/projectkoios/frankensteins/mathematics/probability.py"
+blob = "edb4c7c6e02fe8e74a9af71d046be0866be3caae"
+sha256 = "44d9ceb2a4028c01c713e3e68216d4bbcaa93230a347372b2b559af66c3817e8"
+use = "Frozen behavior evidence for uniform-distribution composition and sampling; behaviorless bases and statistical validators were not copied."
+
 [licensing]
 donor_license_path = "LICENSE"
 donor_license_blob = "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
@@ -98,7 +115,8 @@ donor_license_sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dc
 destination_license = "Apache-2.0"
 third_party_source_vendored = false
 external_runtime_dependencies = []
-rightsholder_authorization = "Explicit operator authorization for this extraction."
+optional_runtime_dependencies = ["numpy>=2.3,<3", "scipy>=1.18,<2"]
+rightsholder_authorization = "Explicit operator authorization for this extraction and the optional probability adapters."
 
 [exclusions]
 items = [

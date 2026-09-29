@@ -3,7 +3,10 @@
 ## Bounded uniform
 
 `BoundedUniformOptimizer` retains the donor SplitMix64 equations, sample-major
-counter order, upper-53-bit conversion, and affine bound mapping. Seed and
+counter order, upper-53-bit conversion, and affine bound mapping. Its unit
+fraction primitive is owned by `SplitMix64UnitUniformSampler` and shared with
+slot-composed probability sampling.
+Seed and
 proposal budget are explicit; the proposal budget is a positive u32. Empty
 spaces produce empty tuples; fixed bounds produce their endpoint. Multiple asks
 may be outstanding and tells may arrive in any order. Equal loss is resolved by
