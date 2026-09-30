@@ -48,10 +48,11 @@ with the accepted behaviorful optimizer contract. GMM, PyPosPack/PyMatMC2,
 PyPosMat, potential models, campaign execution, provenance correlators, plot and
 filesystem report artifacts, dispatch, retry, and workflow tests are excluded.
 
-## Design evidence
+## Architecture source lineage
 
 Read-only Frankenstein commit
-`3eb562f2d6167ec20d6f2c892c517509a7abf283` supplies accepted design evidence:
+`3eb562f2d6167ec20d6f2c892c517509a7abf283` supplies historical architecture
+source-lineage evidence consulted during extraction:
 
 - `docs/architecture/decisions/0001-separate-optimizer-from-potential-problem.md`,
   blob `addf57563e61fc8b6200b14fc7f9e193206d2309`;
@@ -62,9 +63,11 @@ Read-only Frankenstein commit
 - inverse-problem forward-evaluation documentation tree
   `ff193d1dea39018e4ade26a50a3275fa581c1b93`.
 
-ADR 0006 controls the split: an optimizer proposes and updates; a functional
-evaluator returns raw observations; a results handler retains observations,
-derives declared feedback, and calls `tell` on the exact proposing engine.
+These frozen artifacts record source lineage; they are not current architecture
+authority. The living ownership split is documented by this repository: an
+optimizer proposes and updates; a functional evaluator returns raw observations;
+a results handler retains observations, derives declared feedback, and calls
+`tell` on the exact proposing engine.
 
 The same frozen commit supplies compatibility evidence, not canonical source,
 for probability behavior:
