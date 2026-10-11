@@ -11,8 +11,9 @@
 | Uniform algorithm | [`uniform.py`](../../../../src/python/projectkoios/optimization/uniform.py) | bounded SplitMix64 proposals, out-of-order tell |
 | Sampling | [`sampling/`](../../../../src/python/projectkoios/optimization/sampling/) | generic behaviorful sampler contract and exact immutable sample batches |
 | Probability | [`probability/`](../../../../src/python/projectkoios/optimization/probability/) | CDF/inverse-CDF products, uniform distributions, and slot-composed probability sampling |
-| NumPy adapters | [`adapters/numpy/`](../../../../src/python/projectkoios/optimization/adapters/numpy/) | optional NumPy probability functions and isolated RandomState source slot |
-| SciPy adapters | [`adapters/scipy/`](../../../../src/python/projectkoios/optimization/adapters/scipy/) | optional structural frozen-distribution CDF/PPF slots |
+| Adapter-composed quadratic loss | [`adapters/quadratic.py`](../../../../src/python/projectkoios/optimization/adapters/quadratic.py) | unit-free completed-square loss selecting a NumPy dense or SciPy sparse backend |
+| NumPy adapters | [`adapters/numpy/`](../../../../src/python/projectkoios/optimization/adapters/numpy/) | optional NumPy probability functions, isolated RandomState source slot, and dense quadratic loss |
+| SciPy adapters | [`adapters/scipy/`](../../../../src/python/projectkoios/optimization/adapters/scipy/) | optional structural frozen-distribution CDF/PPF slots and sparse quadratic loss |
 | Pattern algorithm | [`pattern.py`](../../../../src/python/projectkoios/optimization/pattern.py) | bounded coordinate local search, resumable ask/tell |
 | Loss | [`loss.py`](../../../../src/python/projectkoios/optimization/loss.py) | positive-weight finite squared residual aggregation |
 | Reports | [`reports.py`](../../../../src/python/projectkoios/optimization/reports.py) | deterministic scalar ranking and Pareto membership |
@@ -20,7 +21,8 @@
 The core namespace is dependency-free and has no calculator, filesystem,
 subprocess, network, dispatch, retry, persistence, or workflow authority. NumPy
 and SciPy bindings are explicit optional backend adapter modules and are not
-imported by the package root. Atomistic and potential models, campaigns, GMM,
+imported by the package root. See the [`PositiveDefiniteQuadraticLoss` architecture](adapters/PositiveDefiniteQuadraticLoss/index.md)
+for dense/sparse backend selection. Atomistic and potential models, campaigns, GMM,
 PyPosPack, PyPosMat, and PyMatMC2 are outside this repository.
 
 See [source mapping](../../../provenance/source-mapping.md) for exact recovery

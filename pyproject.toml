@@ -62,5 +62,5 @@ files = ["src/python/projectkoios/optimization"]
 mypy_path = "src/python"
 
 [[tool.mypy.overrides]]
-module = ["numpy", "numpy.*"]
+module = ["numpy", "numpy.*", "scipy", "scipy.*"]
 ignore_missing_imports = true

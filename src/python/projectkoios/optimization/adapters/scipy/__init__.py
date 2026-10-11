@@ -5,9 +5,11 @@ from .probability import (
     ScipyProbabilityDistributionFunction,
     ScipyProbabilityDistributionSource,
 )
+from .quadratic import ScipySparsePositiveDefiniteQuadraticLoss
 
 __all__ = [
     "ScipyInverseProbabilityDistributionFunction",
+    "ScipySparsePositiveDefiniteQuadraticLoss",
     "ScipyProbabilityDistributionFunction",
     "ScipyProbabilityDistributionSource",
 ]

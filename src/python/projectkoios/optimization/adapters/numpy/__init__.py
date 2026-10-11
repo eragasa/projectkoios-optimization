@@ -6,9 +6,11 @@ from .probability import (
     NumpyRandomStateUnitUniformSampler,
     NumpyUniformCompatibilitySampler,
 )
+from .quadratic import NumpyPositiveDefiniteQuadraticLoss
 
 __all__ = [
     "NumpyInverseProbabilityDistributionFunction",
+    "NumpyPositiveDefiniteQuadraticLoss",
     "NumpyProbabilityDistributionFunction",
     "NumpyRandomStateUnitUniformSampler",
     "NumpyUniformCompatibilitySampler",
