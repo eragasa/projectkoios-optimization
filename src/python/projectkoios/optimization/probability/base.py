@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from .._validation import finite_float
+from ..validation import validation
 
 
 class ProbabilityError(ValueError):
@@ -15,7 +15,7 @@ class ProbabilityError(ValueError):
 def probability_value(value: object, name: str = "probability") -> float:
     """Return one finite built-in probability in the closed unit interval."""
     try:
-        result = finite_float(value, name)
+        result = validation.finite_float(value, name)
     except ValueError as error:
         raise ProbabilityError(f"{name} must be finite") from error
     if not 0.0 <= result <= 1.0:
@@ -30,7 +30,7 @@ class ProbabilityDistributionFunction(ABC):
 
     def evaluate(self, value: float, /) -> float:
         """Return the cumulative probability at one finite coordinate."""
-        coordinate = finite_float(value, "distribution coordinate")
+        coordinate = validation.finite_float(value, "distribution coordinate")
         return probability_value(
             self._evaluate(coordinate),
             "probability distribution function result",
@@ -55,7 +55,7 @@ class InverseProbabilityDistributionFunction(ABC):
         """Return one finite quantile for a probability in ``[0, 1]``."""
         normalized = probability_value(probability)
         try:
-            return finite_float(
+            return validation.finite_float(
                 self._evaluate(normalized),
                 "inverse probability distribution function result",
             )

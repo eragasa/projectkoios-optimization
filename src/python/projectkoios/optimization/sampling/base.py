@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import final
 
-from .._validation import u32
+from ..validation import validation
 
 
 class SamplingError(ValueError):
@@ -30,7 +30,7 @@ class Sampler[SampleT, SeedT](ABC):
         random_seed: SeedT,
     ) -> tuple[SampleT, ...]:
         """Return exactly ``sample_count`` ordered values."""
-        count = u32(sample_count, "sample_count", allow_zero=False)
+        count = validation.u32(sample_count, "sample_count", allow_zero=False)
         values = self._sample(count, random_seed=random_seed)
         if type(values) is not tuple or len(values) != count:
             raise SamplingError(

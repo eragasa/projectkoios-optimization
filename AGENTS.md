@@ -4,11 +4,20 @@ This repository owns reusable optimization contracts and deterministic optimizat
 
 ## Ownership
 
-- Own behaviorful optimizer contracts, candidate proposal and observation/update records, explicit serializable optimizer state/checkpoints, bounded deterministic sampling and optimization algorithms, loss aggregation, and optimization result/report records.
+- Own behaviorful optimizer contracts, candidate proposal and observation behavior, explicit immutable algorithm state, bounded deterministic sampling and optimization algorithms, loss aggregation, and optimization results.
 - Keep forward evaluators and results handlers behind narrow injected ports. This repository may define the information those ports exchange; it does not own simulation execution or scientific-domain models.
 - `projectkoios-workflow` owns execution authorization, dispatch, retries, persistence, and lifecycle orchestration.
 - Simulation and atomistic implementations belong in `projectkoios-simulations` under their neutral, integration, or adapter namespace as appropriate.
 - Material-specific campaigns remain application/research-owner artifacts.
+
+## Protected engine block
+
+- `projectkoios.optimization.multiobjective.pareto` reconstructs optimization behavior
+  originating in Eugene J. Ragasa's PhD work and preserved across PyPosPack and multiple
+  research repositories. KSD recovery copies are evidence, not source origin.
+- Do not move, split, rename, or refactor this protected block without explicit human
+  authorization. Preserve exact behavior-specific source, commit, blob, contributor,
+  license, adaptation, and test mappings.
 
 ## Extraction policy
 

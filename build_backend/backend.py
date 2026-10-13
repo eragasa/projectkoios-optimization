@@ -38,6 +38,7 @@ Author-email: Eugene Ragasa <eugene@projectkoios.com>
 License-Expression: Apache-2.0
 License-File: LICENSE
 License-File: NOTICE
+License-File: licenses/PyPosPack-BSD-2-Clause.txt
 Requires-Python: >=3.14
 Project-URL: Repository, https://github.com/eragasa/projectkoios-optimization
 Project-URL: Documentation, https://github.com/eragasa/projectkoios-optimization/tree/main/docs
@@ -46,6 +47,16 @@ Requires-Dist: numpy<3,>=2.3; extra == 'numpy'
 Provides-Extra: scipy
 Requires-Dist: numpy<3,>=2.3; extra == 'scipy'
 Requires-Dist: scipy<2,>=1.18; extra == 'scipy'
+Provides-Extra: gmm
+Requires-Dist: numpy<3,>=2.3; extra == 'gmm'
+Requires-Dist: scipy<2,>=1.18; extra == 'gmm'
+Requires-Dist: scikit-learn<2,>=1.8; extra == 'gmm'
+Provides-Extra: benchmark
+Requires-Dist: matplotlib<4,>=3.11; extra == 'benchmark'
+Requires-Dist: numpy<3,>=2.3; extra == 'benchmark'
+Requires-Dist: pymoo==0.6.2; extra == 'benchmark'
+Requires-Dist: scikit-learn==1.8.0; extra == 'benchmark'
+Requires-Dist: scipy<2,>=1.18; extra == 'benchmark'
 Provides-Extra: development
 Requires-Dist: build<2,>=1.3; extra == 'development'
 Requires-Dist: mypy<3,>=2.3; extra == 'development'
@@ -76,7 +87,14 @@ def _source_files() -> tuple[Path, ...]:
         "dist",
     }
     discovered: list[Path] = []
-    for root_name in ("build_backend", "docs", "src", "tests"):
+    for root_name in (
+        "benchmarks",
+        "build_backend",
+        "docs",
+        "licenses",
+        "src",
+        "tests",
+    ):
         for path in (_ROOT / root_name).rglob("*"):
             if not path.is_file():
                 continue
@@ -100,6 +118,9 @@ def _wheel_files() -> dict[str, bytes]:
             files[f"projectkoios/optimization/{relative}"] = path.read_bytes()
     files[f"{_DIST_INFO}/licenses/LICENSE"] = (_ROOT / "LICENSE").read_bytes()
     files[f"{_DIST_INFO}/licenses/NOTICE"] = (_ROOT / "NOTICE").read_bytes()
+    files[f"{_DIST_INFO}/licenses/PyPosPack-BSD-2-Clause.txt"] = (
+        _ROOT / "licenses/PyPosPack-BSD-2-Clause.txt"
+    ).read_bytes()
     files[f"{_DIST_INFO}/TRANSFER.toml"] = (_ROOT / "TRANSFER.toml").read_bytes()
     files[f"{_DIST_INFO}/METADATA"] = _metadata()
     files[f"{_DIST_INFO}/WHEEL"] = (

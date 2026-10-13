@@ -17,5 +17,5 @@ class DuplicateObservationError(OptimizationError):
     """Raised when feedback repeats an already accepted candidate."""
 
 
-class CheckpointError(OptimizationError):
-    """Raised when checkpoint syntax, integrity, or compatibility fails."""
+class OptimizerStateError(OptimizationError):
+    """Raised when typed records do not describe reachable optimizer state."""

@@ -4,3 +4,14 @@ Copyright 2026 Eugene Joseph M. Ragasa
 This product contains maintained adaptations of Apache-2.0-licensed Project
 Koios recovery source. Exact source and design-evidence identities, exclusions,
 and semantic adaptations are recorded in TRANSFER.toml.
+
+The iterative multi-objective optimization block originates in the PhD work of Eugene
+J. Ragasa and is reconstructed from evidence scattered across PyPosPack and multiple
+research repositories.
+
+This product includes adapted Pareto-selection, Gaussian KDE, Gaussian-mixture
+partitioning, cluster-conditioned sampling, and covariance-repair behavior from
+PyPosPack, Copyright (c) 2017 Eugene Ragasa, distributed under the BSD 2-Clause License.
+The source header credits Dmitriy Morozov of Lawrence Berkeley National Laboratory
+with Pareto performance improvements contributed in December 2016. The retained
+license text is in licenses/PyPosPack-BSD-2-Clause.txt.

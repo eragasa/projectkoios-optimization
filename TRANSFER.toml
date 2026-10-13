@@ -20,26 +20,122 @@ root_tree = "7977bd49cc79622b5da92f2476eccb430ac67fbf"
 relevant_tree = "9a58c5fa4ce0240c55377bf2347df492d101ff6a"
 status = "read-only recovery evidence; relevant tree identical to primary"
 
+[[sources]]
+role = "owner-export-candidate"
+repository_path = "/Users/eugene/worktrees/ksdft2effmass-hsh-owner-export-foundations"
+commit = "879996761b67f8b78dc30dead3f03d28ff7cbea6"
+root_tree = "80f994634d823aa5bca426d7451564f60d113c4e"
+relevant_tree = "5e90d8596731dec6cffc29533830c0332d465eed"
+status = "reviewed source candidate; adapted by the Optimization owner before acceptance"
+
+[[sources]]
+role = "upstream-performance-source"
+repository = "https://github.com/eragasa/pypospack"
+commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+root_tree = "7ac9c9f255aa7731f39ce35a0e561fc113082a6f"
+status = "public PyPosPack source; exact Pareto blob also preserved in recovery-primary"
+
 [[files]]
+source_role = "recovery-evidence-not-origin"
+origin = "Eugene J. Ragasa PhD engine work preserved across PyPosPack and multiple research repositories"
 source_path = "python/src/ksdft2effmass/application/engines/base.py"
 blob = "33ca76648401deacf8938cca7e1ff910137f2c95"
 sha256 = "56023cc3232cf8d5d149a8000f714be3601f11d2fae5df8195115c3fe0d26f49"
-targets = ["src/python/projectkoios/optimization/identity.py", "src/python/projectkoios/optimization/ports.py"]
-adaptation = "Retained strict immutable identity concepts; replaced universal execute base with behaviorful ask/tell protocol."
+targets = [
+  "src/python/projectkoios/optimization/engines/engine.py",
+  "src/python/projectkoios/optimization/multiobjective/factory.py",
+]
+adaptation = "Replaced passive identity and universal execute records with explicit behaviorful engine ports and a concrete method-selected factory; no string dispatch."
 
 [[files]]
+source_role = "recovery-evidence-not-origin"
+origin = "Eugene J. Ragasa PhD engine work preserved across PyPosPack and multiple research repositories"
 source_path = "python/src/ksdft2effmass/application/engines/potential_fitting.py"
 blob = "d5fac55227e5c41fddd7855ddf135c00a0456c25"
 sha256 = "c457beb0507f575a3f03935037545d9983da63fbd63546dcdfe380eb89cabb1e"
 targets = [
-  "src/python/projectkoios/optimization/records.py",
-  "src/python/projectkoios/optimization/loss.py",
+  "src/python/projectkoios/optimization/engines/records.py",
+  "src/python/projectkoios/optimization/engines/loss.py",
   "src/python/projectkoios/optimization/probability/base.py",
-  "src/python/projectkoios/optimization/uniform.py",
-  "src/python/projectkoios/optimization/pattern.py",
-  "src/python/projectkoios/optimization/reports.py",
+  "src/python/projectkoios/optimization/sampling/uniform.py",
+  "src/python/projectkoios/optimization/algorithms/coordinate.py",
+  "src/python/projectkoios/optimization/reports/reports.py",
 ]
-adaptation = "Generalized potential-specific records; separated ask/tell from evaluation; added fixed/zero-dimensional support and checkpoints; retained SplitMix64 equations, weighted-square arithmetic, strict pattern-search improvement, and Pareto dominance."
+adaptation = "Generalized potential-specific records; separated ask/tell from evaluation; added fixed/zero-dimensional support and typed algorithm state; retained SplitMix64 equations, weighted-square arithmetic, and strict pattern-search improvement."
+
+[[files]]
+source_repository = "https://github.com/eragasa/pypospack"
+source_commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+source_path = "pypospack/pyposmat/engines/mc_sampler_iterate.py"
+blob = "a39c7ba9956d7b6fac6399d3fdf915bb3418bed8"
+sha256 = "bdaaca875f52e82fa17e440dd30a3e7dd5db8df56db2698f4f263bf723838c6e"
+license = "BSD-2-Clause"
+targets = [
+  "src/python/projectkoios/optimization/multiobjective/pareto/optimizer.py",
+  "src/python/projectkoios/optimization/multiobjective/factory.py",
+  "tests/projectkoios/optimization/multiobjective/pareto/test__ParetoOptimizer__unit.py",
+]
+adaptation = "Extracted the iterative sampler-stage policy from filesystem, MPI, calculator, YAML, logging, and string dispatch; samplers are explicit injected stage ports and forward evaluation remains external."
+
+[[files]]
+source_repository = "https://github.com/eragasa/pypospack"
+source_commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+source_path = "pypospack/kde.py"
+blob = "36e4a3ac656140501781419b2f6557456ff40c95"
+sha256 = "011bd3766e02a349b51c9a229029023f2b98ffa740e5f47ff4c0ecf047fcee9f"
+license = "BSD-2-Clause"
+targets = [
+  "src/python/projectkoios/optimization/sampling/scipy/kde.py",
+  "tests/projectkoios/optimization/sampling/scipy/test__ScipyGaussianKdeSampler__integration.py",
+]
+adaptation = "Preserved Silverman1986_h and Chiu1999_h numerical bodies; enum-based KdeBandwidthFactory replaces inconsistent historical string spellings."
+
+[[files]]
+source_repository = "https://github.com/eragasa/pypospack"
+source_commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+source_path = "pypospack/pyposmat/engines/mc_sampler.py"
+blob = "a4c5d595e08df98aaca9886a694a913a339804eb"
+sha256 = "3aa52f84f51875d2cae8080cf02ae6b6e1d194229641e25bedd7c53da7b94016"
+license = "BSD-2-Clause"
+targets = [
+  "src/python/projectkoios/optimization/sampling/scipy/kde.py",
+  "src/python/projectkoios/optimization/probability/factory.py",
+  "tests/projectkoios/optimization/sampling/scipy/test__ScipyGaussianKdeSampler__integration.py",
+]
+adaptation = "Extracted data orientation, gaussian_kde(X, h), and one-vector-at-a-time resampling; replaced files and global RNG state with explicit Pareto-set input and seed; omitted calculators, MPI, logging, constraints, and campaign execution."
+
+[[files]]
+source_repository = "https://github.com/eragasa/pypospack"
+source_commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+source_path = "pypospack/pareto.py"
+blob = "217ea0a75e60c79529f566aace35c1e14d4c627b"
+sha256 = "dd0a541d16b34ccc803967e37471ea0f26f9068725a5c69c83454400bb0b0198"
+license = "BSD-2-Clause"
+targets = [
+  "src/python/projectkoios/optimization/multiobjective/pareto/algorithm.py",
+  "tests/projectkoios/optimization/multiobjective/pareto/test__ParetoAlgorithm__unit.py",
+  "tests/projectkoios/optimization/multiobjective/pareto/test__ParetoAlgorithm__numerical.py",
+]
+adaptation = "Preserved lazy adaptive chunk pruning and comparison order; replaced only the full-batch zip idiom with itertools.batched so the final short batch is not discarded; reconstructed iterative Pareto ask/tell behavior over explicit interchangeable sampler stages and a concrete factory entry point."
+
+[[files]]
+source_path = "exports/optimization/affine.py"
+blob = "9739498c4e071d6d45c3f6f8abc5f9339d302112"
+sha256 = "1c2473e40aa94a466c4b1b92605a2f8b83ba583853d43970dc8e172ef08e10ad"
+targets = [
+  "src/python/projectkoios/optimization/affine/affine.py",
+  "src/python/projectkoios/optimization/affine/quadratic.py",
+  "src/python/projectkoios/optimization/affine/numpy/affine.py",
+  "src/python/projectkoios/optimization/affine/scipy/affine.py",
+]
+adaptation = "Split dependency-free residual definitions from the optional NumPy constructor; replaced normal-equation solving with direct weighted-design least squares and explicit numerical rank rejection."
+
+[[files]]
+source_path = "exports/optimization/metric.py"
+blob = "191fb449f1f797fe3b288f1aceffa3cbd8725fc0"
+sha256 = "576e84d81abc245a5f37b05e79a6c7ee4cfbccb240e73a5e6fc3bc139e227efc"
+targets = ["src/python/projectkoios/optimization/metric/metric.py"]
+adaptation = "Retained the immutable unit-free positive diagonal primal and dual geometry; rewrote imports for the owner namespace."
 
 [[tests]]
 role = "software"
@@ -53,7 +149,7 @@ source_paths = [
   "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialSamplingAnalyticReportAssembler.py",
   "python/tests/software_verification/ksdft2effmass/application/engines/test__PotentialFittingIterationSeriesReportAssembler.py",
 ]
-targets = ["tests/unit", "tests/adversarial"]
+targets = ["tests/projectkoios/optimization"]
 
 [[tests]]
 role = "numerical"
@@ -62,14 +158,43 @@ source_paths = [
   "python/tests/numerical_verification/ksdft2effmass/application/engines/test__BoundedUniformParameterSampler.py",
   "python/tests/numerical_verification/ksdft2effmass/application/engines/test__BoundedCoordinatePatternLossMinimizer.py",
 ]
-targets = ["tests/numerical", "tests/property"]
+targets = ["tests/projectkoios/optimization"]
+
+[[tests]]
+role = "software-numerical-property-integration"
+commit = "879996761b67f8b78dc30dead3f03d28ff7cbea6"
+source_paths = [
+  "exports/optimization/tests/integration/test_affine_quadratic.py",
+  "exports/optimization/tests/unit/test_metric.py",
+]
+source_blobs = [
+  "bc678c5a52742eff71f84df127eaad4ec6e6d34c",
+  "05338c737185b9015c75a570ef9d9e4d164e7d41",
+]
+source_sha256 = [
+  "71ae002966de48441237fb55899b3ff63bc34f8956b9803174a2d9c8ad44dbbf",
+  "f062b24a16b5b3bf970c7ed04da8be0d7b54d7940f8abcdd256e0a4251f14603",
+]
+targets = [
+  "tests/projectkoios/optimization/affine/test__WeightedAffineResidualDefinition__unit.py",
+  "tests/projectkoios/optimization/metric/test__PositiveDiagonalMetric__unit.py",
+  "tests/projectkoios/optimization/metric/test__PositiveDiagonalMetric__numerical.py",
+  "tests/projectkoios/optimization/affine/test__WeightedAffineResidualQuadraticConstructor__integration.py",
+  "tests/projectkoios/optimization/affine/test__WeightedAffineResidualQuadraticConstructor__numerical.py",
+  "tests/projectkoios/optimization/affine/test__WeightedAffineResidualQuadraticConstructor__property.py",
+  "tests/projectkoios/optimization/affine/test__WeightedAffineResidualQuadratic__unit.py",
+  "tests/projectkoios/optimization/affine/numpy/test__NumpyWeightedAffineResidualQuadraticConstructor__integration.py",
+  "tests/projectkoios/optimization/affine/scipy/test__ScipyWeightedAffineResidualQuadraticConstructor__integration.py",
+  "tests/projectkoios/optimization/affine/scipy/test__ScipyWeightedAffineResidualQuadraticConstructor__numerical.py",
+]
+adaptation = "Mapped tests into the source-mirrored owner tree with explicit verification-kind suffixes and markers; added the exact dependent-column regression required by owner review."
 
 [[design_evidence]]
 repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
 commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
 path = "docs/architecture/decisions/0001-separate-optimizer-from-potential-problem.md"
 blob = "addf57563e61fc8b6200b14fc7f9e193206d2309"
-use = "Optimizer owns proposal, update, random state, and checkpoints only."
+use = "Optimizer owns proposal, update, and intrinsic numerical state; Workflow wraps that state for persistence and lifecycle checkpoints."
 
 [[design_evidence]]
 repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
@@ -98,7 +223,7 @@ commit = "3eb562f2d6167ec20d6f2c892c517509a7abf283"
 path = "src/projectkoios/frankensteins/adapters/bindings/numpy/probability.py"
 blob = "92ae8ab087fa0e1fc85df49b6431910b634d9fac"
 sha256 = "8184ec4cf9e59085532d8f421d2146cda500eea21b25dcefb836ff1a93cc1d42"
-use = "Frozen compatibility evidence for isolated NumPy RandomState uniform sampling; API adapted to the optional adapters/numpy namespace."
+use = "Frozen compatibility evidence for isolated NumPy RandomState uniform sampling; API adapted to the capability-local probability/numpy namespace."
 
 [[design_evidence]]
 repository_path = "/Users/eugene/projects/projectkoios-frankenstein"
@@ -108,22 +233,61 @@ blob = "edb4c7c6e02fe8e74a9af71d046be0866be3caae"
 sha256 = "44d9ceb2a4028c01c713e3e68216d4bbcaa93230a347372b2b559af66c3817e8"
 use = "Frozen behavior evidence for uniform-distribution composition and sampling; behaviorless bases and statistical validators were not copied."
 
+[[design_evidence]]
+repository_path = "/Users/eugene/repos/pypospack"
+commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+path = "dev/pyposmat/analysis/GaussianMixtureModel/gmm_analysis.py"
+blob = "9d1284398aaff77b38f11bf34859f79e02d40b42"
+sha256 = "c4a6eb17b0bc68d3fea443c3f1afc37c10d2cbd6f2ebd93cb47018eb87c2fd40"
+use = "Historical full-covariance GaussianMixture construction, fixed random state, AIC/BIC component analysis, and parameter/QoI/all feature selection; adapted to numeric decision/objective records and explicit enums."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/repos/pypospack"
+commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+path = "dev/pyposmat/analysis/GaussianMixtureModel/dev__GmmClusterAnalysis.py"
+blob = "78f7ec8e08d138963fe4cd10b722d400d2ad76dc"
+sha256 = "7928fa82677b1d66453beaef02588fe3b96857d8933a75f5431a032f47dd286b"
+use = "Historical evidence that GMM labels partition parameter and QoI observations and that cluster members and representatives remain pullbacks to exact simulation identifiers."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/repos/pypospack"
+commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
+path = "pypospack/pyposmat/engines/cluster_engine.py"
+blob = "2015d7fe38534b61fff735576e701f17a41f196b"
+sha256 = "b58d5b939e654968cda3ae28a569721aba713abc1323b25d9e85a9e1b826120b"
+use = "Historical cluster-conditioned KDE dataflow: validate cluster sizes, iterate clusters, fit KDE to each cluster's free decision parameters, and request an equal sample count per cluster; the isValidPartition early-return defect is corrected to check every cluster; filesystem, MPI, t-SNE, DBSCAN, and evaluator orchestration excluded."
+
+[[design_evidence]]
+repository_path = "/Users/eugene/repos/pypospack"
+commit = "024f3280b463984b39f6c76541cda4e64a77885e"
+path = "pypospack/statistics.py"
+blob = "655aaa0faad6189a90dcd8778f3e266f73e7def3"
+sha256 = "40828df796d8f200ec2d401d20f2c9fd9c3b1a27356b9287a867c5ad8e9f278a"
+use = "Exact historical zero-eigenvalue covariance repair: eigendecomposition, replacement of eigenvalues equal to zero by 1e-15, covariance reconstruction, and inverse recomputation; retained separately from the modern relative symmetric floor."
+
 [licensing]
 donor_license_path = "LICENSE"
 donor_license_blob = "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
 donor_license_sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
 destination_license = "Apache-2.0"
-third_party_source_vendored = false
+third_party_source_vendored = true
+third_party_license_files = ["licenses/PyPosPack-BSD-2-Clause.txt"]
 external_runtime_dependencies = []
-optional_runtime_dependencies = ["numpy>=2.3,<3", "scipy>=1.18,<2"]
-rightsholder_authorization = "Explicit operator authorization for this extraction and the optional probability adapters."
+optional_runtime_dependencies = [
+  "numpy>=2.3,<3",
+  "scipy>=1.18,<2",
+  "scikit-learn>=1.8,<2 (GMM capability)",
+  "matplotlib>=3.11,<4 (benchmark figures only)",
+  "pymoo==0.6.2 (benchmark only)",
+]
+rightsholder_authorization = "Explicit operator authorization for the original extraction, PhD-work engine reconstruction, BSD-licensed PyPosPack Pareto adaptation, optional implementations, corrected affine/metric owner migration, and source-mirrored capability reorganization."
 
 [exclusions]
 items = [
   "atomistic models and adapters",
   "potential-specific models and campaigns",
-  "GMM and sklearn",
-  "PyPosPack and PyPosMat",
+  "GMM campaign analysis, plotting, scientific feature labels, and filesystem workflow orchestration beyond the extracted numeric GMM-conditioned KDE capability",
+  "unrelated PyPosPack/PyPosMat filesystem, MPI, calculator, plotting, and campaign code",
   "PyMatMC2",
   "legacy launch adapters",
   "universal behaviorless marker bases",

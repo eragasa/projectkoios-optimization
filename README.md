@@ -3,32 +3,81 @@
 `projectkoios-optimization` owns dependency-free optimization contracts and
 deterministic bounded algorithms under `projectkoios.optimization`.
 
-The package provides explicit ask/tell engines, versioned checkpoints,
-SplitMix64 uniform-box sampling, a generic sampler contract, slot-composed
-probability sampling with CDF/inverse-CDF behavior, weighted squared loss, bounded coordinate
-pattern search, and pure ranking/Pareto reports. Optional adapters provide an
-object-oriented positive-definite quadratic loss with NumPy dense and SciPy sparse
-backends. Forward evaluation and result
-handling remain separate injected ports. The package does not execute
-calculators, filesystems, subprocesses, networks, workflows, dispatch, retries,
-or persistence.
+The package provides explicit ask/tell engines, concrete typed optimizer state,
+SplitMix64 uniform-box sampling, generic sampling and probability contracts, weighted
+squared loss, weighted affine residual definitions, positive diagonal metric geometry,
+bounded coordinate pattern search, iterative Pareto optimization over interchangeable
+samplers, recursive Pareto-shell pullback, owner-authored shell-contrastive KDE sampling,
+and deterministic ranking reports. Capability-local optional implementations provide
+NumPy/SciPy probability behavior, PyPosPack-lineage global and GMM-conditioned Gaussian
+KDE parameter sampling, positive-definite quadratic losses, and affine-residual quadratic
+construction.
 
-The package root and core probability contracts are dependency-free. Explicit
-optional adapters are available through the `numpy` and `scipy` extras;
-they are imported only from `projectkoios.optimization.adapters`,
-`projectkoios.optimization.adapters.numpy`, and
-`projectkoios.optimization.adapters.scipy`. The quadratic facade selects NumPy by
-default and SciPy sparse storage when constructed with `sparse=True`.
+Package initializers intentionally perform no eager capability or backend imports.
+Consumers import exact owning modules:
+
+```python
+from projectkoios.optimization.sampling.uniform import UniformRandomSampler
+from projectkoios.optimization.sampling.scipy.gmm_kde import (
+    CovarianceStabilizationMethod,
+    ScipyGmmConditionedKdeSampler,
+)
+from projectkoios.optimization.sampling.scipy.kde import (
+    KdeBandwidthMethod,
+    ScipyGaussianKdeSampler,
+)
+from projectkoios.optimization.sampling.scipy.pareto_shells import (
+    ScipyParetoShellContrastiveKdeSampler,
+)
+from projectkoios.optimization.affine.affine import WeightedAffineResidualDefinition
+from projectkoios.optimization.affine.numpy.affine import (
+    NumpyWeightedAffineResidualQuadraticConstructor,
+)
+from projectkoios.optimization.multiobjective.factory import (
+    MultiObjectiveOptimizerFactory,
+)
+from projectkoios.optimization.probability.factory import ProbabilitySamplerFactory
+from projectkoios.optimization.metric.metric import PositiveDiagonalMetric
+from projectkoios.optimization.quadratic.quadratic import (
+    PositiveDefiniteQuadraticLoss,
+)
+```
+
+NumPy implementations live beneath each capability's `numpy` namespace; SciPy
+implementations live beneath its `scipy` namespace. Importing
+`projectkoios.optimization` alone imports neither capability modules nor optional
+backends. Affine-quadratic construction requires numerical full column rank under the
+selected backend's direct weighted-design least-squares policy and never regularizes a
+rejected system. Affine definitions and diagonal metrics consume ordered numeric tuples;
+scientific coordinate names, channel alignment, units, and nondimensionalization remain
+consumer-owned.
+
+Forward evaluation and result handling remain separate injected ports. The package does
+not execute calculators, filesystems, subprocesses, networks, workflows, dispatch,
+retries, or persistence.
+
+The provenance-bound `projectkoios.optimization.multiobjective.pareto` block originates
+in Eugene J. Ragasa's PhD work preserved across PyPosPack and multiple research
+repositories. Its iterative Pareto optimizer can use a different injected sampler at
+each stage. The
+performance-sensitive PyPosPack Pareto routine retains adaptive chunk pruning, with only
+the incomplete-final-batch defect corrected. This protected block must not be moved,
+split, or refactored without explicit human authorization. The recursive shell pullback
+and contrastive sampler are separately documented owner-authored research additions;
+they are not represented as recovered PyPosPack behavior. The reconstructed
+GMM-conditioned KDE remains separately provenance-bound to the historical GMM and
+cluster-sampling pipeline. Standard and irregular forward-evaluation comparisons are
+documented in [`benchmarks/README.md`](benchmarks/README.md).
 
 See [`TRANSFER.toml`](TRANSFER.toml) and
-[`docs/provenance/source-mapping.md`](docs/provenance/source-mapping.md) for the
-recovery-source and design-evidence mapping. Verification is software and
-bounded numerical verification only; it is not scientific validation.
+[`docs/provenance/source-mapping.md`](docs/provenance/source-mapping.md) for recovery and
+design-evidence mapping. Verification is software and bounded numerical verification
+only; it is not scientific validation.
 
 ## Development
 
 ```bash
-python -m pytest -q
+PYTHONPATH=src/python python -m pytest -q
 python -m ruff check .
 python -m ruff format --check .
 python -m mypy --strict src/python/projectkoios/optimization

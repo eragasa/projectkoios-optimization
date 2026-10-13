@@ -10,7 +10,7 @@ description = "Optimization contracts and algorithms for Project Koios"
 readme = "README.md"
 requires-python = ">=3.14"
 license = "Apache-2.0"
-license-files = ["LICENSE", "NOTICE"]
+license-files = ["LICENSE", "NOTICE", "licenses/*.txt"]
 authors = [
     { name = "Eugene Ragasa", email = "eugene@projectkoios.com" },
 ]
@@ -28,6 +28,18 @@ scipy = [
     "numpy>=2.3,<3",
     "scipy>=1.18,<2",
 ]
+gmm = [
+    "numpy>=2.3,<3",
+    "scipy>=1.18,<2",
+    "scikit-learn>=1.8,<2",
+]
+benchmark = [
+    "matplotlib>=3.11,<4",
+    "numpy>=2.3,<3",
+    "pymoo==0.6.2",
+    "scikit-learn==1.8.0",
+    "scipy>=1.18,<2",
+]
 development = [
     "build>=1.3,<2",
     "mypy>=2.3,<3",
@@ -37,8 +49,9 @@ development = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers"
+addopts = "--strict-markers --import-mode=importlib"
 markers = [
+    "unit: dependency-free contract and behavior verification",
     "integration: optional third-party integration verification",
     "numerical: bounded numerical verification without scientific-validation claims",
     "property: deterministic generated-case software verification",
@@ -62,5 +75,5 @@ files = ["src/python/projectkoios/optimization"]
 mypy_path = "src/python"
 
 [[tool.mypy.overrides]]
-module = ["numpy", "numpy.*", "scipy", "scipy.*"]
+module = ["numpy", "numpy.*", "scipy", "scipy.*", "sklearn", "sklearn.*"]
 ignore_missing_imports = true

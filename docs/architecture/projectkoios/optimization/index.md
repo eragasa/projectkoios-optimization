@@ -2,28 +2,49 @@
 
 ## Ownership index
 
-| Area | Current implementation | Owned behavior |
+| Capability | Current implementation | Owned behavior |
 |---|---|---|
-| Identity | [`identity.py`](../../../../src/python/projectkoios/optimization/identity.py) | immutable versioned optimizer identity and algorithm/checkpoint descriptor |
-| Records | [`records.py`](../../../../src/python/projectkoios/optimization/records.py) | bounds, spaces, candidates, raw evaluations, feedback, updates |
-| Ports | [`ports.py`](../../../../src/python/projectkoios/optimization/ports.py) | optimizer ask/tell, forward evaluator, results handler |
-| Checkpoints | [`checkpoint.py`](../../../../src/python/projectkoios/optimization/checkpoint.py) | canonical JSON, schema and digest validation |
-| Uniform algorithm | [`uniform.py`](../../../../src/python/projectkoios/optimization/uniform.py) | bounded SplitMix64 proposals, out-of-order tell |
-| Sampling | [`sampling/`](../../../../src/python/projectkoios/optimization/sampling/) | generic behaviorful sampler contract and exact immutable sample batches |
-| Probability | [`probability/`](../../../../src/python/projectkoios/optimization/probability/) | CDF/inverse-CDF products, uniform distributions, and slot-composed probability sampling |
-| Adapter-composed quadratic loss | [`adapters/quadratic.py`](../../../../src/python/projectkoios/optimization/adapters/quadratic.py) | unit-free completed-square loss selecting a NumPy dense or SciPy sparse backend |
-| NumPy adapters | [`adapters/numpy/`](../../../../src/python/projectkoios/optimization/adapters/numpy/) | optional NumPy probability functions, isolated RandomState source slot, and dense quadratic loss |
-| SciPy adapters | [`adapters/scipy/`](../../../../src/python/projectkoios/optimization/adapters/scipy/) | optional structural frozen-distribution CDF/PPF slots and sparse quadratic loss |
-| Pattern algorithm | [`pattern.py`](../../../../src/python/projectkoios/optimization/pattern.py) | bounded coordinate local search, resumable ask/tell |
-| Loss | [`loss.py`](../../../../src/python/projectkoios/optimization/loss.py) | positive-weight finite squared residual aggregation |
-| Reports | [`reports.py`](../../../../src/python/projectkoios/optimization/reports.py) | deterministic scalar ranking and Pareto membership |
+| Validation | [`validation/`](../../../../src/python/projectkoios/optimization/validation/) | finite scalar and identifier boundaries shared by maintained numerical capabilities |
+| Engines | [`engines/`](../../../../src/python/projectkoios/optimization/engines/) | injected evaluation/result handling and scalar weighted handling |
+| Multi-objective | [`multiobjective/`](../../../../src/python/projectkoios/optimization/multiobjective/) | optimizer base, Pareto front/set pullback, and optimized PyPosPack selection |
+| Parameter spaces | [`spaces/`](../../../../src/python/projectkoios/optimization/spaces/) | finite ordered closed parameter boxes |
+| Algorithms | [`algorithms/`](../../../../src/python/projectkoios/optimization/algorithms/) | scalar coordinate search and intrinsic typed state |
+| Sampling | [`sampling/`](../../../../src/python/projectkoios/optimization/sampling/) | uniform sampling, PyPosPack-lineage global and GMM-conditioned KDE, owner-authored shell contrast, and generic scalar sampling contracts |
+| Probability | [`probability/`](../../../../src/python/projectkoios/optimization/probability/) | dependency-free distributions and sampling plus capability-local NumPy/SciPy implementations |
+| Affine residuals | [`affine/`](../../../../src/python/projectkoios/optimization/affine/) | immutable weighted affine residuals, checked quadratic inputs, and capability-local NumPy/SciPy constructors |
+| Quadratic loss | [`quadratic/`](../../../../src/python/projectkoios/optimization/quadratic/) | unit-free completed-square facade and capability-local NumPy dense/SciPy sparse implementations |
+| Metric geometry | [`metric/`](../../../../src/python/projectkoios/optimization/metric/) | positive diagonal unit-free primal and dual geometry over ordered tuples |
+| Reports | [`reports/`](../../../../src/python/projectkoios/optimization/reports/) | deterministic scalar ranking using the engine block's Pareto selector |
 
-The core namespace is dependency-free and has no calculator, filesystem,
-subprocess, network, dispatch, retry, persistence, or workflow authority. NumPy
-and SciPy bindings are explicit optional backend adapter modules and are not
-imported by the package root. See the [`PositiveDefiniteQuadraticLoss` architecture](adapters/PositiveDefiniteQuadraticLoss/index.md)
-for dense/sparse backend selection. Atomistic and potential models, campaigns, GMM,
-PyPosPack, PyPosMat, and PyMatMC2 are outside this repository.
+## Import boundary
 
-See [source mapping](../../../provenance/source-mapping.md) for exact recovery
-and architecture source-lineage evidence.
+`projectkoios.optimization.__init__` intentionally imports no capabilities. Capability
+and backend package initializers are also import-empty. Consumers import the exact
+owning module they use, for example:
+
+```python
+from projectkoios.optimization.affine.affine import WeightedAffineResidualDefinition
+from projectkoios.optimization.affine.numpy.affine import (
+    NumpyWeightedAffineResidualQuadraticConstructor,
+)
+from projectkoios.optimization.quadratic.quadratic import (
+    PositiveDefiniteQuadraticLoss,
+)
+```
+
+This prevents package integration from eagerly importing unrelated behavior or optional
+NumPy/SciPy backends. The core package remains dependency-free; optional implementations
+are located beneath the capability they implement.
+
+The package has no calculator, filesystem, subprocess, network, dispatch, retry,
+persistence, or workflow authority. Atomistic and potential models, campaigns, GMM
+plotting and scientific analysis, unrelated PyPosPack/PyPosMat machinery, and PyMatMC2
+are outside this repository. The retained PyPosPack Pareto and GMM/KDE numerical
+behaviors are provenance- and license-bound under their owning capabilities.
+
+See [multi-objective optimization](multiobjective/index.md),
+[engines](engines/index.md), [parameter spaces](spaces/index.md),
+[affine residuals](affine/index.md), [quadratic loss](quadratic/index.md),
+[diagonal metric geometry](metric/index.md), and
+[source mapping](../../../provenance/source-mapping.md) for detailed contracts and
+lineage evidence.

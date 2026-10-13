@@ -1,5 +1,3 @@
-"""Generic deterministic sampler contracts."""
+"""Generic behaviorful sampling contracts."""
 
-from .base import Sampler, SamplingError
-
-__all__ = ["Sampler", "SamplingError"]
+__all__: list[str] = []
