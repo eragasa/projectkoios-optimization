@@ -7,17 +7,21 @@ The package provides explicit ask/tell engines, concrete typed optimizer state,
 SplitMix64 uniform-box sampling, generic sampling and probability contracts, weighted
 squared loss, weighted affine residual definitions, positive diagonal metric geometry,
 bounded coordinate pattern search, iterative Pareto optimization over interchangeable
-samplers, recursive Pareto-shell pullback, owner-authored shell-contrastive KDE sampling,
-and deterministic ranking reports. Capability-local optional implementations provide
-NumPy/SciPy probability behavior, PyPosPack-lineage global and GMM-conditioned Gaussian
-KDE parameter sampling, positive-definite quadratic losses, and affine-residual quadratic
-construction.
+samplers, standalone Gaussian-mixture clustering, recursive Pareto-shell pullback,
+owner-authored shell-contrastive KDE sampling, and deterministic ranking reports.
+Capability-local optional implementations provide NumPy/SciPy probability behavior,
+PyPosPack-lineage global and GMM-conditioned Gaussian KDE parameter sampling,
+KSD-lineage BIC-selected Gaussian-mixture clustering, positive-definite quadratic losses,
+and affine-residual quadratic construction.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
 
 ```python
 from projectkoios.optimization.sampling.uniform import UniformRandomSampler
+from projectkoios.optimization.clustering.scipy.gmm import (
+    ScipyGaussianMixtureClusterer,
+)
 from projectkoios.optimization.sampling.scipy.gmm_kde import (
     CovarianceStabilizationMethod,
     ScipyGmmConditionedKdeSampler,

@@ -19,14 +19,38 @@ engine tree `9a58c5fa4ce0240c55377bf2347df492d101ff6a`.
 |---|---|---|---|
 | `python/src/ksdft2effmass/application/engines/base.py` | `33ca76648401deacf8938cca7e1ff910137f2c95` | `56023cc3232cf8d5d149a8000f714be3601f11d2fae5df8195115c3fe0d26f49` | behaviorful engine ports and explicit concrete factory methods, without the generic execute base or passive identity records |
 | `python/src/ksdft2effmass/application/engines/potential_fitting.py` | `d5fac55227e5c41fddd7855ddf135c00a0456c25` | `c457beb0507f575a3f03935037545d9983da63fbd63546dcdfe380eb89cabb1e` | bounds, SplitMix64 sampling, weighted loss, coordinate-pattern policy, and result records |
+| `python/src/ksdft2effmass/application/engines/gmm.py` | `d125af3779452aebb91f2e93fd29c78ed48fb6a1` | `f879ca06255dd1a0efbad07ffaa93535c762e47a60cd1e5283cbcedff35380ba` | standardized full-covariance model inventory, AIC/BIC diagnostics, BIC selection, canonical components, and exact observation-row assignments |
 
 The source imports from `ksdft2effmass.provenance`, `pathlib`, and application
 engine modules. The core extracted implementation imports only the Python
 standard library and `projectkoios.optimization`; application provenance,
 filesystem paths, potential/QoI models, evaluator implementations, and report
-writers are not imported. NumPy and SciPy are available only through explicit
-capability-local backend modules. Package initializers import no capabilities or
-optional backends.
+writers are not imported. NumPy, SciPy, and scikit-learn are available only through
+explicit capability-local backend modules. Package initializers import no capabilities
+or optional backends.
+
+## Standalone KSD Gaussian-mixture clustering source
+
+The standalone clustering capability is recovered from KSD commit
+`ff50d06e74ad094ec84e53149d1717d66e2154fa`, path
+`python/src/ksdft2effmass/application/engines/gmm.py`, blob
+`d125af3779452aebb91f2e93fd29c78ed48fb6a1`, SHA-256
+`f879ca06255dd1a0efbad07ffaa93535c762e47a60cd1e5283cbcedff35380ba`.
+It preserves population standardization, exact-zero scale replacement by `1.0`, the
+bounded one-through-`floor(n/2)` component inventory, full covariance, caller-supplied
+random seed, `n_init=5`, `max_iter=500`, `reg_covar=1e-8`, AIC/BIC diagnostics, BIC
+selection with component-count tie breaking, canonical mean ordering, posterior
+assignment probabilities, and exact input-row pullback. The single-observation path
+remains an explicit standardized one-component result with zero covariance.
+
+Potential, QoI, report, campaign, and feature-name records are replaced by an ordered
+finite numeric matrix and zero-based row identities. The capability returns clustering
+evidence only; it does not sample, compress an archive, or alter the separately
+protected PyPosPack-lineage GMM-conditioned KDE pipeline. Its bounded numerical test is
+recovered from
+`python/tests/numerical_verification/ksdft2effmass/application/engines/test__PotentialGmmCandidateClusterer.py`,
+blob `ceb36b425334f30594000d73256a44ee055c75e6`, SHA-256
+`bc03e897edb6e5e19e715d32d94d7179005b52d663110e653f443a5a966daa5b`.
 
 ## PyPosPack iterative Pareto and performance sources
 
@@ -143,6 +167,9 @@ Accepted behavioral evidence:
   sequence.
 - `test__BoundedCoordinatePatternLossMinimizer.py` → ask/tell bounded quadratic
   numerical case and resumability equivalence.
+- `test__PotentialGmmCandidateClusterer.py` → numeric-only standardized GMM model
+  selection, canonical assignment, posterior-probability, awkward-input, and
+  single-observation tests.
 
 `test__BaseEngine.py` is not ported because a universal execute base conflicts
 with the accepted behaviorful optimizer contract. The exact PyPosPack Pareto selector, global Gaussian KDE sampler, and GMM-conditioned local KDE sampler are
@@ -206,6 +233,8 @@ is a new narrow structural adapter rather than recovered behavior.
 - Each resumable numerical algorithm exposes its own immutable typed state record.
   JSON, checksums, persistence, and lifecycle wrapping remain outside Optimization.
 - Evaluation, report writing, workflow, and provenance correlation were removed.
+- Standalone GMM clustering consumes unnamed numeric rows; feature names, scientific
+  meaning, campaign identity, and model acceptance remain consumer-owned.
 - Ranking ties use `(loss, candidate_id)`; search accepts only strict
   improvement and therefore retains earlier proposal order on ties.
 - Zero and negative weights are rejected. Every numeric public record rejects

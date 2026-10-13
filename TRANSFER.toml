@@ -64,6 +64,20 @@ targets = [
 adaptation = "Generalized potential-specific records; separated ask/tell from evaluation; added fixed/zero-dimensional support and typed algorithm state; retained SplitMix64 equations, weighted-square arithmetic, and strict pattern-search improvement."
 
 [[files]]
+source_role = "recovery-primary"
+origin = "KSD maintained application GMM clustering behavior"
+source_path = "python/src/ksdft2effmass/application/engines/gmm.py"
+blob = "d125af3779452aebb91f2e93fd29c78ed48fb6a1"
+sha256 = "f879ca06255dd1a0efbad07ffaa93535c762e47a60cd1e5283cbcedff35380ba"
+targets = [
+  "src/python/projectkoios/optimization/clustering/gmm.py",
+  "src/python/projectkoios/optimization/clustering/scipy/gmm.py",
+  "tests/projectkoios/optimization/clustering/test__GaussianMixtureClustering__unit.py",
+  "tests/projectkoios/optimization/clustering/scipy/test__ScipyGaussianMixtureClusterer__integration.py",
+]
+adaptation = "Removed potential, QoI, report, campaign, and feature-name semantics; retained standardization, exact-zero scale replacement, bounded full-covariance model inventory, AIC/BIC diagnostics, BIC selection, canonical component order, posterior assignment probability, exact input-row pullback, and the single-observation result."
+
+[[files]]
 source_repository = "https://github.com/eragasa/pypospack"
 source_commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
 source_path = "pypospack/pyposmat/engines/mc_sampler_iterate.py"
@@ -159,6 +173,20 @@ source_paths = [
   "python/tests/numerical_verification/ksdft2effmass/application/engines/test__BoundedCoordinatePatternLossMinimizer.py",
 ]
 targets = ["tests/projectkoios/optimization"]
+
+[[tests]]
+role = "numerical-gmm"
+commit = "ff50d06e74ad094ec84e53149d1717d66e2154fa"
+source_paths = [
+  "python/tests/numerical_verification/ksdft2effmass/application/engines/test__PotentialGmmCandidateClusterer.py",
+]
+source_blobs = ["ceb36b425334f30594000d73256a44ee055c75e6"]
+source_sha256 = ["bc03e897edb6e5e19e715d32d94d7179005b52d663110e653f443a5a966daa5b"]
+targets = [
+  "tests/projectkoios/optimization/clustering/test__GaussianMixtureClustering__unit.py",
+  "tests/projectkoios/optimization/clustering/scipy/test__ScipyGaussianMixtureClusterer__integration.py",
+]
+adaptation = "Mapped the separated-groups BIC and canonical-assignment regression to unnamed numeric rows; added dependency-free record validation, exact ordered pullback, constant-feature, deterministic, single-observation, empty-input, and awkward numeric-boundary coverage."
 
 [[tests]]
 role = "software-numerical-property-integration"

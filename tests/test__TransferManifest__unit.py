@@ -55,6 +55,28 @@ def test_affine_metric_candidate_provenance_is_exact_and_parseable() -> None:
     assert all((ROOT / target).exists() for target in targets)
 
 
+def test_gmm_clustering_recovery_provenance_is_exact() -> None:
+    transfer = tomllib.loads((ROOT / "TRANSFER.toml").read_text(encoding="utf-8"))
+
+    source = next(
+        item
+        for item in transfer["files"]
+        if item["source_path"] == "python/src/ksdft2effmass/application/engines/gmm.py"
+    )
+    assert source["blob"] == "d125af3779452aebb91f2e93fd29c78ed48fb6a1"
+    assert source["sha256"] == (
+        "f879ca06255dd1a0efbad07ffaa93535c762e47a60cd1e5283cbcedff35380ba"
+    )
+    evidence = next(
+        item for item in transfer["tests"] if item["role"] == "numerical-gmm"
+    )
+    assert evidence["commit"] == "ff50d06e74ad094ec84e53149d1717d66e2154fa"
+    assert evidence["source_blobs"] == ["ceb36b425334f30594000d73256a44ee055c75e6"]
+    assert evidence["source_sha256"] == [
+        "bc03e897edb6e5e19e715d32d94d7179005b52d663110e653f443a5a966daa5b"
+    ]
+
+
 def test_destination_license_retains_recorded_apache_bytes() -> None:
     digest = hashlib.sha256((ROOT / "LICENSE").read_bytes()).hexdigest()
 
