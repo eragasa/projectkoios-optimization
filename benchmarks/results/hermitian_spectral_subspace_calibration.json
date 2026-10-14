@@ -1,0 +1,104 @@
+{
+  "calibration_schema": 2,
+  "case_count": 256,
+  "dimension_maximum": 8,
+  "dimension_minimum": 1,
+  "implementation_sha256": "b8ee5df7aa09f46f2c5a3d3197b7bdcabfa61c1dc825b0c9754e3134357907be",
+  "mpmath_decimal_precisions": [
+    100,
+    160
+  ],
+  "mpmath_version": "1.4.1",
+  "numerical_test_sha256": "14deab5138c34ae1f95a981e2eb90700f5ba06a29460851bd0fd698f5a3beab1",
+  "numpy_backend_sha256": "6c2323231e5209d15988781387ec2facb760d07a346e05ad92bce247d57e8602",
+  "numpy_configuration": {
+    "Build Dependencies": {
+      "blas": {
+        "detection method": "system",
+        "found": true,
+        "include directory": "unknown",
+        "lib directory": "unknown",
+        "name": "accelerate",
+        "openblas configuration": "unknown",
+        "pc file directory": "unknown",
+        "version": "unknown"
+      },
+      "lapack": {
+        "detection method": "system",
+        "found": true,
+        "include directory": "unknown",
+        "lib directory": "unknown",
+        "name": "accelerate",
+        "openblas configuration": "unknown",
+        "pc file directory": "unknown",
+        "version": "unknown"
+      }
+    },
+    "Compilers": {
+      "c": {
+        "commands": "cc",
+        "linker": "ld64",
+        "name": "clang",
+        "version": "15.0.0"
+      },
+      "c++": {
+        "commands": "c++",
+        "linker": "ld64",
+        "name": "clang",
+        "version": "15.0.0"
+      },
+      "cython": {
+        "commands": "cython",
+        "linker": "cython",
+        "name": "cython",
+        "version": "3.3.0"
+      }
+    },
+    "Machine Information": {
+      "build": {
+        "cpu": "aarch64",
+        "endian": "little",
+        "family": "aarch64",
+        "system": "darwin"
+      },
+      "host": {
+        "cpu": "aarch64",
+        "endian": "little",
+        "family": "aarch64",
+        "system": "darwin"
+      }
+    },
+    "Python Information": {
+      "version": "3.14"
+    },
+    "SIMD Extensions": {
+      "baseline": [
+        "NEON",
+        "NEON_FP16",
+        "NEON_VFPV4",
+        "ASIMD"
+      ],
+      "found": [
+        "ASIMDHP",
+        "ASIMDDP"
+      ],
+      "not found": [
+        "ASIMDFHM"
+      ]
+    }
+  },
+  "numpy_random_seed": 20261014,
+  "numpy_version": "2.5.4",
+  "observed": {
+    "maximum_eigenvalue_absolute_error": 2.6645352591003757e-15,
+    "maximum_eigenvalue_acceptance_bound": 5.87785870198531e-12,
+    "maximum_eigenvalue_bound_ratio": 0.0013789348858872256,
+    "maximum_input_entry_magnitude": 2.307083331639289,
+    "maximum_projector_acceptance_bound": 4.761313197840545e-11,
+    "maximum_projector_bound_ratio": 0.004160115436319923,
+    "maximum_projector_frobenius_error": 2.378312844692692e-15
+  },
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "python_random_seed": 20261014,
+  "python_version": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 17.0.0 (clang-1700.6.4.2)]"
+}

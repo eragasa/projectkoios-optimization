@@ -75,6 +75,7 @@ explicit_package_bases = true
 files = [
     "src/python/projectkoios/numerics",
     "src/python/projectkoios/optimization",
+    "tests/projectkoios/numerics/linalg",
 ]
 mypy_path = "src/python"
 
