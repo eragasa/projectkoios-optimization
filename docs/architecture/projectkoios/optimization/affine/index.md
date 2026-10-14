@@ -28,6 +28,13 @@ multiplication order would prematurely overflow or underflow.
 `WeightedAffineResidualQuadraticConstructor` backend selector. Importing this module
 does not import NumPy or SciPy.
 
+[`ComplexAffineResidualQuadraticConstructor`](ComplexAffineResidualQuadraticConstructor/index.md)
+adds a nominal dense capability for complex observation rows with real parameter
+coordinates. Callers retain flattening, normalization, units, labels, and scientific
+meaning; the owner solves the stacked real/imaginary least-squares system directly,
+forms the real symmetric normal matrix, and evaluates the minimum from the fitted
+residual.
+
 `affine/numpy/affine.py` applies `numpy.linalg.lstsq(..., rcond=None)` directly to the
 weighted design and returns a dense quadratic. `affine/scipy/affine.py` applies
 `scipy.linalg.lstsq(..., cond=None, lapack_driver="gelsd")` and returns a SciPy sparse
@@ -42,6 +49,7 @@ scientific validation.
 
 ## Exclusions
 
-This capability does not own physical dimensions, normalization policy, box
-feasibility, support optimization, witness or set-distance search, interval arithmetic,
-directed rounding, certificate interpretation, or scientific disposition.
+These capabilities do not own physical dimensions, normalization policy, tensor
+semantics, box feasibility, support optimization, witness or set-distance search,
+interval arithmetic, directed rounding, certificate interpretation, or scientific
+disposition.
