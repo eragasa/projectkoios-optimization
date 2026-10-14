@@ -10,9 +10,14 @@ from projectkoios.optimization.quadratic.numpy.quadratic import (  # noqa: E402
 )
 from projectkoios.optimization.quadratic.quadratic import (  # noqa: E402
     PositiveDefiniteQuadraticLoss,
+    _QuadraticLossBackend,
 )
 
 pytestmark = pytest.mark.integration
+
+
+def test_numpy_quadratic_backend_is_an_explicit_nominal_subclass() -> None:
+    assert issubclass(NumpyPositiveDefiniteQuadraticLoss, _QuadraticLossBackend)
 
 
 def test_dense_quadratic_uses_numpy_backend_and_retains_tuple_state() -> None:

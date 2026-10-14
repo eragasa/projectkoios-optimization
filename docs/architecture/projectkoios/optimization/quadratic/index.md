@@ -47,8 +47,16 @@ Scientific consumers adapt already normalized coordinates and matrices to this A
 PhysKit owns unit-bearing wrappers and dimensional conversion. Callers own loss meaning,
 normalization, tolerances, thresholds, and acceptance policy.
 
+## Periodic-1D migration architecture
+
+Reusable two-dimensional rectangle minimization, full-ellipsoid support, and ordered
+finite-family selection are specified in the
+[constrained-quadratic architecture](constrained/index.md) and implemented beneath the
+capability-local dense, sparse, factory, and selection modules.
+
 ## Navigation
 
 - [`PositiveDefiniteQuadraticLoss`](PositiveDefiniteQuadraticLoss/index.md)
+- [Constrained-quadratic migration architecture](constrained/index.md)
 - [`WeightedAffineResidualQuadraticConstructor`](../affine/WeightedAffineResidualQuadraticConstructor/index.md)
 - [Package ownership index](../index.md)

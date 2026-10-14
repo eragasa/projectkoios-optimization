@@ -2,25 +2,45 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from abc import ABC, abstractmethod
 
 
-class _QuadraticLossBackend(Protocol):
-    @property
-    def center(self) -> tuple[float, ...]: ...
-
-    @property
-    def matrix(self) -> object: ...
+class _QuadraticLossBackend(ABC):
+    """Nominal internal boundary for quadratic storage and evaluation backends."""
 
     @property
-    def minimum_squared_loss(self) -> float: ...
+    @abstractmethod
+    def center(self) -> tuple[float, ...]:
+        """Return normalized center coordinates."""
+        raise NotImplementedError
 
     @property
-    def dimension(self) -> int: ...
+    @abstractmethod
+    def matrix(self) -> object:
+        """Return the backend matrix representation."""
+        raise NotImplementedError
 
-    def squared_loss(self, coordinates: tuple[float, ...], /) -> float: ...
+    @property
+    @abstractmethod
+    def minimum_squared_loss(self) -> float:
+        """Return the loss at the center."""
+        raise NotImplementedError
 
-    def root_loss(self, coordinates: tuple[float, ...], /) -> float: ...
+    @property
+    @abstractmethod
+    def dimension(self) -> int:
+        """Return the positive coordinate dimension."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def squared_loss(self, coordinates: tuple[float, ...], /) -> float:
+        """Evaluate the completed-square loss."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def root_loss(self, coordinates: tuple[float, ...], /) -> float:
+        """Evaluate the square root of the completed-square loss."""
+        raise NotImplementedError
 
 
 class PositiveDefiniteQuadraticLoss:

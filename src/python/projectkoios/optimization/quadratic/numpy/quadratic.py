@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from typing import final
 
 import numpy as np
 import numpy.typing as npt
 
 from ...validation import validation
 from .. import validation as quadratic_validation
+from ..quadratic import _QuadraticLossBackend
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class NumpyPositiveDefiniteQuadraticLoss:
+class NumpyPositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
     """Evaluate a completed-square loss with dense NumPy linear algebra.
 
     Parameters

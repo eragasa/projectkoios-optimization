@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, final
 
 import numpy as np
 import scipy.sparse as sp
@@ -11,9 +11,11 @@ import scipy.sparse.linalg as spla
 
 from ...validation import validation
 from .. import validation as quadratic_validation
+from ..quadratic import _QuadraticLossBackend
 
 
-class ScipySparsePositiveDefiniteQuadraticLoss:
+@final
+class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
     """Evaluate a completed-square loss with sparse SciPy linear algebra.
 
     Parameters
