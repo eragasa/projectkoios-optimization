@@ -33,7 +33,7 @@ def _metadata() -> bytes:
     value = f"""Metadata-Version: 2.4
 Name: {_NAME}
 Version: {_VERSION}
-Summary: Optimization contracts and algorithms for Project Koios
+Summary: Numerics and optimization for Project Koios
 Author-email: Eugene Ragasa <eugene@projectkoios.com>
 License-Expression: Apache-2.0
 License-File: LICENSE
@@ -59,6 +59,7 @@ Requires-Dist: scikit-learn==1.8.0; extra == 'benchmark'
 Requires-Dist: scipy<2,>=1.18; extra == 'benchmark'
 Provides-Extra: development
 Requires-Dist: build<2,>=1.3; extra == 'development'
+Requires-Dist: mpmath<2,>=1.3; extra == 'development'
 Requires-Dist: mypy<3,>=2.3; extra == 'development'
 Requires-Dist: pytest<10,>=9.1; extra == 'development'
 Requires-Dist: ruff<1,>=0.16; extra == 'development'
@@ -111,11 +112,12 @@ def _source_files() -> tuple[Path, ...]:
 
 def _wheel_files() -> dict[str, bytes]:
     files: dict[str, bytes] = {}
-    package = _ROOT / "src/python/projectkoios/optimization"
-    for path in sorted(package.rglob("*"), key=lambda item: item.as_posix()):
-        if path.is_file() and (path.suffix == ".py" or path.name == "py.typed"):
-            relative = path.relative_to(package).as_posix()
-            files[f"projectkoios/optimization/{relative}"] = path.read_bytes()
+    for package_name in ("numerics", "optimization"):
+        package = _ROOT / f"src/python/projectkoios/{package_name}"
+        for path in sorted(package.rglob("*"), key=lambda item: item.as_posix()):
+            if path.is_file() and (path.suffix == ".py" or path.name == "py.typed"):
+                relative = path.relative_to(package).as_posix()
+                files[f"projectkoios/{package_name}/{relative}"] = path.read_bytes()
     files[f"{_DIST_INFO}/licenses/LICENSE"] = (_ROOT / "LICENSE").read_bytes()
     files[f"{_DIST_INFO}/licenses/NOTICE"] = (_ROOT / "NOTICE").read_bytes()
     files[f"{_DIST_INFO}/licenses/PyPosPack-BSD-2-Clause.txt"] = (
