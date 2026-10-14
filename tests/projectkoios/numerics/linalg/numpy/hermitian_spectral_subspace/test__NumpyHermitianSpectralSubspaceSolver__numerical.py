@@ -24,6 +24,7 @@ from projectkoios.numerics.linalg.hermitian_spectral_subspace import (
 from projectkoios.numerics.linalg.numpy.hermitian_spectral_subspace import (
     NumpyHermitianSpectralSubspaceSolver,
 )
+from projectkoios.numerics.numpy.typing import Complex128Array
 
 pytestmark = pytest.mark.numerical
 
@@ -109,7 +110,7 @@ def _reference(
         )
 
 
-def _as_tuple(matrix: np.ndarray) -> HermitianSpectralMatrix:
+def _as_tuple(matrix: Complex128Array) -> HermitianSpectralMatrix:
     return tuple(tuple(complex(value) for value in row) for row in matrix)
 
 

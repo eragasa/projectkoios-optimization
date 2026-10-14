@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
-import numpy.typing as npt
 
+from ....numerics.numpy.typing import Float64Array, NumpyArrayLike
 from ..base import (
     InverseProbabilityDistributionFunction,
     ProbabilityDistributionFunction,
@@ -16,13 +16,10 @@ from ..base import (
 from ..distributions import UniformProbabilityDistributionParameters
 from ..sampling import UnitUniformSampler
 
-type NumpyProbabilityCallable = Callable[
-    [npt.NDArray[np.float64]],
-    npt.ArrayLike,
-]
+type NumpyProbabilityCallable = Callable[[Float64Array], NumpyArrayLike]
 
 
-def _one_float(value: npt.ArrayLike, name: str) -> float:
+def _one_float(value: NumpyArrayLike, name: str) -> float:
     try:
         result = np.asarray(value, dtype=np.float64)
     except (TypeError, ValueError, OverflowError) as error:

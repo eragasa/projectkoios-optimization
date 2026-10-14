@@ -9,15 +9,21 @@ import os
 import platform
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 import pytest
 
-mp: Any = pytest.importorskip("mpmath")
-np: Any = pytest.importorskip("numpy")
-scipy: Any = pytest.importorskip("scipy")
-optimize: Any = pytest.importorskip("scipy.optimize")
+pytest.importorskip("mpmath")
+pytest.importorskip("numpy")
+pytest.importorskip("scipy")
 
+import mpmath as mp  # noqa: E402
+import numpy as np  # noqa: E402
+import scipy  # noqa: E402
+from scipy import optimize  # noqa: E402
+
+from projectkoios.numerics.numpy.typing import Float64Array  # noqa: E402
+from projectkoios.numerics.scipy.typing import OptimizeResult  # noqa: E402
 from projectkoios.optimization.quadratic.numpy.box import (  # noqa: E402
     NumpyBoxQuadraticMinimizer,
 )
@@ -31,8 +37,12 @@ from projectkoios.optimization.spaces.parameters import (  # noqa: E402
 
 pytestmark = pytest.mark.numerical
 
+type _JsonValue = (
+    None | bool | int | float | str | list[_JsonValue] | dict[str, _JsonValue]
+)
 
-def _space(lower: Any, upper: Any) -> ParameterSpace:
+
+def _space(lower: Float64Array, upper: Float64Array) -> ParameterSpace:
     return ParameterSpace(
         tuple(
             ParameterBound(f"x_{index}", float(low), float(high))
@@ -67,29 +77,32 @@ def test_seeded_and_consumer_dimensions_agree_with_scipy_reference() -> None:
             actual = solver.solve(loss, _space(lower, upper))
 
             def objective(
-                point: Any,
-                center_reference: Any = center_array,
-                matrix_reference: Any = matrix_array,
+                point: Float64Array,
+                center_reference: Float64Array = center_array,
+                matrix_reference: Float64Array = matrix_array,
                 minimum_reference: float = minimum_squared_loss,
             ) -> float:
                 delta = np.asarray(point, dtype=np.float64) - center_reference
                 return minimum_reference + float(delta @ matrix_reference @ delta)
 
             def gradient(
-                point: Any,
-                center_reference: Any = center_array,
-                matrix_reference: Any = matrix_array,
-            ) -> Any:
+                point: Float64Array,
+                center_reference: Float64Array = center_array,
+                matrix_reference: Float64Array = matrix_array,
+            ) -> Float64Array:
                 delta = np.asarray(point, dtype=np.float64) - center_reference
                 return 2.0 * matrix_reference @ delta
 
-            reference = optimize.minimize(
-                objective,
-                np.clip(center_array, lower, upper),
-                jac=gradient,
-                method="L-BFGS-B",
-                bounds=tuple(zip(lower, upper, strict=True)),
-                options={"ftol": 1.0e-15, "gtol": 1.0e-12, "maxiter": 4000},
+            reference = cast(
+                OptimizeResult,
+                optimize.minimize(
+                    objective,
+                    np.clip(center_array, lower, upper),
+                    jac=gradient,
+                    method="L-BFGS-B",
+                    bounds=tuple(zip(lower, upper, strict=True)),
+                    options={"ftol": 1.0e-15, "gtol": 1.0e-12, "maxiter": 4000},
+                ),
             )
             assert reference.success, reference.message
             coordinate_error = max(
@@ -139,28 +152,31 @@ def test_seeded_and_consumer_dimensions_agree_with_scipy_reference() -> None:
             actual = solver.solve(loss, _space(lower, upper))
 
             def consumer_objective(
-                point: Any,
-                center_reference: Any = center_array,
-                matrix_reference: Any = matrix_array,
+                point: Float64Array,
+                center_reference: Float64Array = center_array,
+                matrix_reference: Float64Array = matrix_array,
             ) -> float:
                 delta = np.asarray(point, dtype=np.float64) - center_reference
                 return float(delta @ matrix_reference @ delta)
 
             def consumer_gradient(
-                point: Any,
-                center_reference: Any = center_array,
-                matrix_reference: Any = matrix_array,
-            ) -> Any:
+                point: Float64Array,
+                center_reference: Float64Array = center_array,
+                matrix_reference: Float64Array = matrix_array,
+            ) -> Float64Array:
                 delta = np.asarray(point, dtype=np.float64) - center_reference
                 return 2.0 * matrix_reference @ delta
 
-            reference = optimize.minimize(
-                consumer_objective,
-                np.clip(center_array, lower, upper),
-                jac=consumer_gradient,
-                method="L-BFGS-B",
-                bounds=tuple(zip(lower, upper, strict=True)),
-                options={"ftol": 1.0e-15, "gtol": 1.0e-12, "maxiter": 4000},
+            reference = cast(
+                OptimizeResult,
+                optimize.minimize(
+                    consumer_objective,
+                    np.clip(center_array, lower, upper),
+                    jac=consumer_gradient,
+                    method="L-BFGS-B",
+                    bounds=tuple(zip(lower, upper, strict=True)),
+                    options={"ftol": 1.0e-15, "gtol": 1.0e-12, "maxiter": 4000},
+                ),
             )
             assert reference.success, reference.message
             coordinate_error = max(
@@ -265,7 +281,10 @@ def test_seeded_and_consumer_dimensions_agree_with_scipy_reference() -> None:
         parameter_space_path = repository_root / (
             "src/python/projectkoios/optimization/spaces/parameters.py"
         )
-        numpy_configuration = cast(dict[str, Any], np.show_config(mode="dicts"))
+        numpy_configuration = cast(
+            dict[str, _JsonValue],
+            np.show_config(mode="dicts"),
+        )
         python_information = numpy_configuration.get("Python Information")
         if isinstance(python_information, dict):
             python_information.pop("path", None)
@@ -338,7 +357,7 @@ def _mp_face_reference(
     center: tuple[float, ...],
     matrix: tuple[tuple[float, ...], ...],
     bounds: tuple[tuple[float, float], ...],
-) -> tuple[tuple[Any, ...], Any]:
+) -> tuple[tuple[float, ...], float]:
     mp.mp.dps = 100
     center_mp = tuple(
         mp.mpf(value.as_integer_ratio()[0]) / value.as_integer_ratio()[1]
@@ -358,8 +377,8 @@ def _mp_face_reference(
         )
         for lower, upper in bounds
     )
-    best_point: tuple[Any, ...] | None = None
-    best_value: Any = None
+    best_point: tuple[mp.mpf, ...] | None = None
+    best_value: mp.mpf | None = None
     for statuses in itertools.product((0, 1, 2), repeat=len(center)):
         point = list(center_mp)
         free = [index for index, status in enumerate(statuses) if status == 0]
@@ -398,7 +417,7 @@ def _mp_face_reference(
             best_value = value
     if best_point is None or best_value is None:
         raise AssertionError("high-precision enumeration found no candidate")
-    return best_point, best_value
+    return tuple(float(value) for value in best_point), float(best_value)
 
 
 def test_ill_conditioned_four_dimensional_case_agrees_with_high_precision() -> None:

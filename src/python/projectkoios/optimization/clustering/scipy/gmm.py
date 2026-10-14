@@ -10,10 +10,11 @@ sampling.
 from __future__ import annotations
 
 from importlib import metadata
-from typing import Any, Protocol, cast
+from typing import Protocol, cast
 
 import numpy as np
 
+from ....numerics.numpy.typing import Float64Array, Int64Array
 from ...validation.validation import finite_float
 from ..gmm import (
     GaussianMixtureAssignment,
@@ -29,27 +30,21 @@ from ..gmm import (
 
 class _GaussianMixtureModel(Protocol):
     n_components: int
-    means_: np.ndarray[Any, np.dtype[np.float64]]
-    covariances_: np.ndarray[Any, np.dtype[np.float64]]
-    weights_: np.ndarray[Any, np.dtype[np.float64]]
+    means_: Float64Array
+    covariances_: Float64Array
+    weights_: Float64Array
     converged_: bool
     n_iter_: int
 
-    def fit(
-        self, values: np.ndarray[Any, np.dtype[np.float64]], /
-    ) -> _GaussianMixtureModel: ...
+    def fit(self, values: Float64Array, /) -> _GaussianMixtureModel: ...
 
-    def aic(self, values: np.ndarray[Any, np.dtype[np.float64]], /) -> float: ...
+    def aic(self, values: Float64Array, /) -> float: ...
 
-    def bic(self, values: np.ndarray[Any, np.dtype[np.float64]], /) -> float: ...
+    def bic(self, values: Float64Array, /) -> float: ...
 
-    def predict(
-        self, values: np.ndarray[Any, np.dtype[np.float64]], /
-    ) -> np.ndarray[Any, np.dtype[np.int64]]: ...
+    def predict(self, values: Float64Array, /) -> Int64Array: ...
 
-    def predict_proba(
-        self, values: np.ndarray[Any, np.dtype[np.float64]], /
-    ) -> np.ndarray[Any, np.dtype[np.float64]]: ...
+    def predict_proba(self, values: Float64Array, /) -> Float64Array: ...
 
 
 class ScipyGaussianMixtureClusterer:
@@ -134,7 +129,7 @@ class ScipyGaussianMixtureClusterer:
     @staticmethod
     def _matrix(
         observations: tuple[tuple[float, ...], ...],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+    ) -> Float64Array:
         rows: list[tuple[float, ...]] = []
         feature_count: int | None = None
         for row_index, row in enumerate(observations):
@@ -156,9 +151,9 @@ class ScipyGaussianMixtureClusterer:
 
     @staticmethod
     def _completed(
-        means: np.ndarray[Any, np.dtype[np.float64]],
-        scales: np.ndarray[Any, np.dtype[np.float64]],
-        standardized: np.ndarray[Any, np.dtype[np.float64]],
+        means: Float64Array,
+        scales: Float64Array,
+        standardized: Float64Array,
         model: _GaussianMixtureModel,
         scores: tuple[GaussianMixtureModelScore, ...],
     ) -> GaussianMixtureClusteringCompleted:
@@ -208,8 +203,8 @@ class ScipyGaussianMixtureClusterer:
 
     @staticmethod
     def _single_observation(
-        means: np.ndarray[Any, np.dtype[np.float64]],
-        scales: np.ndarray[Any, np.dtype[np.float64]],
+        means: Float64Array,
+        scales: Float64Array,
     ) -> GaussianMixtureClusteringCompleted:
         feature_count = len(means)
         return GaussianMixtureClusteringCompleted(

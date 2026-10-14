@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from typing import final
 
 import numpy as np
-import numpy.typing as npt
 
+from ....numerics.numpy.typing import Float64Array
 from ...validation import validation
 from .. import validation as quadratic_validation
 from ..quadratic import _QuadraticLossBackend
@@ -32,13 +32,13 @@ class NumpyPositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
     center: tuple[float, ...]
     matrix: tuple[tuple[float, ...], ...]
     minimum_squared_loss: float
-    _center_array: npt.NDArray[np.float64] = field(
+    _center_array: Float64Array = field(
         init=False,
         repr=False,
         compare=False,
         hash=False,
     )
-    _matrix_array: npt.NDArray[np.float64] = field(
+    _matrix_array: Float64Array = field(
         init=False,
         repr=False,
         compare=False,

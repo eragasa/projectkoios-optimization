@@ -7,6 +7,7 @@ from typing import final
 
 import numpy as np
 
+from ....numerics.numpy.typing import Float64Array
 from ...spaces.parameters import ParameterSpace
 from ..box import (
     BoxQuadraticBoundStatus,
@@ -193,9 +194,9 @@ def _snap_free_coordinate(
 
 
 def _initial_statuses(
-    point: np.ndarray,
-    lower: np.ndarray,
-    upper: np.ndarray,
+    point: Float64Array,
+    lower: Float64Array,
+    upper: Float64Array,
     /,
 ) -> list[BoxQuadraticBoundStatus]:
     statuses: list[BoxQuadraticBoundStatus] = []

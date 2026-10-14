@@ -1,0 +1,27 @@
+"""Shared precise array types for optional NumPy capability modules.
+
+Importing this module imports NumPy. Dependency-free contracts must therefore use
+built-in immutable records instead of these aliases; concrete NumPy implementations and
+their tests may import the aliases explicitly.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import numpy.typing as npt
+
+type NumpyArrayLike = npt.ArrayLike
+type BoolArray = npt.NDArray[np.bool_]
+type Complex128Array = npt.NDArray[np.complex128]
+type Float64Array = npt.NDArray[np.float64]
+type Int64Array = npt.NDArray[np.int64]
+type IntpArray = npt.NDArray[np.intp]
+
+__all__ = [
+    "BoolArray",
+    "Complex128Array",
+    "Float64Array",
+    "Int64Array",
+    "IntpArray",
+    "NumpyArrayLike",
+]

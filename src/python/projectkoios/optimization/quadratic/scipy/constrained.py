@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import math
 import warnings
-from typing import Any, final
+from typing import cast, final
 
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
+from ....numerics.scipy.typing import Float64SparseMatrix
 from ...spaces.parameters import ParameterSpace
 from ..constrained import (
     QuadraticSublevelSupportResult,
@@ -35,9 +36,10 @@ class ScipySparseRectangleQuadraticMinimizer2D(RectangleQuadraticMinimizer2D):
     ) -> RectangleQuadraticMinimum:
         if not loss.sparse:
             raise ValueError("SciPy sparse rectangle minimizer requires a sparse loss")
-        matrix: Any = loss.matrix
-        if not sp.issparse(matrix):
+        matrix_object = loss.matrix
+        if not sp.issparse(matrix_object):
             raise TypeError("sparse quadratic matrix must use a SciPy sparse format")
+        matrix = cast(Float64SparseMatrix, matrix_object)
         entries = (
             (float(matrix[0, 0]), float(matrix[0, 1])),
             (float(matrix[1, 0]), float(matrix[1, 1])),
@@ -60,9 +62,10 @@ class ScipySparseQuadraticSublevelSupportSolver(QuadraticSublevelSupportSolver):
     ) -> QuadraticSublevelSupportResult:
         if not loss.sparse:
             raise ValueError("SciPy sparse support solver requires a sparse loss")
-        matrix: Any = loss.matrix
-        if not sp.issparse(matrix):
+        matrix_object = loss.matrix
+        if not sp.issparse(matrix_object):
             raise TypeError("sparse quadratic matrix must use a SciPy sparse format")
+        matrix = cast(Float64SparseMatrix, matrix_object)
 
         direction_array = np.asarray(direction, dtype=np.float64)
         try:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import fields
-from typing import Any
+from typing import Never
 
 import numpy as np
 import pytest
@@ -15,6 +15,7 @@ from projectkoios.numerics.linalg.hermitian_spectral_subspace import (
 from projectkoios.numerics.linalg.numpy.hermitian_spectral_subspace import (
     NumpyHermitianSpectralSubspaceSolver,
 )
+from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 
 pytestmark = pytest.mark.integration
 
@@ -186,7 +187,7 @@ def test_every_diagnostic_field_matches_independent_array_recomputation() -> Non
         )
 
 
-def _as_tuple(matrix: np.ndarray) -> tuple[tuple[complex, ...], ...]:
+def _as_tuple(matrix: Complex128Array) -> tuple[tuple[complex, ...], ...]:
     return tuple(tuple(complex(value) for value in row) for row in matrix)
 
 
@@ -270,8 +271,12 @@ def test_ksd_shaped_lowest_retained_group_returns_full_spectrum_and_projector() 
 def test_numpy_convergence_failure_is_translated_exactly(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fail(*args: object, **kwargs: object) -> Any:
-        del args, kwargs
+    def fail(
+        matrix: Complex128Array,
+        *,
+        UPLO: str,
+    ) -> Never:
+        del matrix, UPLO
         raise np.linalg.LinAlgError("did not converge")
 
     monkeypatch.setattr(np.linalg, "eigh", fail)
@@ -291,9 +296,16 @@ def test_numpy_convergence_failure_is_translated_exactly(
 def test_nonfinite_numpy_output_fails_as_floating_point_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def nonfinite(*args: object, **kwargs: object) -> tuple[np.ndarray, np.ndarray]:
-        del args, kwargs
-        return np.array([np.nan]), np.array([[1.0 + 0.0j]])
+    def nonfinite(
+        matrix: Complex128Array,
+        *,
+        UPLO: str,
+    ) -> tuple[Float64Array, Complex128Array]:
+        del matrix, UPLO
+        return (
+            np.asarray((np.nan,), dtype=np.float64),
+            np.asarray(((1.0 + 0.0j,),), dtype=np.complex128),
+        )
 
     monkeypatch.setattr(np.linalg, "eigh", nonfinite)
     definition = HermitianSpectralSubspaceDefinition(
@@ -310,8 +322,12 @@ def test_nonfinite_numpy_output_fails_as_floating_point_error(
 def test_undeclared_numpy_backend_exception_propagates_unchanged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fail(*args: object, **kwargs: object) -> Any:
-        del args, kwargs
+    def fail(
+        matrix: Complex128Array,
+        *,
+        UPLO: str,
+    ) -> Never:
+        del matrix, UPLO
         raise KeyError("programming defect")
 
     monkeypatch.setattr(np.linalg, "eigh", fail)

@@ -7,6 +7,7 @@ from typing import final
 
 import numpy as np
 
+from ....numerics.numpy.typing import Complex128Array
 from ..linear import (
     LinearLeastSquaresMatrix,
     LinearLeastSquaresResult,
@@ -107,7 +108,7 @@ class NumpyLinearLeastSquaresSolver(LinearLeastSquaresSolver):
         )
 
 
-def _complex_matrix(values: np.ndarray, /) -> LinearLeastSquaresMatrix:
+def _complex_matrix(values: Complex128Array, /) -> LinearLeastSquaresMatrix:
     return tuple(tuple(complex(value) for value in row) for row in values)
 
 

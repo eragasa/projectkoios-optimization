@@ -9,11 +9,13 @@ away from dominated shells.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 import numpy as np
 from scipy import stats
 
+from ....numerics.numpy.typing import Float64Array
+from ....numerics.scipy.typing import GaussianKde
 from ...multiobjective.pareto.shells import pareto_shells
 from ...validation.validation import finite_float, integer, u32
 from .kde import KdeBandwidthFactory, KdeBandwidthMethod
@@ -108,7 +110,7 @@ class ScipyParetoShellContrastiveKdeSampler:
             dtype=np.float64,
         ).T
         positive_kde = self._fit_kde(positive_source)
-        negative_kdes: list[tuple[float, Any]] = []
+        negative_kdes: list[tuple[float, GaussianKde]] = []
         for weight, shell in zip(self._shell_weights, shells[1:], strict=False):
             source = np.asarray(shell.decision_vectors, dtype=np.float64).T
             negative_kdes.append((weight, self._fit_kde(source)))
@@ -142,10 +144,10 @@ class ScipyParetoShellContrastiveKdeSampler:
             for index in selected
         )
 
-    def _fit_kde(self, source: Any) -> Any:
+    def _fit_kde(self, source: Float64Array) -> GaussianKde:
         bandwidth_function = KdeBandwidthFactory.create(self._bandwidth_method)
         bandwidth = bandwidth_function(source)
-        return stats.gaussian_kde(source, bandwidth)
+        return cast(GaussianKde, stats.gaussian_kde(source, bandwidth))
 
 
 __all__ = ["ScipyParetoShellContrastiveKdeSampler"]

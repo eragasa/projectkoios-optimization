@@ -76,6 +76,8 @@ files = [
     "src/python/projectkoios/numerics",
     "src/python/projectkoios/optimization",
     "tests/projectkoios/numerics/linalg",
+    "tests/projectkoios/numerics/numpy",
+    "tests/projectkoios/numerics/scipy",
     "tests/projectkoios/optimization/quadratic/box",
     "tests/projectkoios/optimization/quadratic/numpy/box",
 ]

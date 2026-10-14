@@ -19,8 +19,8 @@
   "loss_facade_sha256": "29b20db49c3f780238481344d6b7b20cc3aea2c54b3931f45a304ba8502b95e8",
   "mpmath_decimal_precision": 100,
   "mpmath_version": "1.4.1",
-  "numerical_test_sha256": "f62e60a49393b3f2729680610b69812158a146dfbee86aea4edab800d7115225",
-  "numpy_backend_sha256": "3dd15993bb1f1a7c113327d520416489dcfc5ff72e288a08cc9bea3bddd5b010",
+  "numerical_test_sha256": "51ab755ceaa6c21507a8a7d774eecdfc17823bf244bd5b336c01eb9b54a60727",
+  "numpy_backend_sha256": "d1bcd60c48284e71e7db3c8bc4e179268b65953016ab7150c8836d8765222520",
   "numpy_configuration": {
     "Build Dependencies": {
       "blas": {
@@ -97,7 +97,7 @@
       ]
     }
   },
-  "numpy_loss_sha256": "82cf46cd2944307b3b4ae94c44d7e124a94dd7c95d0f482c7bca02f544db9980",
+  "numpy_loss_sha256": "d1ac11036ffdcb2da71647036e03df384f40e67f313ab7c121c19d244808d0c8",
   "numpy_random_seed": 20261014,
   "numpy_version": "2.5.4",
   "observed": {

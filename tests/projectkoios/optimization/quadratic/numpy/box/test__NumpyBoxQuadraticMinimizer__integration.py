@@ -1,10 +1,12 @@
 """Integration tests for dense active-set box minimization."""
 
-from typing import Any
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 import pytest
 
+from projectkoios.numerics.numpy.typing import Float64Array
 from projectkoios.optimization.quadratic.box import BoxQuadraticBoundStatus
 from projectkoios.optimization.quadratic.constrained import (
     ConstrainedQuadraticTolerance,
@@ -22,6 +24,8 @@ from projectkoios.optimization.quadratic.quadratic import (
 from projectkoios.optimization.spaces.parameters import ParameterBound, ParameterSpace
 
 pytestmark = pytest.mark.integration
+
+type _DenseSolve = Callable[[Float64Array, Float64Array], Float64Array]
 
 
 def _space(bounds: tuple[tuple[float, float], ...]) -> ParameterSpace:
@@ -169,10 +173,13 @@ def test_smallest_index_active_violation_is_released_first(
         0.0,
     )
     bounds = _space(((-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)))
-    original_solve: Any = np.linalg.solve
+    original_solve = cast(_DenseSolve, np.linalg.solve)
     right_hand_sides: list[tuple[float, ...]] = []
 
-    def recording_solve(matrix: Any, right_hand_side: Any) -> Any:
+    def recording_solve(
+        matrix: Float64Array,
+        right_hand_side: Float64Array,
+    ) -> Float64Array:
         right_hand_sides.append(
             tuple(float(value) for value in np.asarray(right_hand_side))
         )
@@ -296,8 +303,11 @@ def test_declared_linear_solve_failures_are_translated(
     )
     bounds = _space(((-1.0, 1.0), (-1.0, 1.0)))
 
-    def fail_linalg(*args: object, **kwargs: object) -> object:
-        del args, kwargs
+    def fail_linalg(
+        matrix: Float64Array,
+        right_hand_side: Float64Array,
+    ) -> Float64Array:
+        del matrix, right_hand_side
         raise np.linalg.LinAlgError("injected")
 
     monkeypatch.setattr(np.linalg, "solve", fail_linalg)
@@ -316,19 +326,25 @@ def test_nonfinite_direction_and_stagnation_fail_closed(
     )
     bounds = _space(((-1.0, 1.0), (-1.0, 1.0)))
 
-    monkeypatch.setattr(
-        np.linalg,
-        "solve",
-        lambda *args, **kwargs: np.asarray((float("nan"),)),
-    )
+    def nonfinite_solve(
+        matrix: Float64Array,
+        right_hand_side: Float64Array,
+    ) -> Float64Array:
+        del matrix, right_hand_side
+        return np.asarray((float("nan"),), dtype=np.float64)
+
+    monkeypatch.setattr(np.linalg, "solve", nonfinite_solve)
     with pytest.raises(FloatingPointError, match="direction must be finite"):
         NumpyBoxQuadraticMinimizer().solve(loss, bounds)
 
-    monkeypatch.setattr(
-        np.linalg,
-        "solve",
-        lambda *args, **kwargs: np.asarray((0.0,)),
-    )
+    def stagnant_solve(
+        matrix: Float64Array,
+        right_hand_side: Float64Array,
+    ) -> Float64Array:
+        del matrix, right_hand_side
+        return np.asarray((0.0,), dtype=np.float64)
+
+    monkeypatch.setattr(np.linalg, "solve", stagnant_solve)
     with pytest.raises(RuntimeError, match="stagnated"):
         NumpyBoxQuadraticMinimizer().solve(loss, bounds)
 
@@ -343,8 +359,11 @@ def test_undeclared_backend_exceptions_propagate(
     )
     bounds = _space(((-1.0, 1.0), (-1.0, 1.0)))
 
-    def fail_unexpected(*args: object, **kwargs: object) -> object:
-        del args, kwargs
+    def fail_unexpected(
+        matrix: Float64Array,
+        right_hand_side: Float64Array,
+    ) -> Float64Array:
+        del matrix, right_hand_side
         raise KeyError("injected")
 
     monkeypatch.setattr(np.linalg, "solve", fail_unexpected)

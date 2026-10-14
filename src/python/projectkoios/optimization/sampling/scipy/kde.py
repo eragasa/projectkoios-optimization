@@ -11,60 +11,73 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from enum import Enum
-from typing import Any
+from typing import cast
 
 import numpy as np
 from scipy import optimize, stats
 
+from ....numerics.numpy.typing import Float64Array
+from ....numerics.scipy.typing import GaussianKde, OptimizeResult
 from ...validation.validation import u32
 
-type KdeBandwidthFunction = Callable[[Any], float]
+type KdeBandwidthFunction = Callable[[Float64Array], float]
+type _BandwidthCandidate = Float64Array | type[float]
 
 
-def Silverman1986_h(X: Any) -> float:  # noqa: N802
+def Silverman1986_h(X: Float64Array) -> float:  # noqa: N802
     """Get the smoothing factor using the original Silverman method."""
-    kde = stats.gaussian_kde(X, "silverman")
+    kde = cast(GaussianKde, stats.gaussian_kde(X, "silverman"))
     return float(kde.factor)
 
 
-def Chiu1999_h(X: Any) -> float:  # noqa: N802
+def Chiu1999_h(X: Float64Array) -> float:  # noqa: N802
     """Preserve the original PyPosPack cross-validation implementation."""
 
-    def fhati(X: Any, h: Any, i: int) -> Any:  # noqa: N802
+    def fhati(
+        X: Float64Array,
+        h: _BandwidthCandidate,
+        i: int,
+    ) -> Float64Array:  # noqa: N802
         if h is float:  # noqa: SIM108 - preserve donor control flow
             _h = h
         else:
-            _h = h[0]
+            _h = cast(Float64Array, h)[0]
 
         Xi = np.delete(X, i)
-        kde = stats.gaussian_kde(Xi, _h)
+        kde = cast(GaussianKde, stats.gaussian_kde(Xi, _h))
         return kde(X[i])
 
-    def J(X: Any, h: Any) -> Any:  # noqa: N802
+    def J(
+        X: Float64Array,
+        h: _BandwidthCandidate,
+    ) -> float | Float64Array:  # noqa: N802
         if h is float:  # noqa: SIM108 - preserve donor control flow
             _h = h
         else:
-            _h = h[0]
+            _h = cast(Float64Array, h)[0]
 
-        fhat = stats.gaussian_kde(X, _h)
+        fhat = cast(GaussianKde, stats.gaussian_kde(X, _h))
         # F1 = integrate.quad(lambda x: fhat(x)**2, -np.inf, np.inf)[0]
         F1 = fhat.integrate_kde(fhat)
         F2 = np.array([fhati(X, h, i) for i in range(X.shape[0])])
-        return F1 - 2 * np.mean(F2)
+        return cast(float | Float64Array, F1 - 2 * np.mean(F2))
 
     # h0 = Silverman1986_h(X)
     h0 = 0.5
-    results = optimize.minimize(lambda h: J(X, h), h0, method="Nelder-Mead")
+    results = cast(
+        OptimizeResult,
+        optimize.minimize(lambda h: J(X, h), h0, method="Nelder-Mead"),
+    )
 
     return float(results.x[0])
 
 
-def chiu1999_h(X: Any) -> float:  # noqa: N803
+def chiu1999_h(X: Float64Array) -> float:  # noqa: N803
     """Retain the original lowercase compatibility name."""
     return Chiu1999_h(X)
 
 
-def silverman1986_h(X: Any) -> float:  # noqa: N803
+def silverman1986_h(X: Float64Array) -> float:  # noqa: N803
     """Retain the original lowercase compatibility name."""
     return Silverman1986_h(X)
 
@@ -108,7 +121,7 @@ class ScipyGaussianKdeSampler:
         """Return the configured bandwidth-method enum."""
         return self._bandwidth_method
 
-    def determine_kde_bandwidth(self, X: Any) -> float:  # noqa: N803
+    def determine_kde_bandwidth(self, X: Float64Array) -> float:  # noqa: N803
         """Return bandwidth ``h`` from the selected preserved implementation."""
         function = KdeBandwidthFactory.create(self._bandwidth_method)
         return function(X)
@@ -133,7 +146,7 @@ class ScipyGaussianKdeSampler:
 
         X = np.asarray(pareto_set, dtype=np.float64).T
         kde_bw = self.determine_kde_bandwidth(X)
-        rv_generator = stats.gaussian_kde(X, kde_bw)
+        rv_generator = cast(GaussianKde, stats.gaussian_kde(X, kde_bw))
         random_state = np.random.RandomState(seed)
 
         samples: list[tuple[float, ...]] = []

@@ -15,10 +15,11 @@ covariance stabilization. The historical repair replaces exactly zero eigenvalue
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Protocol, cast
 
 import numpy as np
 
+from ....numerics.numpy.typing import Float64Array, Int64Array
 from ...validation.validation import u32
 from .kde import KdeBandwidthFactory, KdeBandwidthMethod
 
@@ -52,9 +53,19 @@ class CovarianceStabilizationMethod(Enum):
     RELATIVE_EIGENVALUE_FLOOR = "relative_eigenvalue_floor"
 
 
+class _GaussianMixtureModel(Protocol):
+    weights_: Float64Array
+
+    def aic(self, values: Float64Array, /) -> float: ...
+
+    def bic(self, values: Float64Array, /) -> float: ...
+
+    def predict(self, values: Float64Array, /) -> Int64Array: ...
+
+
 def historical_zero_eigenvalue_covariance_repair(
-    covariance: np.ndarray[Any, np.dtype[np.float64]],
-) -> np.ndarray[Any, np.dtype[np.float64]]:
+    covariance: Float64Array,
+) -> Float64Array:
     """Apply the exact PyPosPack zero-eigenvalue covariance workaround."""
     eigenvalues, eigenvectors = np.linalg.eig(covariance)
     repaired = eigenvalues.copy()
@@ -66,9 +77,9 @@ def historical_zero_eigenvalue_covariance_repair(
 
 
 def relative_eigenvalue_covariance_repair(
-    covariance: np.ndarray[Any, np.dtype[np.float64]],
+    covariance: Float64Array,
     relative_floor: float,
-) -> np.ndarray[Any, np.dtype[np.float64]]:
+) -> Float64Array:
     """Apply the modern symmetric scale-relative eigenspectrum floor."""
     symmetric = (covariance + covariance.T) / 2.0
     eigenvalues, eigenvectors = np.linalg.eigh(symmetric)
@@ -191,10 +202,7 @@ class ScipyGmmConditionedKdeSampler:
         self,
         pareto_set: tuple[tuple[float, ...], ...],
         pareto_front: tuple[tuple[float, ...], ...],
-    ) -> tuple[
-        np.ndarray[Any, np.dtype[np.float64]],
-        np.ndarray[Any, np.dtype[np.float64]],
-    ]:
+    ) -> tuple[Float64Array, Float64Array]:
         if not pareto_set:
             raise ValueError("pareto_set must contain GMM/KDE seed decision vectors")
         if len(pareto_set) != len(pareto_front):
@@ -211,9 +219,9 @@ class ScipyGmmConditionedKdeSampler:
 
     def _features(
         self,
-        decisions: np.ndarray[Any, np.dtype[np.float64]],
-        objectives: np.ndarray[Any, np.dtype[np.float64]],
-    ) -> np.ndarray[Any, np.dtype[np.float64]]:
+        decisions: Float64Array,
+        objectives: Float64Array,
+    ) -> Float64Array:
         if self._feature_space is GmmFeatureSpace.DECISIONS:
             features = decisions.copy()
         elif self._feature_space is GmmFeatureSpace.OBJECTIVES:
@@ -229,22 +237,23 @@ class ScipyGmmConditionedKdeSampler:
 
     def _fit_labels(
         self,
-        features: np.ndarray[Any, np.dtype[np.float64]],
+        features: Float64Array,
         decision_dimension: int,
-    ) -> tuple[
-        np.ndarray[Any, np.dtype[np.int64]], np.ndarray[Any, np.dtype[np.float64]]
-    ]:
+    ) -> tuple[Int64Array, Float64Array]:
         from sklearn.mixture import GaussianMixture
 
         max_valid_components = max(1, len(features) // (decision_dimension + 1))
         max_components = min(self._max_components, len(features), max_valid_components)
-        candidates: list[tuple[float, Any, np.ndarray[Any, np.dtype[np.int64]]]] = []
+        candidates: list[tuple[float, _GaussianMixtureModel, Int64Array]] = []
         for component_count in range(1, max_components + 1):
-            model = GaussianMixture(
-                n_components=component_count,
-                covariance_type="full",
-                random_state=0,
-            ).fit(features)
+            model = cast(
+                _GaussianMixtureModel,
+                GaussianMixture(
+                    n_components=component_count,
+                    covariance_type="full",
+                    random_state=0,
+                ).fit(features),
+            )
             labels = np.asarray(model.predict(features), dtype=np.int64)
             cluster_sizes = np.bincount(labels, minlength=component_count)
             if np.any(cluster_sizes <= decision_dimension):
@@ -256,11 +265,14 @@ class ScipyGmmConditionedKdeSampler:
             )
             candidates.append((float(criterion), model, labels))
         if not candidates:
-            model = GaussianMixture(
-                n_components=1,
-                covariance_type="full",
-                random_state=0,
-            ).fit(features)
+            model = cast(
+                _GaussianMixtureModel,
+                GaussianMixture(
+                    n_components=1,
+                    covariance_type="full",
+                    random_state=0,
+                ).fit(features),
+            )
             labels = np.asarray(model.predict(features), dtype=np.int64)
             return labels, np.asarray(model.weights_, dtype=np.float64)
         _, selected, labels = min(candidates, key=lambda item: item[0])
@@ -270,7 +282,7 @@ class ScipyGmmConditionedKdeSampler:
         self,
         sample_count: int,
         cluster_ids: tuple[int, ...],
-        weights: np.ndarray[Any, np.dtype[np.float64]],
+        weights: Float64Array,
     ) -> tuple[int, ...]:
         if self._allocation is GmmClusterAllocation.EQUAL:
             quotient, remainder = divmod(sample_count, len(cluster_ids))
@@ -297,7 +309,7 @@ class ScipyGmmConditionedKdeSampler:
 
     def _sample_local_kde(
         self,
-        cluster: np.ndarray[Any, np.dtype[np.float64]],
+        cluster: Float64Array,
         sample_count: int,
         random_state: np.random.RandomState,
     ) -> list[tuple[float, ...]]:
@@ -331,9 +343,7 @@ class ScipyGmmConditionedKdeSampler:
             samples.append(tuple(float(item) for item in value))
         return samples
 
-    def _bandwidth_factor(
-        self, standardized: np.ndarray[Any, np.dtype[np.float64]]
-    ) -> float:
+    def _bandwidth_factor(self, standardized: Float64Array) -> float:
         if self._bandwidth_method is KdeBandwidthMethod.SILVERMAN_1986:
             return _silverman_factor(standardized.shape[1], standardized.shape[0])
         function = KdeBandwidthFactory.create(self._bandwidth_method)

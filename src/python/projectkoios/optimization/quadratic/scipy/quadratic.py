@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import math
-from typing import Any, final
+from typing import cast, final
 
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
+from ....numerics.scipy.typing import Float64SparseMatrix
 from ...validation import validation
 from .. import validation as quadratic_validation
 from ..quadratic import _QuadraticLossBackend
@@ -52,7 +53,7 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
             raise ValueError("minimum_squared_loss must be nonnegative")
 
         if sp.issparse(matrix):
-            source: Any = matrix
+            source = cast(Float64SparseMatrix, matrix)
             if source.shape != (dimension, dimension):
                 raise ValueError("matrix shape must match center dimension")
             if source.dtype.kind in "bOcSUV":
@@ -71,6 +72,7 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
             sparse_matrix = sp.csr_array(
                 np.asarray(normalized_matrix, dtype=np.float64)
             )
+        sparse_matrix = cast(Float64SparseMatrix, sparse_matrix)
 
         # Canonical CSR removes representation-dependent duplicate and zero entries.
         sparse_matrix.sum_duplicates()
@@ -121,7 +123,7 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
         return self._center
 
     @property
-    def matrix(self) -> sp.csr_array:
+    def matrix(self) -> Float64SparseMatrix:
         """Return the canonical sparse matrix.
 
         Returns
