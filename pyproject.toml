@@ -76,6 +76,8 @@ files = [
     "src/python/projectkoios/numerics",
     "src/python/projectkoios/optimization",
     "tests/projectkoios/numerics/linalg",
+    "tests/projectkoios/optimization/quadratic/box",
+    "tests/projectkoios/optimization/quadratic/numpy/box",
 ]
 mypy_path = "src/python"
 

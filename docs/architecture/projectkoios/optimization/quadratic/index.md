@@ -54,9 +54,15 @@ finite-family selection are specified in the
 [constrained-quadratic architecture](constrained/index.md) and implemented beneath the
 capability-local dense, sparse, factory, and selection modules.
 
+Arbitrary-positive-dimensional minimization over a finite closed axis-aligned box is a
+separate dense capability with a bounded deterministic primal active-set method,
+active-bound classification, and independently reconstructed KKT evidence. Its reviewed
+boundary is specified in the [box-quadratic architecture](box/index.md).
+
 ## Navigation
 
 - [`PositiveDefiniteQuadraticLoss`](PositiveDefiniteQuadraticLoss/index.md)
 - [Constrained-quadratic migration architecture](constrained/index.md)
+- [Finite box minimization](box/index.md)
 - [`WeightedAffineResidualQuadraticConstructor`](../affine/WeightedAffineResidualQuadraticConstructor/index.md)
 - [Package ownership index](../index.md)
