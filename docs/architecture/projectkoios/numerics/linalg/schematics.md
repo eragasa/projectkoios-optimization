@@ -18,7 +18,7 @@ flowchart LR
 The implemented contract, when authorized, stops at the projector. It does not hide
 phase or degenerate-basis choices inside an eigensystem result.
 
-## Future linear-algebra composition
+## Linear-algebra composition
 
 ```mermaid
 flowchart LR
@@ -26,11 +26,12 @@ flowchart LR
     P --> K["projector complement"]
     G["sampled Gram matrix"] --> O["symmetric orthonormalization"]
     O --> J["common-space injection"]
-    N["matrix input"] --> M["matrix norms"]
+    N["finite complex matrix"] --> M["implemented Frobenius power and norm"]
 ```
 
-Each box is a separate capability candidate. The diagram does not authorize the
-prospective modules.
+The Frobenius path is current. The projector-complement, compression,
+orthonormalization, and injection boxes remain separate prospective capabilities; this
+diagram does not authorize them.
 
 ## Optimization boundary
 

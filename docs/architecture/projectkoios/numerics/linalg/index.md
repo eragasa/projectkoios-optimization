@@ -7,8 +7,10 @@ not select an optimizer argument through their public contract.
 ## Status
 
 The invariant-only dense Hermitian spectral-subspace capability is implemented and
-independently qualified locally. It is not committed or bound downstream. Frame-producing eigensystems, orthonormalization, norms, and compression
-remain prospective and require separate capability-level review.
+independently qualified. Dependency-free finite complex-matrix Frobenius power and norm
+evaluation is also implemented. Frame-producing eigensystems, orthonormalization, other
+matrix norms, and compression remain prospective and require separate capability-level
+review.
 
 ## Capability inventory
 
@@ -17,7 +19,8 @@ remain prospective and require separate capability-level review.
 | `hermitian_spectral_subspace.py` | complete ascending Hermitian spectrum and projector for a caller-selected contiguous index range whose present boundaries pass a declared cutoff policy | implemented and independently qualified locally |
 | `orthonormalization.py` | symmetric Gram inverse-square-root construction and common-space injection | planned |
 | `compression.py` | projector-based compression and embedding of supplied operators | planned |
-| `norms.py` | Frobenius, operator-2, maximum-entry, and reference-normalized matrix norms | planned |
+| `frobenius.py` | finite complex-matrix Frobenius power and norm | implemented |
+| other matrix norms | operator-2, maximum-entry, and reference-normalized norms | planned |
 | `numpy/*` | dense concrete implementations | capability-specific review required |
 
 A generic `eigensystems.py` module is not introduced merely to hold unrelated spectral
@@ -35,6 +38,9 @@ decompositions require distinct contracts.
 - `HermitianSpectralSubspaceMethod`
 - `HermitianSpectralSubspaceSolverFactory`
 - `NumpyHermitianSpectralSubspaceSolver`
+- `FiniteComplexMatrix`
+- `ComplexMatrixFrobenius`
+- `complex_matrix_frobenius`
 
 ## Frame nonuniqueness boundary
 
@@ -66,6 +72,7 @@ algorithmic rationale but do not replace ProjectKoios contracts.
 ## Pages
 
 - [Hermitian spectral-subspace decomposition](hermitian_spectral_subspace/index.md)
+- [Complex-matrix Frobenius values](frobenius/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
 - [Numerics namespace](../index.md)

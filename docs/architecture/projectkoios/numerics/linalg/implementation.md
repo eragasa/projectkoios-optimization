@@ -2,11 +2,11 @@
 
 ## Current status
 
-The package now contains the locally implemented invariant-only Hermitian
-spectral-subspace solver documented under
-[`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md). It is
-independently qualified locally but remains uncommitted. Source continues to be added
-capability by capability; no universal decomposition base is authorized.
+The package contains the invariant-only Hermitian spectral-subspace solver documented
+under [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md) and the
+dependency-free complex-matrix Frobenius reduction documented under
+[`frobenius/`](frobenius/index.md). Source continues to be added capability by
+capability; no universal decomposition base is authorized.
 
 ## Target modules
 
@@ -14,19 +14,19 @@ capability by capability; no universal decomposition base is authorized.
 projectkoios/numerics/linalg/
 ├── __init__.py
 ├── hermitian_spectral_subspace.py
+├── frobenius.py
 ├── orthonormalization.py
 ├── compression.py
-├── norms.py
 └── numpy/
     ├── __init__.py
     ├── hermitian_spectral_subspace.py
     ├── orthonormalization.py
-    ├── compression.py
-    └── norms.py
+    └── compression.py
 ```
 
-Only the two `hermitian_spectral_subspace.py` paths belong to the current slice. All
-other paths remain prospective.
+The Hermitian spectral-subspace and standard-library-only Frobenius paths are current.
+Orthonormalization, compression, other norms, and their optional backends remain
+prospective.
 
 ## Record boundary
 
