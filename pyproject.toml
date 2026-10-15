@@ -80,6 +80,7 @@ files = [
     "tests/projectkoios/numerics/scipy",
     "tests/projectkoios/optimization/quadratic/box",
     "tests/projectkoios/optimization/quadratic/numpy/box",
+    "tests/projectkoios/optimization/selection",
 ]
 mypy_path = "src/python"
 

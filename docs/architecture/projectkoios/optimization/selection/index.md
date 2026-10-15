@@ -1,7 +1,8 @@
-# Finite objective selection
+# Objective selection
 
-`projectkoios.optimization.selection` owns deterministic selection from a finite ordered
-inventory of objective values.
+`projectkoios.optimization.selection` owns deterministic selection from finite ordered
+objective inventories and closed-form selection for explicitly supported continuous
+families.
 
 ## Module
 
@@ -65,15 +66,25 @@ def absolute_ambiguity_set(
 Consumers own candidate labels, threshold meaning, model-class meaning, and scientific
 dispositions.
 
+## Periodic single-harmonic selection
+
+`harmonic.py` defines a dependency-free closed-form maximum for
+`offset + c*cos(order*argument) + s*sin(order*argument)`. It returns the mathematical
+maximum and either a canonical argument in one half-open fundamental interval or an
+explicit tolerance-qualified numerically-constant status. See the
+[periodic-harmonic architecture](periodic_harmonic/index.md).
+
 ## Uses
 
 - M3 finite quadratic family selection.
 - Appendix-D ordered model-class comparison.
 - Appendix-J Stage-B ambiguity-set construction.
 - Appendix-J Stage-C ordered hierarchy comparison.
+- Continuous maximization of a consumer-derived single harmonic.
 
 ## Pages
 
+- [Periodic single-harmonic maximization](periodic_harmonic/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
 - [Optimization namespace](../index.md)

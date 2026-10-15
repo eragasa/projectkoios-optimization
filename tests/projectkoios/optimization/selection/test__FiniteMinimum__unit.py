@@ -15,7 +15,7 @@ def test_finite_minimum_validates_index_and_value() -> None:
     assert FiniteMinimum(0, 1) == FiniteMinimum(0, 1.0)
 
     with pytest.raises(TypeError, match="index"):
-        FiniteMinimum(True, 1.0)  # type: ignore[arg-type]
+        FiniteMinimum(True, 1.0)
     with pytest.raises(ValueError, match="nonnegative"):
         FiniteMinimum(-1, 1.0)
     with pytest.raises(ValueError, match="finite"):

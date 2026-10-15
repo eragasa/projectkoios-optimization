@@ -1,4 +1,4 @@
-# Finite-selection schematics
+# Selection schematics
 
 ## Selection operations
 
@@ -25,3 +25,17 @@ flowchart LR
 
 Selection never stores consumer labels or assigns scientific meaning to ceilings and
 tolerances.
+
+## Closed-form continuous selection
+
+```mermaid
+flowchart LR
+    K[Single-harmonic coefficients] --> H[Periodic harmonic maximizer]
+    H --> V[Mathematical maximum]
+    H --> D{Amplitude resolved?}
+    D -->|yes| A[Canonical argument]
+    D -->|no| N[Numerically constant status]
+```
+
+Only the explicitly supported single-harmonic family uses this continuous route. It is
+not a generic continuous optimizer.

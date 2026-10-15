@@ -1,14 +1,17 @@
-# Finite-selection implementation organization
+# Selection implementation organization
 
 ## Target module
 
 ```text
 projectkoios/optimization/selection/
 ├── __init__.py
-└── finite.py
+├── finite.py
+└── harmonic.py
 ```
 
-The capability is dependency-free and requires no backend package.
+Both capabilities are dependency-free and require no backend package. Detailed harmonic
+organization is documented under
+[`periodic_harmonic/implementation.md`](periodic_harmonic/implementation.md).
 
 ## Records
 
@@ -40,7 +43,12 @@ index.
 tests/projectkoios/optimization/selection/
 ├── test__FiniteMinimum__unit.py
 ├── test__FiniteAmbiguitySet__unit.py
-└── test__FiniteSelection__unit.py
+├── test__FiniteSelection__unit.py
+├── test__PeriodicHarmonic__unit.py
+├── test__PeriodicHarmonicMaximum__unit.py
+├── test__PeriodicHarmonicMaximizer__unit.py
+├── test__PeriodicHarmonicMaximizer__numerical.py
+└── test__PeriodicHarmonicWheel__integration.py
 ```
 
 ## Verification
@@ -57,5 +65,6 @@ tests/projectkoios/optimization/selection/
 
 ## Status
 
-Finite selection is implemented as part of the M3 constrained-quadratic slice. The
-Slice 01 software, bounded numerical, packaging, and independent code-review gate passes.
+Finite selection is implemented as part of the M3 constrained-quadratic slice. Periodic
+single-harmonic selection is a separate closed-form continuous capability and does not
+change finite-selection behavior or tie semantics.
