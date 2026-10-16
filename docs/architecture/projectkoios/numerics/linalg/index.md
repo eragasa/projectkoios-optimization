@@ -8,15 +8,16 @@ not select an optimizer argument through their public contract.
 
 The invariant-only dense Hermitian spectral-subspace capability is implemented and
 independently qualified. Dependency-free finite complex-matrix Frobenius power and norm
-evaluation is also implemented. Frame-producing eigensystems, orthonormalization, other
-matrix norms, and compression remain prospective and require separate capability-level
-review.
+evaluation and batched complete Hermitian-spectrum evaluation are also implemented.
+Frame-producing eigensystems, orthonormalization, other matrix norms, and compression
+remain prospective and require separate capability-level review.
 
 ## Capability inventory
 
 | Proposed module | Owned behavior | Status |
 |---|---|---|
 | `hermitian_spectral_subspace.py` | complete ascending Hermitian spectrum and projector for a caller-selected contiguous index range whose present boundaries pass a declared cutoff policy | implemented and independently qualified locally |
+| `hermitian_spectrum.py` | batched complete ascending spectra of explicit Hermitian representatives with per-matrix and aggregate input diagnostics | implemented and locally qualified |
 | `orthonormalization.py` | symmetric Gram inverse-square-root construction and common-space injection | planned |
 | `compression.py` | projector-based compression and embedding of supplied operators | planned |
 | `frobenius.py` | finite complex-matrix Frobenius power and norm | implemented |
@@ -38,6 +39,13 @@ decompositions require distinct contracts.
 - `HermitianSpectralSubspaceMethod`
 - `HermitianSpectralSubspaceSolverFactory`
 - `NumpyHermitianSpectralSubspaceSolver`
+- `BatchedHermitianSpectrumDefinition`
+- `BatchedHermitianSpectrumTolerance`
+- `HermitianSpectrumMatrixDiagnostics`
+- `BatchedHermitianSpectrumDiagnostics`
+- `BatchedHermitianSpectrumResult`
+- `BatchedHermitianSpectrumSolver`
+- `NumpyBatchedHermitianSpectrumSolver`
 - `FiniteComplexMatrix`
 - `ComplexMatrixFrobenius`
 - `complex_matrix_frobenius`
@@ -72,7 +80,7 @@ algorithmic rationale but do not replace ProjectKoios contracts.
 ## Pages
 
 - [Hermitian spectral-subspace decomposition](hermitian_spectral_subspace/index.md)
+- [Batched complete Hermitian spectra](hermitian_spectrum/index.md)
 - [Complex-matrix Frobenius values](frobenius/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
-- [Numerics namespace](../index.md)

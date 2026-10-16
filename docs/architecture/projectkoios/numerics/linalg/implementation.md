@@ -3,8 +3,9 @@
 ## Current status
 
 The package contains the invariant-only Hermitian spectral-subspace solver documented
-under [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md) and the
-dependency-free complex-matrix Frobenius reduction documented under
+under [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md), batched
+complete Hermitian spectra under [`hermitian_spectrum/`](hermitian_spectrum/index.md),
+and the dependency-free complex-matrix Frobenius reduction documented under
 [`frobenius/`](frobenius/index.md). Source continues to be added capability by
 capability; no universal decomposition base is authorized.
 
@@ -14,17 +15,20 @@ capability; no universal decomposition base is authorized.
 projectkoios/numerics/linalg/
 ├── __init__.py
 ├── hermitian_spectral_subspace.py
+├── hermitian_spectrum.py
 ├── frobenius.py
 ├── orthonormalization.py
 ├── compression.py
 └── numpy/
     ├── __init__.py
     ├── hermitian_spectral_subspace.py
+    ├── hermitian_spectrum.py
     ├── orthonormalization.py
     └── compression.py
 ```
 
-The Hermitian spectral-subspace and standard-library-only Frobenius paths are current.
+The Hermitian spectral-subspace, batched complete-spectrum, and standard-library-only
+Frobenius paths are current.
 Orthonormalization, compression, other norms, and their optional backends remain
 prospective.
 
@@ -65,8 +69,11 @@ slice requires:
 - lazy optional imports and isolated wheel smoke; and
 - DOI/ISBN reference auditing plus human source inspection.
 
-Future orthonormalization, compression, and norm modules require their own verification
-contracts rather than inheriting acceptance from the spectral slice.
+The batched complete-spectrum slice separately verifies inferred nonempty shape, explicit
+empty construction, whole-batch failure, representative evidence, absent empty
+aggregates, one NumPy batched call, and high-precision spectra. Future
+orthonormalization, compression, and norm modules require their own verification
+contracts rather than inheriting acceptance from either spectral slice.
 
 ## Ownership constraint
 
