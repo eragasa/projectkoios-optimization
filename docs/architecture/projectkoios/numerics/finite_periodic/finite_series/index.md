@@ -94,3 +94,4 @@ actions requiring their own authorization.
 - [Numerical contract](numerics.md)
 - [Implementation organization](implementation.md)
 - [Schematics](schematics.md)
+- [Distinct shared-grid batched finite-series evaluation](../batched_finite_series/index.md)

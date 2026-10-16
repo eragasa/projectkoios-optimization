@@ -15,11 +15,19 @@ KSD-lineage BIC-selected Gaussian-mixture clustering, positive-definite quadrati
 and affine-residual quadratic construction. Linear-algebra numerics provide dense batched
 complete Hermitian spectra through NumPy and SciPy, plus sparse partial Hermitian spectra
 through SciPy ARPACK with explicit convergence controls and residual evidence.
+Finite-periodic numerics provide shared-grid batched positive-exponent Fourier-series
+evaluation with point-major values and one dense NumPy channel reduction.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
 
 ```python
+from projectkoios.numerics.finite_periodic.batched_finite_series import (
+    BatchedFiniteFourierSeriesEvaluationDefinition,
+)
+from projectkoios.numerics.finite_periodic.numpy.batched_finite_series import (
+    NumpyBatchedFiniteFourierSeriesEvaluator,
+)
 from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumTolerance,
