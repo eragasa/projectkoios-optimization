@@ -25,8 +25,11 @@ flowchart TD
     M --> C{Any defect above its cutoff?}
     C -->|yes| F[Reject complete batch before backend]
     C -->|no| H[Construct represented-Hermitian matrices]
-    H --> N[One batched NumPy eigvalsh call]
+    H --> B{Selected dense backend}
+    B --> N[One batched NumPy eigvalsh call]
+    B --> P[One batched SciPy eigvalsh call]
     N --> S[Validate complete ascending spectra]
+    P --> S
     S --> R[Correlate spectra and diagnostics]
 ```
 

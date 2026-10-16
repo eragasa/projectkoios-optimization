@@ -1,86 +1,116 @@
 # Linear algebra numerics
 
-`projectkoios.numerics.linalg` owns unit-free matrix decompositions, invariant
-spectral subspaces, orthonormalization, projectors, compression, and matrix norms that do
-not select an optimizer argument through their public contract.
+`projectkoios.numerics.linalg` owns unit-free matrix decompositions, invariant spectral
+records, and matrix reductions that do not select optimizer arguments.
+
+- Current capabilities include invariant Hermitian subspaces, dense batched complete
+  Hermitian spectra, sparse partial Hermitian spectra, and finite complex-matrix
+  Frobenius values.
+- Prospective capabilities require separate mathematical contracts and qualification.
+- Physical semantics and objective-driven selection remain outside this namespace.
 
 ## Status
 
-The invariant-only dense Hermitian spectral-subspace capability is implemented and
-independently qualified. Dependency-free finite complex-matrix Frobenius power and norm
-evaluation and batched complete Hermitian-spectrum evaluation are also implemented.
-Frame-producing eigensystems, orthonormalization, other matrix norms, and compression
-remain prospective and require separate capability-level review.
+The namespace grows by capability rather than through a universal decomposition base.
+
+- Hermitian spectral-subspace decomposition is implemented and independently qualified.
+- Dense batched complete Hermitian-spectrum evaluation is implemented with NumPy and
+  SciPy backends.
+- Sparse partial Hermitian-spectrum evaluation is implemented with a SciPy ARPACK
+  backend.
+- Dependency-free finite complex-matrix Frobenius power and norm are implemented.
+- Frame-producing eigensystems, orthonormalization, other norms, and compression remain
+  prospective.
 
 ## Capability inventory
 
-| Proposed module | Owned behavior | Status |
-|---|---|---|
-| `hermitian_spectral_subspace.py` | complete ascending Hermitian spectrum and projector for a caller-selected contiguous index range whose present boundaries pass a declared cutoff policy | implemented and independently qualified locally |
-| `hermitian_spectrum.py` | batched complete ascending spectra of explicit Hermitian representatives with per-matrix and aggregate input diagnostics | implemented and locally qualified |
-| `orthonormalization.py` | symmetric Gram inverse-square-root construction and common-space injection | planned |
-| `compression.py` | projector-based compression and embedding of supplied operators | planned |
-| `frobenius.py` | finite complex-matrix Frobenius power and norm | implemented |
-| other matrix norms | operator-2, maximum-entry, and reference-normalized norms | planned |
-| `numpy/*` | dense concrete implementations | capability-specific review required |
+The inventory identifies owned behavior and prevents planned modules from inheriting
+acceptance from implemented modules.
 
-A generic `eigensystems.py` module is not introduced merely to hold unrelated spectral
-behaviors. Eigenframes, generalized problems, sparse partial spectra, and non-Hermitian
-decompositions require distinct contracts.
+- `hermitian_spectral_subspace.py` owns a complete ascending Hermitian spectrum and an
+  orthogonal projector for a caller-selected contiguous index range; it is implemented
+  and independently qualified.
+- `hermitian_spectrum.py` owns batched complete ascending spectra of explicit Hermitian
+  representatives with represented-input diagnostics; it is implemented and locally
+  qualified.
+- `sparse_hermitian_spectrum.py` owns canonical CSR partial-spectrum selection and
+  residual evidence; it is implemented with a SciPy sparse backend.
+- `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
+- `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
+  common-space injection; it remains planned.
+- `compression.py` would own projector-based compression and embedding; it remains
+  planned.
+- Other matrix norms and each optional backend require capability-specific review.
+- A generic `eigensystems.py` module is not introduced merely to collect unrelated
+  spectral behaviors.
 
-## First proposed public vocabulary
+## Public vocabulary
 
-- `HermitianSpectralMatrix`
-- `HermitianSpectralSubspaceTolerance`
-- `HermitianSpectralSubspaceDefinition`
-- `HermitianSpectralSubspaceDiagnostics`
-- `HermitianSpectralSubspaceResult`
-- `HermitianSpectralSubspaceSolver`
-- `HermitianSpectralSubspaceMethod`
-- `HermitianSpectralSubspaceSolverFactory`
-- `NumpyHermitianSpectralSubspaceSolver`
-- `BatchedHermitianSpectrumDefinition`
-- `BatchedHermitianSpectrumTolerance`
-- `HermitianSpectrumMatrixDiagnostics`
-- `BatchedHermitianSpectrumDiagnostics`
-- `BatchedHermitianSpectrumResult`
-- `BatchedHermitianSpectrumSolver`
-- `NumpyBatchedHermitianSpectrumSolver`
-- `FiniteComplexMatrix`
-- `ComplexMatrixFrobenius`
-- `complex_matrix_frobenius`
+The public vocabulary reflects separate mathematical problems rather than a universal
+solver or certificate hierarchy.
+
+- Hermitian subspace records: `HermitianSpectralMatrix`,
+  `HermitianSpectralSubspaceTolerance`, `HermitianSpectralSubspaceDefinition`,
+  `HermitianSpectralSubspaceDiagnostics`, and `HermitianSpectralSubspaceResult`.
+- Hermitian subspace execution: `HermitianSpectralSubspaceSolver`,
+  `HermitianSpectralSubspaceMethod`, `HermitianSpectralSubspaceSolverFactory`, and
+  `NumpyHermitianSpectralSubspaceSolver`.
+- Batched spectrum records: `BatchedHermitianSpectrumDefinition`,
+  `BatchedHermitianSpectrumTolerance`, `HermitianSpectrumMatrixDiagnostics`,
+  `BatchedHermitianSpectrumDiagnostics`, and `BatchedHermitianSpectrumResult`.
+- Dense batched spectrum execution: `BatchedHermitianSpectrumSolver`,
+  `NumpyBatchedHermitianSpectrumSolver`, and `ScipyBatchedHermitianSpectrumSolver`.
+- Sparse partial-spectrum records: `SparseComplexCsrMatrix`,
+  `SparseHermitianSpectrumSelection`, `SparseHermitianPartialSpectrumDefinition`, and
+  `SparseHermitianPartialSpectrumResult`.
+- Sparse execution: `SparseHermitianPartialSpectrumSolver`,
+  `ScipySparseHermitianPartialSpectrumSolver`, and
+  `scipy_sparse_hermitian_csr_matrix`.
+- Frobenius values: `FiniteComplexMatrix`, `ComplexMatrixFrobenius`, and
+  `complex_matrix_frobenius`.
 
 ## Frame nonuniqueness boundary
 
-The first spectral slice returns eigenvalues and an orthogonal spectral projector, not
-eigenvectors. A selected-subspace frame $F$ is nonunique because $FU$ spans the same
-subspace for every selected-space unitary $U$. Exact degeneracy therefore does not admit
-a canonical eigenbasis without an additional coordinate-dependent policy.
+Invariant subspaces do not determine a unique basis, so the implemented spectral
+capabilities avoid implicit coordinate-dependent frame policy.
 
-Frame-producing extraction is blocked until spectral clustering, phase fixing,
-degenerate-block completion, coordinate dependence, and failure behavior are reviewed.
-KSD must separately state whether M2 requires eigenvector-diagonal frames or only an
-orthonormal frame spanning its retained subspace.
+- A selected frame $F$ and $FU$ span the same subspace for every selected-space unitary
+  $U$.
+- Exact degeneracy therefore admits no canonical eigenbasis without additional policy.
+- The invariant-subspace capability returns a projector rather than public eigenvectors.
+- Frame extraction remains blocked pending reviewed clustering, phase fixing,
+  degenerate-block completion, coordinate dependence, and failure behavior.
+- KSD remains responsible for stating whether a consumer needs eigenvector-diagonal
+  frames or only an orthonormal basis for a retained subspace.
 
 ## Optimization boundary
 
-This capability decomposes and transforms supplied matrices. It does not fit parameters
-or select a transformation by minimizing an objective. Least squares and Procrustes
-therefore belong in `projectkoios.optimization`; optimized transport remains under
-`projectkoios.optimization.alignment`.
+Linear algebra numerics transform supplied matrices without selecting transformations by
+minimizing objectives.
+
+- Numerics owns decompositions, spectra, projectors, and matrix reductions.
+- Least squares and Procrustes selection belong in `projectkoios.optimization`.
+- Optimized transport belongs under `projectkoios.optimization.alignment`.
 
 ## Academic basis
 
-The spectral-subspace pages include an annotated, inspected bibliography in which every
-academic reference has a DOI or valid ISBN. The references cover the spectral theorem,
-spectral projectors, invariant-subspace perturbation, dense Hermitian eigensystems,
-finite-precision error analysis, and LAPACK behavior. They support terminology and
-algorithmic rationale but do not replace ProjectKoios contracts.
+The invariant spectral-subspace pages maintain an inspected bibliography for terminology
+and algorithmic rationale.
+
+- References cover the spectral theorem, spectral projectors, invariant-subspace
+  perturbation, dense Hermitian eigensystems, finite-precision error analysis, and LAPACK
+  behavior.
+- Every academic reference carries a DOI or valid ISBN.
+- References support owner contracts but do not replace them.
 
 ## Pages
 
+The child pages document implemented capabilities, organization, and namespace-level
+schematics.
+
 - [Hermitian spectral-subspace decomposition](hermitian_spectral_subspace/index.md)
 - [Batched complete Hermitian spectra](hermitian_spectrum/index.md)
+- [Sparse partial Hermitian spectra](sparse_hermitian_spectrum/index.md)
 - [Complex-matrix Frobenius values](frobenius/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)

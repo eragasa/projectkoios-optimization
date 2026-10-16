@@ -1,7 +1,7 @@
 # Project Koios Optimization
 
-`projectkoios-optimization` owns dependency-free optimization contracts and
-deterministic bounded algorithms under `projectkoios.optimization`.
+`projectkoios-optimization` owns reusable mathematical numerics and optimization under
+`projectkoios.numerics` and `projectkoios.optimization`.
 
 The package provides explicit ask/tell engines, concrete typed optimizer state,
 SplitMix64 uniform-box sampling, generic sampling and probability contracts, weighted
@@ -12,12 +12,33 @@ owner-authored shell-contrastive KDE sampling, and deterministic ranking reports
 Capability-local optional implementations provide NumPy/SciPy probability behavior,
 PyPosPack-lineage global and GMM-conditioned Gaussian KDE parameter sampling,
 KSD-lineage BIC-selected Gaussian-mixture clustering, positive-definite quadratic losses,
-and affine-residual quadratic construction.
+and affine-residual quadratic construction. Linear-algebra numerics provide dense batched
+complete Hermitian spectra through NumPy and SciPy, plus sparse partial Hermitian spectra
+through SciPy ARPACK with explicit convergence controls and residual evidence.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
 
 ```python
+from projectkoios.numerics.linalg.hermitian_spectrum import (
+    BatchedHermitianSpectrumDefinition,
+    BatchedHermitianSpectrumTolerance,
+)
+from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
+    NumpyBatchedHermitianSpectrumSolver,
+)
+from projectkoios.numerics.linalg.scipy.hermitian_spectrum import (
+    ScipyBatchedHermitianSpectrumSolver,
+)
+from projectkoios.numerics.linalg.scipy.sparse_hermitian_spectrum import (
+    ScipySparseHermitianPartialSpectrumSolver,
+    scipy_sparse_hermitian_csr_matrix,
+)
+from projectkoios.numerics.linalg.sparse_hermitian_spectrum import (
+    SparseHermitianPartialSpectrumDefinition,
+    SparseHermitianSpectrumSelection,
+)
+
 from projectkoios.optimization.sampling.uniform import UniformRandomSampler
 from projectkoios.optimization.clustering.scipy.gmm import (
     ScipyGaussianMixtureClusterer,

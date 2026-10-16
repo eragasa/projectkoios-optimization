@@ -1,83 +1,95 @@
 # Linear algebra implementation organization
 
+The namespace organizes source by mathematical capability and keeps optional backends
+beneath the capability-neutral contract layer.
+
+- No universal decomposition base is authorized.
+- Package initializers remain import-empty.
+- Concrete optional implementations carry explicit backend prefixes.
+
 ## Current status
 
-The package contains the invariant-only Hermitian spectral-subspace solver documented
-under [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md), batched
-complete Hermitian spectra under [`hermitian_spectrum/`](hermitian_spectrum/index.md),
-and the dependency-free complex-matrix Frobenius reduction documented under
-[`frobenius/`](frobenius/index.md). Source continues to be added capability by
-capability; no universal decomposition base is authorized.
+Three linear algebra capabilities currently have owner implementations and mirrored
+architecture pages.
 
-## Target modules
+- [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md) documents
+  invariant-only Hermitian spectral-subspace decomposition.
+- [`hermitian_spectrum/`](hermitian_spectrum/index.md) documents batched complete
+  Hermitian spectra.
+- [`sparse_hermitian_spectrum/`](sparse_hermitian_spectrum/index.md) documents sparse
+  partial Hermitian-spectrum selection.
+- [`frobenius/`](frobenius/index.md) documents dependency-free complex-matrix Frobenius
+  values.
+- Orthonormalization, compression, other norms, and their optional backends remain
+  prospective.
 
-```text
-projectkoios/numerics/linalg/
-├── __init__.py
-├── hermitian_spectral_subspace.py
-├── hermitian_spectrum.py
-├── frobenius.py
-├── orthonormalization.py
-├── compression.py
-└── numpy/
-    ├── __init__.py
-    ├── hermitian_spectral_subspace.py
-    ├── hermitian_spectrum.py
-    ├── orthonormalization.py
-    └── compression.py
-```
+## Module organization
 
-The Hermitian spectral-subspace, batched complete-spectrum, and standard-library-only
-Frobenius paths are current.
-Orthonormalization, compression, other norms, and their optional backends remain
-prospective.
+Current and prospective modules remain capability-local so each public operation can
+carry its own validation, evidence, and qualification.
+
+- `projectkoios/numerics/linalg/__init__.py` remains import-empty.
+- `hermitian_spectral_subspace.py`, `hermitian_spectrum.py`,
+  `sparse_hermitian_spectrum.py`, and `frobenius.py` are current contract modules.
+- `numpy/hermitian_spectral_subspace.py` and `numpy/hermitian_spectrum.py` are current
+  concrete backend modules.
+- `scipy/hermitian_spectrum.py` and `scipy/sparse_hermitian_spectrum.py` are current
+  dense-complete and sparse-partial SciPy backend modules.
+- `orthonormalization.py`, `compression.py`, and matching backend modules remain planned.
+- `numpy/__init__.py` remains import-empty.
 
 ## Record boundary
 
-Dependency-free capability modules define immutable tuple-oriented definitions,
-tolerances, diagnostics, and results. Dense backend modules own optional-array conversion
-and the narrow third-party decomposition call. Shared final template methods retain input
-validation, declared matrix representation, relational checks, failure classification,
-and backend-neutral output construction.
+Dependency-free modules define immutable mathematical records, while backend modules own
+third-party representation conversion and narrow numerical calls.
 
-Package initializers remain import-empty. Concrete classes carry explicit backend prefixes.
+- Contract modules own definitions, tolerances, diagnostics, results, and nominal solver
+  templates.
+- Backend modules own optional-array conversion and concrete decomposition calls.
+- Final template methods retain validation, represented matrix construction, relational
+  checks, failure classification, and backend-neutral result construction.
+- Backend records do not acquire units, domain identifiers, or scientific policy.
 
 ## Invariant-before-frame rule
+
+Spectral capabilities expose invariant information before any basis-dependent frame
+selection.
 
 - Eigenvalues use ascending order with multiplicity retained.
 - Spectral selection is caller-supplied rather than domain-inferred.
 - Internal exact degeneracies are admitted only when the complete block is selected.
-- A selected boundary that cuts an exact cluster or fails the declared isolation policy
-  fails closed.
-- Subspace results expose basis-independent projectors before any basis-dependent frame.
+- A selected boundary that cuts an exact cluster or fails declared isolation fails
+  closed.
+- Subspace results expose basis-independent projectors before basis-dependent frames.
 - No backend eigenvector is represented as canonical.
 - Compression, embedding, projection, frame completion, and transformation selection
-  remain distinct operations.
+  remain separate operations.
 
 ## Verification organization
 
-Each accepted capability receives mirrored core and backend tests. The first spectral
-slice requires:
+Each accepted capability receives mirrored contract, backend, bounded numerical, and
+wheel verification appropriate to its mathematical output.
 
-- exact built-in input and tolerance validation;
-- analytic and high-precision spectrum/projector references;
-- projector Hermiticity, idempotence, trace, and commutator checks;
-- internal-degeneracy and boundary-cutting cases;
-- phase, internal-unitary, shift, scaling, and coordinate-permutation cases;
-- malicious nominal backend outputs;
-- precise backend exception translation;
-- lazy optional imports and isolated wheel smoke; and
-- DOI/ISBN reference auditing plus human source inspection.
-
-The batched complete-spectrum slice separately verifies inferred nonempty shape, explicit
-empty construction, whole-batch failure, representative evidence, absent empty
-aggregates, one NumPy batched call, and high-precision spectra. Future
-orthonormalization, compression, and norm modules require their own verification
-contracts rather than inheriting acceptance from either spectral slice.
+- Spectral-subspace verification covers strict inputs, analytic and high-precision
+  references, projector identities, degeneracy boundaries, invariances, malicious
+  backend outputs, failure translation, lazy imports, and reference auditing.
+- Batched complete-spectrum verification covers normalized Python and NumPy inputs,
+  inferred nonempty shape, explicit empty construction, whole-batch failure,
+  representative evidence, absent empty aggregates, NumPy/SciPy batched calls, and
+  high-precision spectra.
+- Sparse partial-spectrum verification covers canonical CSR storage, explicit selection
+  and convergence controls, sparse Hermiticity evidence, SciPy ARPACK behavior,
+  deterministic start vectors, and residual bounds.
+- Future capabilities require independent verification contracts and do not inherit
+  acceptance from either spectral slice.
 
 ## Ownership constraint
 
-Linear algebra source may depend on the Python standard library and its selected optional
-backend. It must not import Optimization, PhysKit, or KSD. Optimization may consume these
-records for objectives and transformation selection; downstream consumers retain units,
-model identities, thresholds, evidence, and scientific interpretation.
+Linear algebra source depends only on the standard library and its selected optional
+backend, while downstream layers retain their own semantics.
+
+- Numerics must not import Optimization, PhysKit, or KSD.
+- Optimization may consume numerical records for objective construction and
+  transformation selection.
+- PhysKit and KSD retain units, model identities, thresholds, evidence, and scientific
+  interpretation.

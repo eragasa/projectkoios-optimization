@@ -51,6 +51,9 @@ from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumTolerance,
 )
+from projectkoios.numerics.linalg.sparse_hermitian_spectrum import (
+    SparseComplexCsrMatrix,
+)
 installed = Path(os.environ['EXPECTED_WHEEL_ROOT']).resolve()
 assert Path(spectrum.__file__).resolve().is_relative_to(installed)
 assert importlib.util.find_spec('numpy') is None
@@ -60,6 +63,8 @@ empty = BatchedHermitianSpectrumDefinition.empty(
     BatchedHermitianSpectrumTolerance(0.0, 0.0),
 )
 assert empty.dimension == 2 and empty.batch_size == 0
+sparse = SparseComplexCsrMatrix(2, (0, 1, 2), (0, 1), (1.0, 2.0))
+assert sparse.nonzero_count == 2
 assert 'numpy' not in sys.modules
 """
     numpy_script = """
@@ -74,6 +79,18 @@ from projectkoios.numerics.linalg.hermitian_spectrum import (
 from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
     NumpyBatchedHermitianSpectrumSolver,
 )
+from projectkoios.numerics.linalg.scipy.hermitian_spectrum import (
+    ScipyBatchedHermitianSpectrumSolver,
+)
+from projectkoios.numerics.linalg.scipy.sparse_hermitian_spectrum import (
+    ScipySparseHermitianPartialSpectrumSolver,
+    scipy_sparse_hermitian_csr_matrix,
+)
+from projectkoios.numerics.linalg.sparse_hermitian_spectrum import (
+    SparseHermitianPartialSpectrumDefinition,
+    SparseHermitianSpectrumSelection,
+)
+import scipy.sparse
 installed = Path(os.environ['EXPECTED_WHEEL_ROOT']).resolve()
 assert Path(spectrum.__file__).resolve().is_relative_to(installed)
 solver = NumpyBatchedHermitianSpectrumSolver()
@@ -87,6 +104,22 @@ definition = BatchedHermitianSpectrumDefinition(
 result = solver.solve(definition)
 assert abs(result.eigenvalues[0][0]) < 1e-15
 assert abs(result.eigenvalues[0][1] - 2.0) < 1e-15
+scipy_result = ScipyBatchedHermitianSpectrumSolver().solve(definition)
+assert abs(scipy_result.eigenvalues[0][0]) < 1e-15
+assert abs(scipy_result.eigenvalues[0][1] - 2.0) < 1e-15
+sparse_result = ScipySparseHermitianPartialSpectrumSolver().solve(
+    SparseHermitianPartialSpectrumDefinition(
+        matrix=scipy_sparse_hermitian_csr_matrix(
+            scipy.sparse.diags_array([1.0, 2.0, 3.0, 4.0])
+        ),
+        eigenvalue_count=2,
+        selection=SparseHermitianSpectrumSelection.SMALLEST_ALGEBRAIC,
+        hermiticity_tolerance=tolerance,
+        random_seed=5,
+    )
+)
+assert abs(sparse_result.eigenvalues[0] - 1.0) < 1e-12
+assert abs(sparse_result.eigenvalues[1] - 2.0) < 1e-12
 """
     environment = os.environ.copy()
     environment.update(

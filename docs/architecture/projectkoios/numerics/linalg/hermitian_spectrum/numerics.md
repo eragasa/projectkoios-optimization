@@ -55,7 +55,9 @@ third-party eigensolver.
 
 - A nonempty batch becomes one complex128 array stack.
 - The NumPy backend invokes `numpy.linalg.eigvalsh(..., UPLO="L")` exactly once.
-- The NumPy backend does not loop through scalar owner eigensolvers in Python.
+- The SciPy backend invokes `scipy.linalg.eigvalsh(..., lower=True, driver="evd")`
+  exactly once.
+- Neither dense backend loops through scalar owner eigensolvers in Python.
 - An empty batch returns empty spectra and per-matrix diagnostics without calling NumPy.
 - An empty result retains its declared dimension and uses `diagnostics=None`.
 - The conceptual empty spectrum shape is `(0, dimension)`.
@@ -73,7 +75,7 @@ backend nonconvergence without making message strings part of the API.
 - Invalid dimensions, shapes, finiteness, ordering, or Hermiticity policy raise
   `ValueError`.
 - Nonfinite shared arithmetic or backend eigenvalues raise `FloatingPointError`.
-- NumPy eigensolver nonconvergence raises `RuntimeError`.
+- NumPy or SciPy eigensolver nonconvergence raises `RuntimeError`.
 - Exception classes and inducing conditions are public behavior.
 - Human-readable exception messages remain diagnostic context.
 - Diagnostics constitute software and bounded numerical evidence, not scientific

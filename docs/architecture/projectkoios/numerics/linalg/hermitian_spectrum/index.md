@@ -4,7 +4,7 @@
 complete eigenvalue spectra of finite dense complex Hermitian matrix batches.
 
 - The contract is unit-free and backend-neutral.
-- The NumPy backend remains an explicit capability-local import.
+- The NumPy and SciPy backends remain explicit capability-local imports.
 - The result contains spectra and represented-input numerical diagnostics.
 
 ## Mathematical operation
@@ -47,7 +47,8 @@ implementation.
   `BatchedHermitianSpectrumDiagnostics`.
 - Output record: `BatchedHermitianSpectrumResult`.
 - Nominal template: `BatchedHermitianSpectrumSolver`.
-- Concrete backend: `NumpyBatchedHermitianSpectrumSolver`.
+- Concrete backends: `NumpyBatchedHermitianSpectrumSolver` and
+  `ScipyBatchedHermitianSpectrumSolver`.
 - Empty results use `diagnostics is None` because a maximum over no observations is
   undefined.
 
@@ -58,6 +59,7 @@ without importing NumPy through the contract module.
 
 - A nonempty batch uses the ordinary definition constructor, while an empty batch uses
   the named empty constructor.
+- NumPy and SciPy provide interchangeable dense complete-spectrum implementations.
 
   ```python
   from projectkoios.numerics.linalg.hermitian_spectrum import (
@@ -66,6 +68,9 @@ without importing NumPy through the contract module.
   )
   from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
       NumpyBatchedHermitianSpectrumSolver,
+  )
+  from projectkoios.numerics.linalg.scipy.hermitian_spectrum import (
+      ScipyBatchedHermitianSpectrumSolver,
   )
 
   policy = BatchedHermitianSpectrumTolerance(
@@ -83,8 +88,15 @@ without importing NumPy through the contract module.
       )
   )
   empty = solver.solve(BatchedHermitianSpectrumDefinition.empty(2, policy))
+  scipy_result = ScipyBatchedHermitianSpectrumSolver().solve(
+      BatchedHermitianSpectrumDefinition(
+          [[[2.0, 1.0 - 1.0j], [1.0 + 1.0j, 3.0]]],
+          policy,
+      )
+  )
   assert result.dimension == 2
   assert empty.diagnostics is None
+  assert scipy_result.backend_identifier == "scipy.linalg.eigvalsh"
   ```
 
 ## Boundary

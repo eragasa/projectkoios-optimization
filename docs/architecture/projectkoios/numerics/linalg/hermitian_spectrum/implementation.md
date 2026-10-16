@@ -5,7 +5,8 @@ backend and mirrors that boundary in its tests.
 
 - Package initializers remain import-empty.
 - The contract module imports no optional numerical package.
-- The NumPy module owns only concrete array conversion and eigensolver execution.
+- The NumPy and SciPy modules own only concrete array conversion and eigensolver
+  execution.
 
 ## Source
 
@@ -18,8 +19,10 @@ behavior.
   solver template.
 - `src/python/projectkoios/numerics/linalg/numpy/hermitian_spectrum.py` owns complex128
   array conversion and one nonempty batched `numpy.linalg.eigvalsh` call.
-- Consumers import the concrete backend directly because a single-option factory and
-  method enum would add no selection value.
+- `src/python/projectkoios/numerics/linalg/scipy/hermitian_spectrum.py` owns complex128
+  array conversion and one nonempty batched `scipy.linalg.eigvalsh` call.
+- Consumers import either concrete backend directly because backend choice follows from
+  the imported implementation rather than a global factory.
 
 ## Tests
 
@@ -30,11 +33,13 @@ numerical verification, and isolated-wheel behavior.
   the shared solver contract, and wheel imports.
 - `tests/projectkoios/numerics/linalg/numpy/hermitian_spectrum/` covers NumPy integration
   and bounded numerical verification.
+- `tests/projectkoios/numerics/linalg/scipy/hermitian_spectrum/` covers SciPy integration
+  and bounded numerical verification.
 - Contract cases cover input normalization, inferred dimensions, explicit empty
   construction, empty short-circuiting, cutoff equality, whole-batch failure,
   representative evidence, absent empty aggregates, and malformed backend output.
-- Backend cases cover one-call NumPy batching, nonconvergence translation, and nonfinite
-  output.
+- Backend cases cover NumPy and SciPy one-call batching, nonconvergence translation, and
+  nonfinite output.
 - Numerical cases cover high-precision reference spectra, batch order, uniform shifts,
   and tolerance-qualified representative construction.
 - Wheel cases cover dependency-free contract import and installed NumPy execution.
