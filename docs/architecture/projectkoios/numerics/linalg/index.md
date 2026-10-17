@@ -114,3 +114,4 @@ schematics.
 - [Complex-matrix Frobenius values](frobenius/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
+- [Numerics namespace](../index.md)
