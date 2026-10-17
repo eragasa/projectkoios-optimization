@@ -1,7 +1,8 @@
-# Generic solver implementation
+# Shared solver-policy implementation
 
-The generic abstract base is dependency-free and slotted. Final shared policy methods
-cannot be overridden by scalar or batched subclasses. Family bases specialize definition
-and result type parameters and own their execution templates.
+The shared policy owner is dependency-free and slotted. Final tolerance, rank, residual,
+and backend-evidence methods cannot be overridden by scalar or batched subclasses. It
+does not expose a generic execution method or generic return type. Family-specific
+nominal bases own their concrete definition and result contracts and execution templates.
 
 There is no compatibility alias retaining the former scalar meaning of this name.

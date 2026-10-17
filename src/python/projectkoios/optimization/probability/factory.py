@@ -102,11 +102,11 @@ class ProbabilitySamplerFactory:
             chunk_size=chunk_size,
         )
 
-    def create_distribution_sampler[SeedT](
+    def create_distribution_sampler(
         self,
         distribution: ProbabilityDistribution,
-        source: UnitUniformSampler[SeedT],
-    ) -> ProbabilityDistributionSampler[SeedT]:
+        source: UnitUniformSampler,
+    ) -> ProbabilityDistributionSampler:
         """Construct inverse-CDF sampling from an explicit unit-uniform source."""
         if not isinstance(distribution, ProbabilityDistribution):
             raise TypeError("distribution must be ProbabilityDistribution")
@@ -118,7 +118,7 @@ class ProbabilitySamplerFactory:
     def create_splitmix64_distribution_sampler(
         self,
         distribution: ProbabilityDistribution,
-    ) -> ProbabilityDistributionSampler[int]:
+    ) -> ProbabilityDistributionSampler:
         """Construct inverse-CDF sampling driven by deterministic SplitMix64."""
         return self.create_distribution_sampler(
             distribution,

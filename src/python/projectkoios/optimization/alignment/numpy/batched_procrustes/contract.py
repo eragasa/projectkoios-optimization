@@ -9,7 +9,7 @@ execution to :mod:`.solver`.
 
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Self, final
 
@@ -862,18 +862,13 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
         return self.right_unitary_completions
 
 
-class BatchedComplexUnitaryProcrustesSolver(
-    ComplexUnitaryProcrustesSolver[
-        NumpyBatchedComplexUnitaryProcrustesDefinition,
-        NumpyBatchedComplexUnitaryProcrustesResult,
-    ]
-):
+class BatchedComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver, ABC):
     """Own policy shared by concrete exact-array batch solvers.
 
     Notes
     -----
-    The nominal batch boundary specializes the generic Procrustes solver to the exact
-    NumPy definition and result contract. It adds vectorized additive-cutoff
+    The nominal batch boundary combines shared Procrustes policy with the exact NumPy
+    definition and result contract. It adds vectorized additive-cutoff
     construction while leaving decomposition execution to concrete backends.
     """
 

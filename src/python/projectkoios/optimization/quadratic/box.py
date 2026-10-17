@@ -6,7 +6,7 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Self, final
+from typing import Self, SupportsFloat, final
 
 from projectkoios.numerics.validation import (
     exact_nonnegative_float,
@@ -37,14 +37,14 @@ class BoxQuadraticBoundStatus(StrEnum):
     FIXED = "fixed"
 
 
-def _nonnegative_int(value: object, name: str, /) -> int:
+def _nonnegative_int(value: int, name: str, /) -> int:
     result = integer(value, name)
     if result < 0:
         raise ValueError(f"{name} must be nonnegative")
     return result
 
 
-def _positive_int(value: object, name: str, /) -> int:
+def _positive_int(value: int, name: str, /) -> int:
     result = integer(value, name)
     if result <= 0:
         raise ValueError(f"{name} must be positive")
@@ -93,13 +93,13 @@ class BoxQuadraticMinimum:
     def from_values(
         cls,
         *,
-        coordinates: object,
-        squared_loss: object,
+        coordinates: tuple[SupportsFloat, ...],
+        squared_loss: SupportsFloat,
         bound_statuses: tuple[BoxQuadraticBoundStatus, ...],
-        gradient: object,
-        kkt_tolerance_bounds: object,
-        maximum_kkt_violation: object,
-        maximum_kkt_ratio: object,
+        gradient: tuple[SupportsFloat, ...],
+        kkt_tolerance_bounds: tuple[SupportsFloat, ...],
+        maximum_kkt_violation: SupportsFloat,
+        maximum_kkt_ratio: SupportsFloat,
         iteration_count: int,
         active_set_change_count: int,
         linear_solve_count: int,

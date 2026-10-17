@@ -19,14 +19,14 @@ projectkoios/optimization/alignment/
 
 Parent package initializers remain import-empty. The encapsulated batched capability
 initializer exposes only names approved by its `base.py` façade. Dependency-free scalar
-contracts and shared generic policy remain in `procrustes.py`; exact-array batch records,
+contracts and shared concrete policy remain in `procrustes.py`; exact-array batch records,
 numerics, and execution have explicit module owners.
 
 ## Nominal solver boundary
 
-`ComplexUnitaryProcrustesSolver[DefinitionT, ResultT]` owns final shared numerical-policy
-methods and an abstract typed solve boundary. `ScalarComplexUnitaryProcrustesSolver`
-owns the final one-pair template; concrete scalar backends implement `_svd_validated`.
+`ComplexUnitaryProcrustesSolver` owns final shared numerical-policy methods without a
+generic solve return. `ScalarComplexUnitaryProcrustesSolver` owns the concrete final
+one-pair template; concrete scalar backends implement `_svd_validated`.
 `BatchedComplexUnitaryProcrustesSolver` owns vectorized rank-cutoff policy; the concrete
 NumPy batch solver owns execution. The scalar factory still imports its NumPy backend
 lazily.

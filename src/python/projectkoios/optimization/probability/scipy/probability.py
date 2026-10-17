@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, SupportsFloat
 
 from projectkoios.numerics import validation as numerical_validation
 
@@ -16,11 +16,11 @@ from ..base import (
 class ScipyProbabilityDistributionSource(Protocol):
     """Narrow surface supplied by a frozen ``scipy.stats`` distribution."""
 
-    def cdf(self, value: float, /) -> object:
+    def cdf(self, value: float, /) -> SupportsFloat:
         """Return a scalar cumulative probability."""
         ...
 
-    def ppf(self, probability: float, /) -> object:
+    def ppf(self, probability: float, /) -> SupportsFloat:
         """Return a scalar quantile."""
         ...
 

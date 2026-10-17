@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import SupportsFloat
 
 from projectkoios.numerics import validation as numerical_validation
 
@@ -12,7 +13,7 @@ class ProbabilityError(ValueError):
     """A probability distribution or transformation is invalid."""
 
 
-def probability_value(value: object, name: str = "probability") -> float:
+def probability_value(value: SupportsFloat, name: str = "probability") -> float:
     """Return one finite built-in probability in the closed unit interval."""
     try:
         result = numerical_validation.finite_float(value, name)

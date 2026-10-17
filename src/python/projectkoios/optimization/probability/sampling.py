@@ -6,11 +6,11 @@ from dataclasses import dataclass
 
 from projectkoios.numerics import validation as numerical_validation
 
-from ..sampling.base import Sampler, SamplingError
+from ..sampling.base import RandomSeed, Sampler, SamplingError
 from .base import InverseProbabilityDistributionFunction, ProbabilityError
 
 
-class UnitUniformSampler[SeedT](Sampler[float, SeedT]):
+class UnitUniformSampler(Sampler):
     """Sample finite fractions in the closed-open unit interval."""
 
     __slots__ = ()
@@ -26,10 +26,10 @@ class UnitUniformSampler[SeedT](Sampler[float, SeedT]):
 
 
 @dataclass(frozen=True, slots=True)
-class ProbabilityDistributionSampler[SeedT](Sampler[float, SeedT]):
+class ProbabilityDistributionSampler(Sampler):
     """Sampling pipeline with unit-source and inverse-distribution slots."""
 
-    source_slot: UnitUniformSampler[SeedT]
+    source_slot: UnitUniformSampler
     transform_slot: InverseProbabilityDistributionFunction
 
     def __post_init__(self) -> None:
@@ -48,7 +48,7 @@ class ProbabilityDistributionSampler[SeedT](Sampler[float, SeedT]):
         sample_count: int,
         /,
         *,
-        random_seed: SeedT,
+        random_seed: RandomSeed,
     ) -> tuple[float, ...]:
         probabilities = self.source_slot.sample(
             sample_count,
@@ -68,7 +68,7 @@ class ProbabilityDistributionSampler[SeedT](Sampler[float, SeedT]):
             ) from error
 
 
-class SplitMix64UnitUniformSampler(UnitUniformSampler[int]):
+class SplitMix64UnitUniformSampler(UnitUniformSampler):
     """Sample deterministic upper-53-bit fractions from SplitMix64 words."""
 
     __slots__ = ()
@@ -95,7 +95,7 @@ class SplitMix64UnitUniformSampler(UnitUniformSampler[int]):
         sample_count: int,
         /,
         *,
-        random_seed: int,
+        random_seed: RandomSeed,
     ) -> tuple[float, ...]:
         seed = numerical_validation.u64(random_seed, "random_seed")
         return tuple(self.unit_fraction(seed, index) for index in range(sample_count))

@@ -20,6 +20,7 @@ from projectkoios.optimization.probability.sampling import (  # noqa: E402
     SplitMix64UnitUniformSampler,
 )
 from projectkoios.optimization.sampling.base import (  # noqa: E402
+    RandomSeed,
     Sampler,
     SamplingError,
 )
@@ -107,14 +108,14 @@ def test_sampler_rejects_invalid_counts(sample_count: int) -> None:
         sampler.sample(sample_count, random_seed=7)
 
 
-class WrongLengthSampler(Sampler[int, int]):
+class WrongLengthSampler(Sampler):
     def _sample(
         self,
         sample_count: int,
         /,
         *,
-        random_seed: int,
-    ) -> tuple[int, ...]:
+        random_seed: RandomSeed,
+    ) -> tuple[float, ...]:
         del sample_count, random_seed
         return ()
 

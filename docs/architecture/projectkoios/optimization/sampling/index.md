@@ -1,7 +1,9 @@
 # Sampling
 
-`sampling/base.py` owns the dependency-free `Sampler[SampleT, SeedT]` contract for exact
-immutable batches.
+`sampling/base.py` owns the dependency-free scalar `Sampler` contract for exact
+immutable finite-float batches driven by an explicit `int | None` seed. Capability-
+specific vector samplers retain their own concrete return contracts rather than using a
+generic return type.
 
 `sampling/uniform.py` owns `UniformRandomSampler`, which maps deterministic SplitMix64
 fractions into an ordered finite `ParameterSpace`. It produces decision vectors only: it

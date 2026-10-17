@@ -5,3 +5,4 @@ This tree records concrete maintainability debt that does not presently invalida
 ## Open issues
 
 - [Reduce concentrated cyclomatic complexity](complexity-hotspots/index.md)
+- [Remove broad typing, generic returns, postconstruction mutation, and magic tests](type-and-construction-smells/index.md)

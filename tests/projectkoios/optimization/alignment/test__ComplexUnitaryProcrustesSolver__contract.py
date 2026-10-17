@@ -113,12 +113,12 @@ def _decomposition(
     )
 
 
-def test_generic_and_scalar_solvers_are_abstract_and_scalar_template_is_final() -> None:
-    with pytest.raises(TypeError):
-        ComplexUnitaryProcrustesSolver()  # type: ignore[abstract]
+def test_shared_policy_is_concrete_and_scalar_solver_template_is_final() -> None:
+    shared_policy = ComplexUnitaryProcrustesSolver()
     with pytest.raises(TypeError):
         ScalarComplexUnitaryProcrustesSolver()  # type: ignore[abstract]
 
+    assert not hasattr(shared_policy, "solve")
     assert vars(ScalarComplexUnitaryProcrustesSolver.solve)["__final__"] is True
 
 

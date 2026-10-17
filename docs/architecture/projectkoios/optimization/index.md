@@ -21,7 +21,7 @@ belong to [`projectkoios.numerics`](../numerics/index.md).
 | Parameter spaces | [`spaces/`](../../../../src/python/projectkoios/optimization/spaces/) | finite ordered closed parameter boxes |
 | Algorithms | [`algorithms/`](../../../../src/python/projectkoios/optimization/algorithms/) | scalar coordinate search and intrinsic typed state |
 | Clustering | [`clustering/`](../../../../src/python/projectkoios/optimization/clustering/) | numeric Gaussian-mixture model selection, canonical assignments, components, and diagnostics |
-| Sampling | [`sampling/`](../../../../src/python/projectkoios/optimization/sampling/) | uniform sampling, PyPosPack-lineage global and GMM-conditioned KDE, owner-authored shell contrast, and generic scalar sampling contracts |
+| Sampling | [`sampling/`](../../../../src/python/projectkoios/optimization/sampling/) | uniform sampling, PyPosPack-lineage global and GMM-conditioned KDE, owner-authored shell contrast, and concrete scalar sampling contracts |
 | Probability | [`probability/`](../../../../src/python/projectkoios/optimization/probability/) | dependency-free distributions and sampling plus capability-local NumPy/SciPy implementations |
 | Affine residuals | [`affine/`](../../../../src/python/projectkoios/optimization/affine/) | immutable weighted affine residuals, checked quadratic inputs, and capability-local NumPy/SciPy constructors |
 | Linear least squares | [`least_squares/`](../../../../src/python/projectkoios/optimization/least_squares/) | ordinary and positive-weight real/complex dense solving with one or multiple right-hand sides |

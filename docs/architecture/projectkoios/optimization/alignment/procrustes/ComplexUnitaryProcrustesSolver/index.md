@@ -1,11 +1,12 @@
 # ComplexUnitaryProcrustesSolver
 
-`ComplexUnitaryProcrustesSolver[DefinitionT, ResultT]` is the generic behaviorful nominal
-root for scalar and batched right-Procrustes solver families.
+`ComplexUnitaryProcrustesSolver` is the concrete behaviorful shared-policy root for
+scalar and batched right-Procrustes solver families.
 
 It owns exact tolerance validation, additive rank-cutoff policy, the binary64 residual
-roundoff coefficient, and executed-versus-absent backend evidence validation. Its typed
-`solve` method remains abstract because family definitions and results differ.
+roundoff coefficient, and executed-versus-absent backend evidence validation. It does
+not declare a generic `solve` return. Scalar and batched nominal bases own their concrete
+definition and result contracts.
 
 ## Pages
 

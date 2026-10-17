@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ....numerics.numpy.typing import Float64Array, NumpyArrayLike
+from ...sampling.base import RandomSeed
 from ..base import (
     InverseProbabilityDistributionFunction,
     ProbabilityDistributionFunction,
@@ -70,7 +71,7 @@ class NumpyInverseProbabilityDistributionFunction(
         return _one_float(self.function(argument), "NumPy inverse CDF")
 
 
-class NumpyRandomStateUnitUniformSampler(UnitUniformSampler[int | None]):
+class NumpyRandomStateUnitUniformSampler(UnitUniformSampler):
     """NumPy RandomState implementation of the sampler source slot."""
 
     __slots__ = ()
@@ -80,7 +81,7 @@ class NumpyRandomStateUnitUniformSampler(UnitUniformSampler[int | None]):
         sample_count: int,
         /,
         *,
-        random_seed: int | None,
+        random_seed: RandomSeed,
     ) -> tuple[float, ...]:
         samples = _random_state(random_seed).uniform(
             low=0.0,

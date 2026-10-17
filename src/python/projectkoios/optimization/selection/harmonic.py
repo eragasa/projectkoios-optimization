@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Self, cast, final
+from typing import Self, SupportsFloat, cast, final
 
 from projectkoios.numerics.validation import (
     exact_finite_float,
@@ -44,11 +44,11 @@ class PeriodicHarmonic:
     def from_values(
         cls,
         *,
-        offset: object,
-        cosine_coefficient: object,
-        sine_coefficient: object,
+        offset: SupportsFloat,
+        cosine_coefficient: SupportsFloat,
+        sine_coefficient: SupportsFloat,
         harmonic_order: int,
-        fundamental_interval_start: object,
+        fundamental_interval_start: SupportsFloat,
     ) -> Self:
         """Construct a canonical immutable harmonic from finite real values.
 
@@ -139,11 +139,11 @@ class PeriodicHarmonicMaximum:
         cls,
         *,
         harmonic: PeriodicHarmonic,
-        maximum_value: object,
-        amplitude: object,
-        canonical_maximizing_argument: object | None,
-        fundamental_period: object,
-        applied_degeneracy_cutoff: object,
+        maximum_value: SupportsFloat,
+        amplitude: SupportsFloat,
+        canonical_maximizing_argument: SupportsFloat | None,
+        fundamental_period: SupportsFloat,
+        applied_degeneracy_cutoff: SupportsFloat,
         status: PeriodicHarmonicMaximumStatus,
     ) -> Self:
         """Construct canonical immutable evidence from finite real values.

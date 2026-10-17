@@ -1021,7 +1021,7 @@ def _validate_scalar_result_backend_evidence(
     text(result.backend_version, "backend_version")
 
 
-class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
+class ComplexUnitaryProcrustesSolver:
     """Own representation-independent right-Procrustes solver policy.
 
     This generic nominal root unifies scalar and batched solvers without imposing either
@@ -1186,28 +1186,9 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
             raise ValueError("unexecuted backend must not claim backend evidence")
         return None
 
-    @abstractmethod
-    def solve(self, definition: DefinitionT, /) -> ResultT:
-        """Solve one validated scalar or batched right-Procrustes definition.
-
-        Parameters
-        ----------
-        definition
-            Family-specific immutable definition.
-
-        Returns
-        -------
-        ResultT
-            Family-specific immutable result.
-        """
-        raise NotImplementedError
-
 
 class ScalarComplexUnitaryProcrustesSolver(
-    ComplexUnitaryProcrustesSolver[
-        ComplexUnitaryProcrustesDefinition,
-        ComplexUnitaryProcrustesResult,
-    ],
+    ComplexUnitaryProcrustesSolver,
     ABC,
 ):
     """Define the scalar solver boundary and shared validation template.
