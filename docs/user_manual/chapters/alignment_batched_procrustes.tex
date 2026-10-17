@@ -1,5 +1,18 @@
 \chapter{Batched complex-unitary Procrustes}
 
+\section{Why batch Procrustes?}
+Batch Procrustes solves many independent instances of the scalar problem while retaining
+the leading array topology. Each item compares one already corresponding source--target
+matrix pair under its own best right-unitary change of column coordinates. This avoids
+constructing a Python object for every pair and keeps ranks, residuals, and transformations
+in shape-preserving arrays.
+
+The solver does not couple neighboring items. In particular, it does not choose
+transformations that vary smoothly across a path or grid, synchronize phases between
+items, enforce loop closure, or infer that leading indices are adjacent. If continuity or
+topological consistency matters, a consumer must evaluate the pointwise evidence and
+apply a separately defined method and policy.
+
 \section{Batched problem}
 Let $\mathcal{B}=(d_1,\ldots,d_k)$, with $k\ge1$, be the leading batch shape. A source
 and target have shape

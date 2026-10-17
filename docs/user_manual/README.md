@@ -16,33 +16,37 @@ a documented capability correctly.
 
 For every documented capability, include all information needed to perform the operation:
 
-1. State the mathematical problem, dimensions, notation, constraints, assumptions,
+1. Begin with scientific/developer context: explain in plain language what problem the
+   method solves, what kinds of prepared data it compares, what transformation it is
+   allowed to choose, why a user would choose it, and what nearby problems it does not
+   solve. Define specialist terminology before presenting formulas.
+2. State the mathematical problem, dimensions, notation, constraints, assumptions,
    orientation, and returned quantity.
-2. Explain the method: derive or justify the reduction from the stated objective to the
+3. Explain the method: derive or justify the reduction from the stated objective to the
    implemented procedure, explain why the selected solution is optimal, and identify
    when it is unique. Give the exact procedure in execution order, including
    decomposition, selection, cutoff, reconstruction, validation, and edge-case formulas
    where they are public behavior.
-3. State installation extras and the supported public import path.
-4. State exact accepted representations, types, dtypes, shapes, finiteness rules, and
+4. State installation extras and the supported public import path.
+5. State exact accepted representations, types, dtypes, shapes, finiteness rules, and
    empty-input behavior. Say explicitly when implicit coercion is rejected.
-5. Explain every supported construction path, including ownership and copying:
+6. Explain every supported construction path, including ownership and copying:
    defensive-copy factories, zero-copy factories, and canonical immutable-storage
    requirements when applicable.
-6. Provide a complete, executable usage example that constructs inputs, invokes the
+7. Provide a complete, executable usage example that constructs inputs, invokes the
    public API, handles status, applies the result in the correct orientation, and reads
    the evidence needed for interpretation.
-7. Describe result fields, their shapes or units, their mathematical meaning, and the
+8. Describe result fields, their shapes or units, their mathematical meaning, and the
    relations users may rely on.
-8. Describe rank-deficient, nonunique, empty, and failure behavior. Distinguish a
+9. Describe rank-deficient, nonunique, empty, and failure behavior. Distinguish a
    successful diagnostic result from an exception.
-9. List public exception classes by inducing condition. Exact exception message text is
+10. List public exception classes by inducing condition. Exact exception message text is
    not documentation unless another project instruction explicitly requires it.
-10. Explain numerical resolution, conditioning limitations, and validation evidence.
+11. Explain numerical resolution, conditioning limitations, and validation evidence.
     State why scaling, cutoffs, or fail-closed checks are used and what information they
     cannot establish. A reported zero, full-rank status, or small residual must not be
     presented as a scientific conclusion.
-11. Cite primary papers, standard monographs, or authoritative software references for
+12. Cite primary papers, standard monographs, or authoritative software references for
     the mathematical and numerical techniques. Prefer DOI-linked primary sources for
     named methods and established numerical-analysis texts for stability claims. A
     citation supplements but never replaces the manual's own explanation of the method.

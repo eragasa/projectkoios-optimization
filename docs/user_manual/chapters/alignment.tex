@@ -1,9 +1,17 @@
 \chapter{Alignment}
 
-Alignment selects a mathematical transformation between already prepared numerical
-representations. Optimization owns the transformation-selection problem, numerical
-controls, and reconstructable evidence. It does not own the physical or scientific
-meaning of the matrices.
+Alignment compares two already corresponding numerical representations after allowing a
+restricted change of coordinates. It is useful when two calculations describe the same
+objects in different admissible bases or frames and entry-by-entry subtraction would
+therefore mix genuine disagreement with an arbitrary coordinate convention.
+
+The Procrustes capabilities in this manual choose one norm-preserving change of column
+coordinates that makes a source matrix as close as possible to a target matrix. They do
+not discover which rows correspond, translate or rescale the data, change its column
+dimension, or decide whether the remaining discrepancy is scientifically acceptable.
+Optimization owns this transformation-selection problem, its numerical controls, and
+reconstructable evidence. It does not own the physical or scientific meaning of the
+matrices.
 
 \section{Installation}
 The dependency-free scalar contract is installed with the base distribution. The NumPy

@@ -1,5 +1,33 @@
 \chapter{Scalar complex-unitary Procrustes}
 
+\section{What is the Procrustes problem?}
+The classical Procrustes problem asks how closely one prepared configuration can match
+another after applying an allowed rigid change of coordinates. The name comes from
+comparing shapes without attributing coordinate-system differences to shape differences.
+In this implementation the entries may be complex, and the allowed change of coordinates
+is unitary rather than merely real orthogonal.
+
+Think of the $m$ rows of $A$ and $B$ as already paired observations, vectors, samples, or
+coefficients, each expressed with $n$ components. The method chooses one common
+$n\times n$ matrix $Q$ that mixes the source columns. Unitarity makes this a
+norm-preserving coordinate change: it preserves lengths and Hermitian inner products
+between source rows. Complex unitary transformations also include phase changes and
+unitary mixtures of columns. The residual after alignment measures the disagreement that
+cannot be removed by this one global coordinate change.
+
+This is useful, for example, when two numerical procedures return equivalent bases or
+frames with different admissible column conventions, or when paired complex feature
+matrices must be compared independently of such a convention. These examples describe
+the mathematical use pattern only; the consumer remains responsible for establishing
+that the rows and columns have the intended scientific correspondence.
+
+The implemented problem is deliberately narrower than some procedures also called
+``Procrustes analysis.'' It does not center data, subtract translations, estimate a
+scale factor, weight rows, discover row correspondences, choose a separate transform for
+each row, or change the number of columns. Any scientifically justified preprocessing
+must occur before construction of the definition. The returned residual pertains to the
+matrices actually supplied.
+
 \section{Problem and orientation}
 Let $A,B\in\mathbb{C}^{m\times n}$ be finite, nonempty matrices with identical shape.
 The scalar capability solves the complex-unitary form of the orthogonal Procrustes
@@ -45,8 +73,9 @@ $C=U\Sigma V^\dagger$ and $Q=UV^\dagger$ gives
 The von Neumann trace inequality bounds every unitary choice by this nuclear norm
 \cite{Bhatia1997}, so the selected $Q$ attains the global minimum. This SVD construction
 is also the unitary polar factor of $C$ \cite{Higham1986Polar}. If $C$ is nonsingular,
-that factor is unique. If $C$ is singular, directions in its null spaces are unconstrained
-by the objective and multiple unitary completions attain the same minimum. The software
+that factor is unique. Nonsingularity requires $m\ge n$, although $m\ge n$ alone is not
+sufficient. If $C$ is singular, directions in its null spaces are unconstrained by the
+objective and multiple unitary completions attain the same minimum. The software
 rank policy decides whether binary64 evidence is treated as nonsingular for the public
 contract; it does not claim exact algebraic rank. Standard SVD and numerical-rank
 background is given by Golub and Van Loan \cite{GolubVanLoan2013}.
