@@ -55,10 +55,14 @@ scientific use.
 
 - Consumers may admit only full-rank transformations.
 - Consumers may retain deficient completions for diagnostics only.
+- The fail-closed accessor makes whole-batch uniqueness an explicit software gate while
+  leaving scientific acceptance downstream.
 
 ```mermaid
 flowchart LR
-    O[Optimization batched Procrustes result] --> T[Consumer tensor-grid links]
-    T --> G[Consumer rank qualification gate]
-    G --> C[Consumer closure and scientific diagnostics]
+    O[Optimization batched Procrustes result] --> G{All items full rank?}
+    G -->|yes| T[Require unique right-unitary transformations]
+    G -->|no| D[Retain diagnostic completions and indexed rank evidence]
+    T --> C[Consumer closure and scientific diagnostics]
+    D --> P[Consumer inapplicability or failure policy]
 ```

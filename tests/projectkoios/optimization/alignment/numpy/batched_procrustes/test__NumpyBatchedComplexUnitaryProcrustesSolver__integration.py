@@ -289,6 +289,13 @@ def test_empty_batch_short_circuits_without_svd(
         case.column_count,
     )
     assert result.cross_singular_values.shape == case.batch_shape + (case.column_count,)
+    assert result.all_full_rank
+    assert result.rank_deficient_count == 0
+    assert result.first_rank_deficient_index is None
+    assert (
+        result.require_unique_right_unitary_transformations()
+        is result.right_unitary_completions
+    )
     assert result.backend_identifier is None
     assert result.backend_version is None
 

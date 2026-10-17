@@ -1,0 +1,19 @@
+\chapter{alignment}
+
+Alignment selects mathematical transformations between prepared representations.
+Optimization owns transformation selection and numerical evidence. It does not own the
+physical or scientific meaning of the representations.
+
+\section{Ownership}
+PhysKit may adapt units, operators, lattices, hoppings, and frame identities into
+unit-free arrays. KSD may select scientific controls and interpret evidence. These
+consumer responsibilities do not enter Optimization.
+
+\section{Available families}
+The library provides one-pair complex-unitary right Procrustes alignment and a dense
+NumPy batched family. Both act on the right of the source and share one generic numerical
+policy owner.
+
+\section{Evidence and interpretation}
+Rank, residual, cutoff, and backend metadata are software evidence. Consumers must not
+infer scientific validity from full rank or a small residual alone.

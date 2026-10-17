@@ -26,4 +26,4 @@ separate per-item status.
 
 - Full-rank items expose unique right transformations.
 - Deficient items expose diagnostic SVD completions marked non-full-rank.
-- See the [batched schematics](batched/schematics.md) for vectorized flow.
+- See the [batched schematics](../batched_procrustes/schematics.md) for vectorized flow.

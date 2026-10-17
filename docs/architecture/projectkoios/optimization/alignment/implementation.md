@@ -8,20 +8,28 @@ projectkoios/optimization/alignment/
 ├── procrustes.py
 └── numpy/
     ├── __init__.py
-    └── procrustes.py
+    ├── procrustes.py
+    └── batched_procrustes/
+        ├── __init__.py
+        ├── base.py
+        ├── contract.py
+        ├── numerics.py
+        └── solver.py
 ```
 
-Package initializers are import-empty. The dependency-free contract owns exact input
-validation, cross-matrix construction, SVD conformance checks, numerical-rank policy,
-transformation withholding, residual reconstruction, and result construction. The
-NumPy backend performs only the complete square complex128 SVD.
+Parent package initializers remain import-empty. The encapsulated batched capability
+initializer exposes only names approved by its `base.py` façade. Dependency-free scalar
+contracts and shared generic policy remain in `procrustes.py`; exact-array batch records,
+numerics, and execution have explicit module owners.
 
 ## Nominal solver boundary
 
-`ComplexUnitaryProcrustesSolver.solve` is a final public template. Concrete backends
-inherit nominally and implement only `_svd_validated`. The closed factory imports the
-NumPy backend lazily. Structural solver substitution and mutable backend registration
-are not supported.
+`ComplexUnitaryProcrustesSolver[DefinitionT, ResultT]` owns final shared numerical-policy
+methods and an abstract typed solve boundary. `ScalarComplexUnitaryProcrustesSolver`
+owns the final one-pair template; concrete scalar backends implement `_svd_validated`.
+`BatchedComplexUnitaryProcrustesSolver` owns vectorized rank-cutoff policy; the concrete
+NumPy batch solver owns execution. The scalar factory still imports its NumPy backend
+lazily.
 
 ## Verification
 
@@ -30,6 +38,6 @@ backend output, SVD reconstruction, unitary evidence, deficient withholding, res
 reconstruction, seeded numerical optimality, scale covariance, isolated-wheel laziness,
 and the exact rank-one neighbor-overlap failure shape.
 
-Earlier planning for rectangular, batched, frame-path, transport, closure, and phase
-synchronization APIs has been removed from current-state architecture. It grants no
-future implementation authority.
+Rectangular transformations, frame paths, transport, closure, and phase synchronization
+remain excluded. The implemented batched capability provides square right-unitary
+completions only and grants no downstream scientific authority.

@@ -12,6 +12,7 @@ from projectkoios.optimization.alignment.procrustes import (
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesStatus,
     ComplexUnitaryProcrustesTolerance,
+    ScalarComplexUnitaryProcrustesSolver,
 )
 
 pytestmark = pytest.mark.unit
@@ -23,7 +24,7 @@ type _Output = tuple[
 ]
 
 
-class _ConfiguredSolver(ComplexUnitaryProcrustesSolver):
+class _ConfiguredSolver(ScalarComplexUnitaryProcrustesSolver):
     __slots__ = ("output", "identifier", "version")
 
     def __init__(
@@ -54,7 +55,7 @@ class _ConfiguredSolver(ComplexUnitaryProcrustesSolver):
         return cast(_Output, self.output)
 
 
-class _FailingSolver(ComplexUnitaryProcrustesSolver):
+class _FailingSolver(ScalarComplexUnitaryProcrustesSolver):
     __slots__ = ()
 
     @property
@@ -93,11 +94,13 @@ def _diagonal(values: tuple[float, ...]) -> ComplexUnitaryProcrustesMatrix:
     )
 
 
-def test_solver_is_abstract_and_public_template_is_final() -> None:
+def test_generic_and_scalar_solvers_are_abstract_and_scalar_template_is_final() -> None:
     with pytest.raises(TypeError):
         ComplexUnitaryProcrustesSolver()  # type: ignore[abstract]
+    with pytest.raises(TypeError):
+        ScalarComplexUnitaryProcrustesSolver()  # type: ignore[abstract]
 
-    assert vars(ComplexUnitaryProcrustesSolver.solve)["__final__"] is True
+    assert vars(ScalarComplexUnitaryProcrustesSolver.solve)["__final__"] is True
 
 
 def test_solver_rejects_wrong_definition_type() -> None:

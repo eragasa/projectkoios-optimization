@@ -1,0 +1,36 @@
+\chapter{alignment/procrustes}
+
+For finite equally shaped matrices $A,B\in\mathbb{C}^{m\times n}$, scalar Procrustes
+solves
+\[
+ \min_{Q^\dagger Q=I}\lVert AQ-B\rVert_F.
+\]
+The cross matrix is $A^\dagger B$ and the selected full-rank transformation is
+$Q=UV^\dagger$ for $A^\dagger B=U\Sigma V^\dagger$.
+
+\section{Solver hierarchy}
+\texttt{ComplexUnitaryProcrustesSolver[DefinitionT, ResultT]} owns shared tolerance,
+rank-cutoff, residual-roundoff, and backend-evidence policy.
+\texttt{ScalarComplexUnitaryProcrustesSolver} owns the final one-pair solve template.
+\texttt{NumpyComplexUnitaryProcrustesSolver} supplies the reviewed dense SVD.
+
+\section{Rank behavior}
+The cutoff is $\tau_a+\tau_r\sigma_{\max}$. Singular values must be strictly greater
+than it to count. A deficient scalar result withholds the backend's arbitrary null-space
+completion.
+
+\section{Factory use}
+\begin{lstlisting}[language=Python]
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesDefinition,
+    ComplexUnitaryProcrustesMethod,
+    ComplexUnitaryProcrustesSolverFactory,
+)
+
+definition = ComplexUnitaryProcrustesDefinition(source, target)
+solver = ComplexUnitaryProcrustesSolverFactory.create(
+    ComplexUnitaryProcrustesMethod.NUMPY_DENSE
+)
+result = solver.solve(definition)
+\end{lstlisting}
+Tuple matrices are the dependency-free scalar representation.

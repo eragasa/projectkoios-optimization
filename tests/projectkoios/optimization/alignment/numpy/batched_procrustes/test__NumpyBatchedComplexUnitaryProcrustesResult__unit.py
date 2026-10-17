@@ -16,6 +16,16 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
 pytestmark = pytest.mark.unit
 
 
+def _full_rank_result() -> NumpyBatchedComplexUnitaryProcrustesResult:
+    source = np.broadcast_to(
+        np.eye(2, dtype=np.complex128),
+        (2, 3, 2, 2),
+    ).copy()
+    return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
+        NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+    )
+
+
 def _result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     source = np.broadcast_to(
         np.eye(2, dtype=np.complex128),
@@ -26,6 +36,13 @@ def _result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     target[0, 1, :, 1] = 0.0 + 0.0j
     return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
         NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+    )
+
+
+def test_result_exposes_no_postconstruction_array_installer() -> None:
+    assert not hasattr(
+        NumpyBatchedComplexUnitaryProcrustesResult,
+        "_install_arrays",
     )
 
 
@@ -62,6 +79,9 @@ def test_rank_deficient_completion_is_status_bearing_and_read_only() -> None:
 
     assert result.numerical_ranks[0, 1] == 1
     assert not bool(result.full_rank[0, 1])
+    assert not result.all_full_rank
+    assert result.rank_deficient_count == 1
+    assert result.first_rank_deficient_index == (0, 1)
     completion = result.right_unitary_completions[0, 1]
     np.testing.assert_allclose(
         completion.conjugate().T @ completion,
@@ -71,6 +91,19 @@ def test_rank_deficient_completion_is_status_bearing_and_read_only() -> None:
     )
     with pytest.raises(ValueError):
         completion[0, 0] = 2.0 + 0.0j
+    with pytest.raises(ValueError, match=r"batch index \(0, 1\) is rank deficient"):
+        result.require_unique_right_unitary_transformations()
+
+
+def test_full_rank_result_exposes_fail_closed_unique_transformations() -> None:
+    result = _full_rank_result()
+
+    assert result.all_full_rank
+    assert result.rank_deficient_count == 0
+    assert result.first_rank_deficient_index is None
+    transformations = result.require_unique_right_unitary_transformations()
+    assert transformations is result.right_unitary_completions
+    assert not transformations.flags.writeable
 
 
 def test_result_defensively_copies_public_arrays() -> None:

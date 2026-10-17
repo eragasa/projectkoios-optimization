@@ -21,10 +21,30 @@ def test_module_exports_only_public_batched_names() -> None:
     import projectkoios.optimization.alignment.numpy.batched_procrustes as module
 
     assert module.__all__ == [
+        "BatchedComplexUnitaryProcrustesSolver",
         "NumpyBatchedComplexUnitaryProcrustesDefinition",
         "NumpyBatchedComplexUnitaryProcrustesResult",
         "NumpyBatchedComplexUnitaryProcrustesSolver",
     ]
+
+
+def test_package_facade_preserves_explicit_implementation_ownership() -> None:
+    import projectkoios.optimization.alignment.numpy.batched_procrustes as facade
+    from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+        BatchedComplexUnitaryProcrustesSolver,
+        NumpyBatchedComplexUnitaryProcrustesResult,
+        NumpyBatchedComplexUnitaryProcrustesSolver,
+    )
+
+    assert BatchedComplexUnitaryProcrustesSolver.__module__.endswith(".contract")
+    assert NumpyBatchedComplexUnitaryProcrustesDefinition.__module__.endswith(
+        ".contract"
+    )
+    assert NumpyBatchedComplexUnitaryProcrustesResult.__module__.endswith(".contract")
+    assert NumpyBatchedComplexUnitaryProcrustesSolver.__module__.endswith(".solver")
+    assert not hasattr(facade, "ResidualReconstruction")
+    assert not hasattr(facade, "CompletionEvidence")
+    assert not hasattr(facade, "ResultArrays")
 
 
 def test_definition_preserves_shape_and_owns_read_only_copies() -> None:

@@ -1,0 +1,24 @@
+\chapter{alignment/batched\_procrustes}
+
+Batched Procrustes evaluates the same right-action problem for every item in a preserved
+leading shape. It does not materialize a Python definition or result object per matrix
+pair.
+
+\section{Nominal boundary}
+\texttt{BatchedComplexUnitaryProcrustesSolver} specializes the generic policy to exact
+NumPy batch definitions and results. It owns vectorized additive-cutoff construction.
+Concrete backends own decomposition execution.
+
+\section{Evidence}
+Every item retains a complete singular spectrum, numerical rank, full-rank status,
+applied rank cutoff, source and target powers, optimal residual, and squared-residual
+roundoff cutoff. Deficient completions remain diagnostic.
+
+\section{Fail-closed unique access}
+\texttt{require\_unique\_right\_unitary\_transformations()} returns the existing immutable
+completion array only when every item is full rank. Otherwise it raises with the first
+deficient C-order index.
+
+\section{Empty batches}
+Zero-sized leading dimensions preserve exact output shapes, claim no backend evidence,
+and invoke no SVD.

@@ -617,11 +617,11 @@ def _optimal_residual_evidence(
     normalized_terms = [source_power / scale, target_power / scale]
     normalized_terms.extend(-value / scale for value in twice_singular_values)
     normalized = math.fsum(normalized_terms)
-    roundoff_factor = max(64.0, 8.0 * float(len(normalized_terms)))
-    roundoff_bound = (
-        roundoff_factor
-        * sys.float_info.epsilon
-        * math.fsum(abs(value) for value in normalized_terms)
+    roundoff_coefficient = ComplexUnitaryProcrustesSolver.residual_roundoff_coefficient(
+        len(singular_values)
+    )
+    roundoff_bound = roundoff_coefficient * math.fsum(
+        abs(value) for value in normalized_terms
     )
     applied_roundoff_cutoff = _finite(
         roundoff_bound * scale,
@@ -641,36 +641,6 @@ def _optimal_residual_evidence(
             "optimal squared residual became nonfinite",
         ),
         applied_roundoff_cutoff,
-    )
-
-
-def _rank_cutoff(
-    tolerance: ComplexUnitaryProcrustesTolerance,
-    largest_singular_value: float,
-    /,
-) -> float:
-    """Compute the absolute-plus-relative numerical-rank cutoff.
-
-    Parameters
-    ----------
-    tolerance
-        Declared software tolerances.
-    largest_singular_value
-        Largest cross singular value.
-
-    Returns
-    -------
-    float
-        Finite cutoff used with a strict-greater-than rank rule.
-
-    Raises
-    ------
-    FloatingPointError
-        If cutoff arithmetic becomes nonfinite.
-    """
-    return _finite(
-        tolerance.rank_absolute + tolerance.rank_relative * largest_singular_value,
-        "applied numerical-rank cutoff became nonfinite",
     )
 
 
@@ -951,7 +921,10 @@ class ComplexUnitaryProcrustesResult:
             self.applied_rank_cutoff,
             "applied_rank_cutoff",
         )
-        expected_cutoff = _rank_cutoff(self.tolerance, singular_values[0])
+        expected_cutoff = ComplexUnitaryProcrustesSolver.rank_cutoff(
+            self.tolerance,
+            singular_values[0],
+        )
         if applied_rank_cutoff != expected_cutoff:
             raise ValueError("applied_rank_cutoff is inconsistent")
         expected_rank = sum(value > expected_cutoff for value in singular_values)
@@ -1065,8 +1038,226 @@ class ComplexUnitaryProcrustesResult:
         return cutoff
 
 
-class ComplexUnitaryProcrustesSolver(ABC):
-    """Define the nominal solver boundary and shared validation template.
+class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
+    """Own representation-independent right-Procrustes solver policy.
+
+    This generic nominal root unifies scalar and batched solvers without imposing either
+    representation's definition, result, empty-batch, or deficient-completion semantics.
+
+    Notes
+    -----
+    Concrete solver families inherit final shared policy methods and implement a typed
+    :meth:`solve` operation. The common policy fixes right action, exact tolerance
+    ownership, additive rank cutoffs, residual roundoff scaling, and backend-evidence
+    validation.
+    """
+
+    __slots__ = ()
+
+    @staticmethod
+    @final
+    def validate_tolerance(
+        tolerance: object,
+        /,
+    ) -> ComplexUnitaryProcrustesTolerance:
+        """Return an exact owner tolerance record.
+
+        Parameters
+        ----------
+        tolerance
+            Candidate numerical policy.
+
+        Returns
+        -------
+        ComplexUnitaryProcrustesTolerance
+            The exact validated record.
+
+        Raises
+        ------
+        TypeError
+            If the value is not an exact owner tolerance record.
+        """
+        if type(tolerance) is not ComplexUnitaryProcrustesTolerance:
+            raise TypeError("tolerance must be ComplexUnitaryProcrustesTolerance")
+        return tolerance
+
+    @classmethod
+    @final
+    def rank_cutoff_parameters(
+        cls,
+        tolerance: object,
+        /,
+    ) -> tuple[float, float]:
+        """Return validated additive rank-cutoff coefficients.
+
+        Parameters
+        ----------
+        tolerance
+            Candidate owner tolerance record.
+
+        Returns
+        -------
+        tuple[float, float]
+            Absolute and relative coefficients in additive order.
+
+        Raises
+        ------
+        TypeError
+            If the tolerance has the wrong exact nominal type.
+        """
+        validated = cls.validate_tolerance(tolerance)
+        return validated.rank_absolute, validated.rank_relative
+
+    @classmethod
+    @final
+    def rank_cutoff(
+        cls,
+        tolerance: object,
+        largest_singular_value: object,
+        /,
+    ) -> float:
+        """Return the finite additive cutoff for one singular spectrum.
+
+        Parameters
+        ----------
+        tolerance
+            Candidate owner tolerance record.
+        largest_singular_value
+            Candidate nonnegative exact built-in float.
+
+        Returns
+        -------
+        float
+            Finite cutoff used with strict-greater-than rank comparison.
+
+        Raises
+        ------
+        TypeError
+            If an input has the wrong exact nominal type.
+        ValueError
+            If the singular value is negative.
+        FloatingPointError
+            If cutoff arithmetic becomes nonfinite.
+        """
+        absolute, relative = cls.rank_cutoff_parameters(tolerance)
+        largest = _nonnegative_float(
+            largest_singular_value,
+            "largest_singular_value",
+        )
+        return _finite(
+            absolute + relative * largest,
+            "applied numerical-rank cutoff became nonfinite",
+        )
+
+    @staticmethod
+    @final
+    def residual_roundoff_coefficient(singular_value_count: object, /) -> float:
+        """Return the shared binary64 residual-roundoff coefficient.
+
+        Parameters
+        ----------
+        singular_value_count
+            Positive number of complete-spectrum entries.
+
+        Returns
+        -------
+        float
+            Dimension-aware binary64 epsilon coefficient for the absolute term sum.
+
+        Raises
+        ------
+        TypeError
+            If the count is not an exact built-in integer.
+        ValueError
+            If the count is not positive.
+        """
+        count = _positive_integer(singular_value_count, "singular_value_count")
+        return max(64.0, 8.0 * float(count + 2)) * sys.float_info.epsilon
+
+    @staticmethod
+    @final
+    def validate_backend_evidence(
+        identifier: object,
+        version: object,
+        /,
+    ) -> tuple[str, str]:
+        """Validate metadata for an executed backend.
+
+        Parameters
+        ----------
+        identifier, version
+            Candidate API-level backend metadata.
+
+        Returns
+        -------
+        tuple[str, str]
+            Validated nonempty identifier and version.
+
+        Raises
+        ------
+        TypeError
+            If present metadata has the wrong exact type.
+        ValueError
+            If a metadata string is empty.
+        """
+        return (
+            _nonempty_string(identifier, "backend_identifier"),
+            _nonempty_string(version, "backend_version"),
+        )
+
+    @staticmethod
+    @final
+    def validate_absent_backend_evidence(
+        identifier: object,
+        version: object,
+        /,
+    ) -> tuple[None, None]:
+        """Validate metadata for a path that executed no backend.
+
+        Parameters
+        ----------
+        identifier, version
+            Candidate absent metadata.
+
+        Returns
+        -------
+        tuple[None, None]
+            Two validated absent values.
+
+        Raises
+        ------
+        ValueError
+            If either value claims backend evidence.
+        """
+        if identifier is not None or version is not None:
+            raise ValueError("unexecuted backend must not claim backend evidence")
+        return None, None
+
+    @abstractmethod
+    def solve(self, definition: DefinitionT, /) -> ResultT:
+        """Solve one validated scalar or batched right-Procrustes definition.
+
+        Parameters
+        ----------
+        definition
+            Family-specific immutable definition.
+
+        Returns
+        -------
+        ResultT
+            Family-specific immutable result.
+        """
+        raise NotImplementedError
+
+
+class ScalarComplexUnitaryProcrustesSolver(
+    ComplexUnitaryProcrustesSolver[
+        ComplexUnitaryProcrustesDefinition,
+        ComplexUnitaryProcrustesResult,
+    ],
+    ABC,
+):
+    """Define the scalar solver boundary and shared validation template.
 
     Notes
     -----
@@ -1193,7 +1384,7 @@ class ComplexUnitaryProcrustesSolver(ABC):
         ):
             raise ValueError("backend SVD violates the reconstruction bound")
 
-        cutoff = _rank_cutoff(tolerance, singular_values[0])
+        cutoff = self.rank_cutoff(tolerance, singular_values[0])
         # Equality is deliberately deficient so the boundary cannot silently flip
         # between producer and verifier implementations.
         numerical_rank = sum(value > cutoff for value in singular_values)
@@ -1232,13 +1423,9 @@ class ComplexUnitaryProcrustesSolver(ABC):
                     "backend transformation is inconsistent with the optimal residual"
                 )
 
-        backend_identifier = _nonempty_string(
+        backend_identifier, backend_version = self.validate_backend_evidence(
             self._backend_identifier,
-            "backend_identifier",
-        )
-        backend_version = _nonempty_string(
             self._backend_version,
-            "backend_version",
         )
         return ComplexUnitaryProcrustesResult(
             definition.row_count,
@@ -1308,7 +1495,7 @@ class ComplexUnitaryProcrustesSolverFactory:
     def create(
         method: ComplexUnitaryProcrustesMethod,
         /,
-    ) -> ComplexUnitaryProcrustesSolver:
+    ) -> ScalarComplexUnitaryProcrustesSolver:
         """Construct the exact requested nominal solver.
 
         Parameters
@@ -1318,8 +1505,8 @@ class ComplexUnitaryProcrustesSolverFactory:
 
         Returns
         -------
-        ComplexUnitaryProcrustesSolver
-            Fresh nominal solver instance.
+        ScalarComplexUnitaryProcrustesSolver
+            Fresh one-pair nominal solver instance.
 
         Raises
         ------
@@ -1342,6 +1529,7 @@ __all__ = [
     "ComplexUnitaryProcrustesResult",
     "ComplexUnitaryProcrustesSolver",
     "ComplexUnitaryProcrustesSolverFactory",
+    "ScalarComplexUnitaryProcrustesSolver",
     "ComplexUnitaryProcrustesStatus",
     "ComplexUnitaryProcrustesTolerance",
     "DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE",

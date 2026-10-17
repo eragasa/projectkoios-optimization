@@ -1,4 +1,4 @@
-# Batched complex-unitary right Procrustes alignment
+# NumPy batched complex-unitary right Procrustes alignment
 
 This NumPy-specific capability solves a complete tensor batch without converting matrix
 pairs into Python tuple objects.
@@ -31,6 +31,10 @@ completion is the uniquely identified polar factor.
 - `full_rank` is true exactly when the numerical rank equals the column count.
 - A full-rank completion is the unique Procrustes transformation.
 - A deficient completion is diagnostic and must not be represented as a unique solution.
+- `all_full_rank`, `rank_deficient_count`, and `first_rank_deficient_index` summarize
+  the same per-item evidence without introducing downstream policy.
+- `require_unique_right_unitary_transformations()` fails closed at the first deficient
+  C-order index and otherwise returns the existing immutable completion array.
 - Whole-batch success does not erase deficient-item status.
 
 ## Public vocabulary
@@ -44,6 +48,8 @@ of the contract.
 - `right_unitary_completions`
 - `cross_singular_values`
 - `numerical_ranks` and `full_rank`
+- `all_full_rank`, `rank_deficient_count`, and `first_rank_deficient_index`
+- `require_unique_right_unitary_transformations()`
 
 ## Ownership boundary
 
@@ -61,5 +67,10 @@ The supporting pages specify numerical behavior, implementation structure, and f
 
 - [Numerical contract](numerics.md)
 - [Implementation organization](implementation.md)
+- [Consumer needs](scientific.md)
+- [Contract and result ownership](contract/index.md)
+- [Numerical-evidence ownership](numerics/index.md)
+- [Solver ownership](solver/index.md)
 - [Schematics](schematics.md)
-- [One-pair Procrustes contract](../index.md)
+- [Backend-neutral batched contract](../index.md)
+- [One-pair Procrustes contract](../../procrustes/index.md)

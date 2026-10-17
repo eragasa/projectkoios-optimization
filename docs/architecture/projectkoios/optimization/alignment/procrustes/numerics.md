@@ -57,4 +57,4 @@ unitary completion for every item together with explicit effective-rank evidence
 - Rank and residual policies otherwise match the existing scalar owner semantics.
 - Batched backend or validation failures reject the whole batch without partial output.
 
-See [batched Procrustes numerics](batched/numerics.md) for array-specific behavior.
+See [batched Procrustes numerics](../batched_procrustes/numerics.md) for array-specific behavior.

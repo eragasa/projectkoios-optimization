@@ -45,6 +45,7 @@ def test_full_rank_batch_matches_every_scalar_owner_result() -> None:
         NumpyBatchedComplexUnitaryProcrustesDefinition(source, target, tolerance)
     )
     scalar = NumpyComplexUnitaryProcrustesSolver()
+    unique_transformations = batch.require_unique_right_unitary_transformations()
 
     for index in np.ndindex(batch.batch_shape):
         expected = scalar.solve(
@@ -57,7 +58,7 @@ def test_full_rank_batch_matches_every_scalar_owner_result() -> None:
         assert expected.status is ComplexUnitaryProcrustesStatus.UNIQUE
         assert expected.transformation is not None
         np.testing.assert_allclose(
-            batch.right_unitary_completions[index],
+            unique_transformations[index],
             np.asarray(expected.transformation),
             rtol=0.0,
             atol=3.0e-14,

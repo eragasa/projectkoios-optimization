@@ -58,7 +58,10 @@ result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
 )
 assert result.batch_shape == (2, 3)
 assert np.all(result.full_rank)
-assert np.max(np.abs(result.right_unitary_completions - rotation)) < 1.0e-15
+assert result.all_full_rank
+assert result.rank_deficient_count == 0
+transformations = result.require_unique_right_unitary_transformations()
+assert np.max(np.abs(transformations - rotation)) < 1.0e-15
 assert result.backend_identifier == "numpy.linalg.svd"
 """
     environment = os.environ.copy()

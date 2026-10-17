@@ -8,12 +8,12 @@ import numpy as np
 
 from ..procrustes import (
     ComplexUnitaryProcrustesMatrix,
-    ComplexUnitaryProcrustesSolver,
+    ScalarComplexUnitaryProcrustesSolver,
 )
 
 
 @final
-class NumpyComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver):
+class NumpyComplexUnitaryProcrustesSolver(ScalarComplexUnitaryProcrustesSolver):
     """Compute the square cross-matrix SVD with NumPy complex128 arithmetic."""
 
     __slots__ = ()

@@ -20,6 +20,9 @@ $$
 - Equality with the cutoff is deficient.
 - Every item exposes its actual applied cutoff.
 - `full_rank` is explicit and does not depend on consumer interpretation.
+- Aggregate rank properties are exact reductions of `full_rank`, not separate evidence.
+- The unique-transformation accessor raises before returning matrices if any item is
+  deficient; diagnostic completions remain available through their explicit field.
 - A different downstream `max(absolute, relative)` convention is not encoded upstream.
 
 ## Residual evidence

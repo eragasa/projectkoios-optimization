@@ -30,9 +30,11 @@ marking every item's effective rank and full-rank status explicitly.
 - `ComplexUnitaryProcrustesStatus`
 - `ComplexUnitaryProcrustesResult`
 - `ComplexUnitaryProcrustesSolver`
+- `ScalarComplexUnitaryProcrustesSolver`
 - `ComplexUnitaryProcrustesMethod`
 - `ComplexUnitaryProcrustesSolverFactory`
 - `NumpyComplexUnitaryProcrustesSolver`
+- `BatchedComplexUnitaryProcrustesSolver`
 - `NumpyBatchedComplexUnitaryProcrustesDefinition`
 - `NumpyBatchedComplexUnitaryProcrustesResult`
 - `NumpyBatchedComplexUnitaryProcrustesSolver`
@@ -51,6 +53,9 @@ tolerances here are software controls and do not establish scientific identifiab
 ## Pages
 
 - [Complex-unitary Procrustes alignment](procrustes/index.md)
+- [Batched Procrustes alignment](batched_procrustes/index.md)
+- [Numerics](numerics.md)
+- [Consumer needs](scientific.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
 - [Optimization namespace](../index.md)

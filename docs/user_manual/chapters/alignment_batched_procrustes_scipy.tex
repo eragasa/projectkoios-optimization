@@ -1,0 +1,11 @@
+\chapter{alignment/batched\_procrustes/scipy}
+
+No SciPy batched Procrustes solver is currently implemented or exported.
+
+Dense exact complex128 batches use the supported NumPy façade. A future SciPy backend
+requires a distinct representation or execution need, an explicit contract, independent
+numerical qualification, and isolated-wheel verification. It must not be introduced as
+a name-only wrapper around NumPy.
+
+Consumers must not infer SciPy availability from unrelated SciPy capabilities in the
+distribution.

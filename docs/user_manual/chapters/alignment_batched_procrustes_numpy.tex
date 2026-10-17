@@ -1,0 +1,31 @@
+\chapter{NumPy batched Procrustes}
+
+\noindent\textbf{API chapter:} \path{alignment/batched_procrustes/numpy}
+
+The NumPy backend accepts exact \texttt{numpy.ndarray} inputs with exact
+\texttt{numpy.complex128} dtype and shape \texttt{(..., m, n)}. It performs one public
+batched \texttt{numpy.linalg.svd} call for a nonempty batch.
+
+\section{Public façade}
+\begin{lstlisting}[language=Python]
+from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+    NumpyBatchedComplexUnitaryProcrustesDefinition,
+    NumpyBatchedComplexUnitaryProcrustesSolver,
+)
+
+definition = NumpyBatchedComplexUnitaryProcrustesDefinition(
+    source_matrices=source,
+    target_matrices=target,
+)
+result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(definition)
+transformations = result.require_unique_right_unitary_transformations()
+\end{lstlisting}
+
+\section{Validation}
+The solver validates SVD factor unitarity, cross reconstruction, completion unitarity,
+and direct residual agreement. Nonfinite arithmetic fails closed. A failed batch returns
+no partial result.
+
+\section{Consumer use}
+Consumers preserve leading-index topology and interpret rank and residual evidence after
+the solve. KSD topology policy and PhysKit physical semantics remain outside this API.

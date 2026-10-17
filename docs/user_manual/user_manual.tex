@@ -1,0 +1,32 @@
+\documentclass[11pt,oneside]{book}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\geometry{margin=1in}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,pdftitle={Project Koios Optimization User Manual},pdfauthor={Project Koios}}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,columns=fullflexible,showstringspaces=false}
+\pdfinfoomitdate=1
+\pdftrailerid{}
+\begin{document}
+\frontmatter
+\title{Project Koios Optimization\\User Manual}
+\author{Project Koios}
+\date{}
+\maketitle
+\tableofcontents
+\mainmatter
+\include{chapters/alignment}
+\include{chapters/alignment_procrustes}
+\include{chapters/alignment_batched_procrustes}
+\include{chapters/alignment_batched_procrustes_numpy}
+\include{chapters/alignment_batched_procrustes_scipy}
+\backmatter
+\chapter*{Verification scope}
+Software verification and bounded numerical verification establish implementation
+properties only. They do not establish scientific validity, material-model adequacy, or
+human acceptance.
+\end{document}

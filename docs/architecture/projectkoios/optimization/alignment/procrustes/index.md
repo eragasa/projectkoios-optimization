@@ -65,12 +65,22 @@ materializing one Python object graph per matrix pair.
 - It preserves the scalar owner's additive numerical-rank cutoff.
 - It returns a unitary SVD completion for every item with explicit full-rank status.
 - A deficient completion is diagnostic and is not represented as a unique solution.
-- The dependency-free one-pair API remains unchanged.
+- Both scalar and batched families inherit one behaviorful generic policy owner.
+
+## Solver hierarchy
+
+- [`ComplexUnitaryProcrustesSolver`](ComplexUnitaryProcrustesSolver/index.md) owns shared
+  generic policy.
+- [`ScalarComplexUnitaryProcrustesSolver`](ScalarComplexUnitaryProcrustesSolver/index.md)
+  owns the final one-pair solve template.
+- Batched ownership is documented under
+  [`BatchedComplexUnitaryProcrustesSolver`](../batched_procrustes/numpy/contract/BatchedComplexUnitaryProcrustesSolver/index.md).
 
 ## Pages
 
 - [Numerics](numerics.md)
 - [Implementation](implementation.md)
+- [Consumer needs](scientific.md)
 - [Schematics](schematics.md)
-- [Batched NumPy Procrustes alignment](batched/index.md)
+- [Batched Procrustes alignment](../batched_procrustes/index.md)
 - [Alignment namespace](../index.md)
