@@ -12,11 +12,16 @@
 
 ## Record validation
 
+Record tests distinguish rejected public operations from mechanisms that bypass the
+record contract and fabricate unreachable state.
+
 - Invalid-state tests use explicit canonical constructor inputs.
 - Each invalid input corresponds to a named contract condition.
+- Tests may assert that ordinary field assignment raises `FrozenInstanceError` or
+  `AttributeError`; the rejected assignment leaves the record unchanged.
 - Invalid-state tests do not clone a valid production record and arbitrarily perturb its
-  fields through `dataclasses.replace`, generic override dictionaries, frozen-record
-  mutation, or equivalent mechanisms.
+  fields through `object.__setattr__`, `object.__new__`, `dataclasses.replace`, generic
+  override dictionaries, or equivalent mechanisms.
 - Backend trust-boundary tests use typed immutable probes when a public constructor
   cannot represent the malformed state.
 

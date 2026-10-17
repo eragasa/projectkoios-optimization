@@ -45,13 +45,19 @@
 
 ## Test construction
 
+Tests should exercise public construction and behavior without manufacturing evidence
+that the public contract cannot represent.
+
 - Tests do not create evidence by changing arbitrary values in an otherwise valid record.
 - Tests use named, independently derived mathematical cases and explicit contract
   boundaries.
 - Invalid-state tests use explicit canonical constructor inputs or typed immutable
   backend probes.
-- Tests do not mutate frozen production records or use generic override dictionaries to
-  manufacture malformed state.
+- Tests may assert that ordinary field assignment raises `FrozenInstanceError` or
+  `AttributeError`; failed assignment does not mutate the record.
+- Tests do not bypass immutability or manufacture state through `object.__setattr__`,
+  `object.__new__`, `dataclasses.replace`, generic override dictionaries, or equivalent
+  mechanisms.
 - Expected values are not changed to match observed production output.
 
 ## Enforcement
