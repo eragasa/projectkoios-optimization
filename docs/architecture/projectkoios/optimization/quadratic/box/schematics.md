@@ -43,11 +43,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    S[Current feasible point and working bounds] --> K[Reconstruct gradient, row scales, and KKT violations]
+    S[Current feasible point and working bounds] --> K[_active_set_kkt_evidence reconstructs immutable ordered evidence]
     K --> F{Any free stationarity violation?}
-    F -- yes --> L[Solve Q_FF p_F = minus Qd_F]
-    L --> A[Choose largest feasible alpha in zero to one]
-    A --> H[Update point and activate endpoint hits in coordinate order]
+    F -- yes --> L[_solve_free_direction solves Q_FF p_F = minus Qd_F]
+    L --> A[_blocking_step chooses largest feasible alpha in zero to one]
+    A --> H[_advance_free_coordinates updates and activates hits in coordinate order]
     F -- no --> V{Any active sign violation?}
     V -- yes --> R[Release smallest-index violating bound]
     V -- no --> O[Return candidate to final template]

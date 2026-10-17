@@ -18,12 +18,14 @@ concrete backend path.
 ```mermaid
 flowchart LR
     D[Dependency-free definition] --> V[Validate dimension, grid, modes, channels]
-    V --> E{Any exact empty case?}
-    E -->|yes| Z[Return exact P x S result without backend evidence]
-    E -->|no| A[Convert shared arrays]
+    V --> E[_trivial_values checks exact empty cases]
+    E -->|exact values| Z[Return P x S result without backend evidence]
+    E -->|nontrivial| A[Convert shared arrays]
     A --> P[Construct one P x M phase matrix]
     P --> M[One dense P x M by M x S multiplication]
-    M --> R[Validate point-major result and backend evidence]
+    M --> S[Correlate result metadata]
+    S --> R[Validate complete value surface]
+    R --> B[Require paired backend evidence]
 ```
 
 ## Consumer composition

@@ -14,13 +14,26 @@ src/python/projectkoios/optimization/quadratic/
 │   └── BoxQuadraticMinimizerFactory
 └── numpy/
     └── box.py
-        └── NumpyBoxQuadraticMinimizer
+        ├── NumpyBoxQuadraticMinimizer
+        ├── _ActiveSetKktEvidence
+        ├── _active_set_kkt_evidence
+        ├── _solve_free_direction
+        ├── _blocking_step
+        └── _advance_free_coordinates
 ```
 
 Package initializers remain import-empty. `box.py` and `factory.py` import no optional
 backend. The closed factory lazily imports the NumPy implementation. External nominal
 subclasses may be injected directly and do not require factory registration, but the
 nominal base is dense-only and imposes the same final validation on every subclass.
+
+The NumPy backend keeps the public iteration template small by assigning one coherent
+responsibility to each named internal operation. `_active_set_kkt_evidence()` reconstructs
+immutable ordered decision evidence, `_solve_free_direction()` owns the principal-system
+solve and its exception translation, `_blocking_step()` owns the largest feasible step,
+and `_advance_free_coordinates()` owns the in-place feasible update and deterministic
+endpoint activation. These operations preserve the documented coordinate order and do
+not introduce an alternative objective or tolerance policy.
 
 `BoxQuadraticMinimizer` accepts an exact `ConstrainedQuadraticTolerance` and a positive
 built-in unsigned-32-bit `maximum_iterations` at construction and exposes both through
@@ -115,7 +128,9 @@ Mapped contract, result, factory, wheel, integration, and numerical tests live u
 - `tests/projectkoios/optimization/quadratic/box/`; and
 - `tests/projectkoios/optimization/quadratic/numpy/box/`.
 
-They cover 1-D, interior, faces, edges, corners, fixed coordinates, parity with the
+They directly exercise the named KKT-evidence, free-direction, blocking-step, and
+coordinate-advance operations in addition to covering 1-D, interior, faces, edges,
+corners, fixed coordinates, parity with the
 existing exact 2-D rectangle minimizer, coordinate permutation, ill-conditioned admitted
 matrices, deterministic repetition, simultaneous-hit sets, smallest-index release,
 exact-endpoint retention, interior snapping precedence, invalid inputs, iteration
