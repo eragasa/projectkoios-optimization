@@ -29,11 +29,22 @@ relevant_tree = "5e90d8596731dec6cffc29533830c0332d465eed"
 status = "reviewed source candidate; adapted by the Optimization owner before acceptance"
 
 [[sources]]
-role = "upstream-performance-source"
+role = "pareto-mechanism-authority"
 repository = "https://github.com/eragasa/pypospack"
 commit = "be453fa7191e55a0426f66e8b5b5b0b103c8b29d"
 root_tree = "7ac9c9f255aa7731f39ce35a0e561fc113082a6f"
-status = "public PyPosPack source; exact Pareto blob also preserved in recovery-primary"
+status = "authoritative source for the transferred Pareto selector and iterative sampling policy; exact selector blob also preserved in recovery-primary"
+
+[[sources]]
+role = "pareto-mechanism-context-authority"
+repository = "https://github.com/eragasa/pymatmc2"
+commit = "9d31d7fd4f8902f17864fbf391059101a3f5afda"
+root_tree = "7773f886eaecfe919abf68d9e4f990fb398a82be"
+historical_source_commit = "3063f031301c04e395cb9d7bc5064f2a52e1110c"
+historical_source_tree = "fd9788560365e93faae596ac91f2530aa6bd92a8"
+historical_mexm_commit = "3963a1a30ba1595fba69cd0f791dc31fe2e08f7c"
+historical_mexm_tree = "a19cd86088aad5ecb0b3bbf8a4c73e0159a22fd3"
+status = "more authoritative historical mechanism context than KSD recovery copies; no PyMatMC2 source transferred"
 
 [[files]]
 source_role = "recovery-evidence-not-origin"
@@ -316,7 +327,7 @@ items = [
   "potential-specific models and campaigns",
   "GMM campaign analysis, plotting, scientific feature labels, and filesystem workflow orchestration beyond the extracted numeric GMM-conditioned KDE capability",
   "unrelated PyPosPack/PyPosMat filesystem, MPI, calculator, plotting, and campaign code",
-  "PyMatMC2",
+  "PyMatMC2 runtime and source transfer; retained only as authoritative historical mechanism context",
   "legacy launch adapters",
   "universal behaviorless marker bases",
   "calculator, filesystem, subprocess, and network execution",

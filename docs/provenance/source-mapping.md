@@ -2,11 +2,10 @@
 
 This mapping was established before implementation. Recovery material is
 evidence, not a canonical release. The iterative multi-objective optimization block
-originates in Eugene J. Ragasa's PhD work; surviving behavior and provenance are
-scattered across
-PyPosPack and multiple research repositories. Each retained behavior
-therefore requires an exact source mapping rather than attribution to only the nearest
-recovery wrapper.
+originates in Eugene J. Ragasa's PhD work. PyPosPack and PyMatMC2 are the more
+authoritative historical mechanism
+repositories; KSD is later recovery evidence. Each retained behavior therefore requires
+an exact source mapping rather than attribution to only the nearest recovery wrapper.
 
 ## Accepted recovery sources
 
@@ -52,18 +51,20 @@ recovered from
 blob `ceb36b425334f30594000d73256a44ee055c75e6`, SHA-256
 `bc03e897edb6e5e19e715d32d94d7179005b52d663110e653f443a5a966daa5b`.
 
-## PyPosPack iterative Pareto and performance sources
+## Pareto mechanism authority
 
-The interchangeable stage policy comes from public PyPosPack commit
-`be453fa7191e55a0426f66e8b5b5b0b103c8b29d`, path
-`pypospack/pyposmat/engines/mc_sampler_iterate.py`, blob
-`a39c7ba9956d7b6fac6399d3fdf915bb3418bed8`, SHA-256
-`bdaaca875f52e82fa17e440dd30a3e7dd5db8df56db2698f4f263bf723838c6e`.
-The owner extraction retains the ability to use a different sampler in each iteration,
-including adaptive samplers that consume the preceding Pareto archive. Filesystem, YAML,
-MPI, logging, calculator execution, and string-selected sampling modes are not retained.
+The canonical Pareto behavior and provenance record is
+[`docs/architecture/projectkoios/optimization/multiobjective/pareto/index.md`](../architecture/projectkoios/optimization/multiobjective/pareto/index.md).
+PyPosPack and PyMatMC2 are the more authoritative historical mechanism repositories;
+KSD is recovery evidence rather than mechanism origin or release authority. PyPosPack is
+the exact source authority for the selector and iterative sampling policy transferred
+here. PyMatMC2 supplies related mechanism and design context, but no PyMatMC2 source is
+currently transferred. Exact machine-readable source and target identities remain in
+`TRANSFER.toml`.
 
-The optional Gaussian KDE sampler also comes from that public snapshot. The preserved
+## PyPosPack KDE and GMM-conditioned sampling sources
+
+The optional Gaussian KDE sampler comes from the public PyPosPack snapshot. The preserved
 bandwidth functions are in `pypospack/kde.py`, blob
 `36e4a3ac656140501781419b2f6557456ff40c95`, SHA-256
 `011bd3766e02a349b51c9a229029023f2b98ffa740e5f47ff4c0ecf047fcee9f`.
@@ -113,39 +114,10 @@ covariance. The symmetric `eigh` relative eigenspectrum floor is clearly separat
 modern numerical alternative. GMM-labeled cluster members remain KDE seed populations;
 they are not represented as archive compression.
 
-The owner-authored Pareto-shell decomposition and contrastive KDE sampler are not donor
-translations. Eugene Joseph M. Ragasa recorded the recursive shell pullback and
-positive-versus-dominated-shell sampling idea on 2026-10-13. Repository and Git-history
-searches found no implementation in PyPosPack, KSD, or the frozen Frankenstein design
-evidence. The dated local design record is
-`docs/research/pareto-shell-contrastive-sampling.md`. These additions call the preserved
-selector and bandwidth capability but remain explicitly outside claims of historical
-reconstruction or literature novelty. They also remain separate from the reconstructed
-GMM-conditioned KDE capability.
-
-The performance-critical Pareto selector comes from the same public PyPosPack commit,
-`be453fa7191e55a0426f66e8b5b5b0b103c8b29d`, path `pypospack/pareto.py`, blob
-`217ea0a75e60c79529f566aace35c1e14d4c627b`, SHA-256
-`dd0a541d16b34ccc803967e37471ea0f26f9068725a5c69c83454400bb0b0198`.
-KSD is not the origin of this engine behavior. The identical blob merely survives as
-recovery evidence under KSD commit `ff50d06e...` at
-`python/src/ksdft2effmass/pypospack/pareto.py`.
-
-Eugene J. Ragasa developed the original implementation. Its source header credits
-Dmitriy Morozov of Lawrence Berkeley National Laboratory with December 2016 Pareto
-performance improvements. The upstream commit is BSD-2-Clause; the exact retained
-license is `licenses/PyPosPack-BSD-2-Clause.txt` and the attribution is repeated in
-`NOTICE`.
-
-Both upstream files are BSD-2-Clause and part of the PhD-work lineage; KSD copies are
-later recovery evidence, not source origin.
-
-The adaptive lazy chunk-pruning loop and comparison order are preserved. The sole
-algorithmic correction replaces `zip(*[iter(indices)] * size)`, which silently discarded
-a final short batch, with Python 3.14 `itertools.batched`. A 501-point regression and a
-20,000-point, ten-objective numerical comparison against the full brute-force result
-protect that correction. Further movement or refactoring of
-`optimization/multiobjective/pareto/` requires explicit human authorization.
+The owner-authored Pareto-shell decomposition and contrastive KDE sampler use the
+preserved selector and bandwidth capability but are not donor translations. Their
+Pareto ownership, origin distinction, and protection rules are recorded with the Pareto
+capability rather than in this general inventory.
 
 ## Test mapping
 
@@ -175,8 +147,8 @@ Accepted behavioral evidence:
 with the accepted behaviorful optimizer contract. The exact PyPosPack Pareto selector, global Gaussian KDE sampler, and GMM-conditioned local KDE sampler are
 the retained PyPosPack-lineage behaviors. Recursive Pareto-shell pullback and contrastive
 KDE sampling are separately identified owner-authored research additions. GMM campaign
-analysis and plotting, PyMatMC2, unrelated PyPosPack/PyPosMat filesystem
-and calculator machinery, potential models, campaign execution, provenance
+analysis and plotting, PyMatMC2 runtime/source transfer, unrelated PyPosPack/PyPosMat
+filesystem and calculator machinery, potential models, campaign execution, provenance
 correlators, plot and report artifacts, dispatch, retry, and workflow tests are excluded.
 
 ## Architecture source lineage
