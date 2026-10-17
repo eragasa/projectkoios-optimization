@@ -137,37 +137,27 @@ def test_parseval_and_origin_aware_hermiticity_hold_for_hermitian_samples(
     assert hermiticity.ordinary_maximum_frobenius_defect <= 2.0e-14
 
 
-def test_hermiticity_analyzer_reports_deliberately_unpaired_coefficient() -> None:
+def test_hermiticity_analyzer_reports_independently_declared_defect() -> None:
     mesh = CenteredUniformMesh(1, 4, (0.5,))
-    samples = np.broadcast_to(
-        np.eye(2, dtype=np.complex128),
-        (mesh.size, 2, 2),
-    ).copy()
-    definition = NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
+    modes = np.array([[-2], [-1], [0], [1]], dtype=np.int64)
+    coefficients = np.array(
+        [
+            [[0.0j, 0.0j], [0.0j, 0.0j]],
+            [[0.0j, 0.0j], [0.0j, 0.0j]],
+            [[0.0j, 0.0j], [0.0j, 0.0j]],
+            [[0.0j, 0.25j], [0.0j, 0.0j]],
+        ],
+        dtype=np.complex128,
+    )
+    series = NumpyFiniteFourierMatrixSeries.from_arrays(1, modes, coefficients)
+    result = NumpyCenteredUniformMeshMatrixFourierTransformResult(
         mesh,
-        samples,
-    )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
-    coefficients = transformed.series.matrix_coefficients.copy()
-    positive_mode = np.flatnonzero(transformed.series.integer_modes[:, 0] == 1)[0]
-    coefficients[positive_mode, 0, 1] += 0.25j
-    nonhermitian_series = NumpyFiniteFourierMatrixSeries.from_arrays(
-        1,
-        transformed.series.integer_modes,
-        coefficients,
-    )
-    nonhermitian_result = NumpyCenteredUniformMeshMatrixFourierTransformResult(
-        mesh,
-        nonhermitian_series,
-        "test.deliberate_nonhermitian_series",
+        series,
+        "test.independently_declared_hermiticity_defect",
         "1",
     )
 
-    diagnostics = NumpyCenteredUniformMeshHermiticityAnalyzer().analyze(
-        nonhermitian_result
-    )
+    diagnostics = NumpyCenteredUniformMeshHermiticityAnalyzer().analyze(result)
 
     assert diagnostics.twisted_cyclic_maximum_frobenius_defect == pytest.approx(
         0.25,
