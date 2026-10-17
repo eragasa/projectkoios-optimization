@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 import pytest
 
 from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesDecomposition,
     ComplexUnitaryProcrustesDefinition,
     ComplexUnitaryProcrustesMatrix,
     ComplexUnitaryProcrustesSolver,
@@ -17,22 +18,16 @@ from projectkoios.optimization.alignment.procrustes import (
 
 pytestmark = pytest.mark.unit
 
-type _Output = tuple[
-    tuple[float, ...],
-    ComplexUnitaryProcrustesMatrix,
-    ComplexUnitaryProcrustesMatrix,
-]
-
 
 class _ConfiguredSolver(ScalarComplexUnitaryProcrustesSolver):
     __slots__ = ("output", "identifier", "version")
 
     def __init__(
         self,
-        output: object,
+        output: ComplexUnitaryProcrustesDecomposition,
         *,
-        identifier: object = "test.svd",
-        version: object = "1",
+        identifier: str = "test.svd",
+        version: str = "1",
     ) -> None:
         self.output = output
         self.identifier = identifier
@@ -40,19 +35,31 @@ class _ConfiguredSolver(ScalarComplexUnitaryProcrustesSolver):
 
     @property
     def _backend_identifier(self) -> str:
-        return cast(str, self.identifier)
+        return self.identifier
 
     @property
     def _backend_version(self) -> str:
-        return cast(str, self.version)
+        return self.version
 
     def _svd_validated(
         self,
         cross_matrix: ComplexUnitaryProcrustesMatrix,
         /,
-    ) -> _Output:
+    ) -> ComplexUnitaryProcrustesDecomposition:
         del cross_matrix
-        return cast(_Output, self.output)
+        return self.output
+
+
+class _MalformedOutputSolver(_ConfiguredSolver):
+    __slots__ = ()
+
+    def _svd_validated(
+        self,
+        cross_matrix: ComplexUnitaryProcrustesMatrix,
+        /,
+    ) -> ComplexUnitaryProcrustesDecomposition:
+        del cross_matrix
+        return cast(ComplexUnitaryProcrustesDecomposition, "malformed")
 
 
 class _FailingSolver(ScalarComplexUnitaryProcrustesSolver):
@@ -70,7 +77,7 @@ class _FailingSolver(ScalarComplexUnitaryProcrustesSolver):
         self,
         cross_matrix: ComplexUnitaryProcrustesMatrix,
         /,
-    ) -> _Output:
+    ) -> ComplexUnitaryProcrustesDecomposition:
         del cross_matrix
         raise KeyError("backend defect")
 
@@ -94,6 +101,18 @@ def _diagonal(values: tuple[float, ...]) -> ComplexUnitaryProcrustesMatrix:
     )
 
 
+def _decomposition(
+    singular_values: tuple[float, ...],
+    left: ComplexUnitaryProcrustesMatrix,
+    right_adjoint: ComplexUnitaryProcrustesMatrix,
+) -> ComplexUnitaryProcrustesDecomposition:
+    return ComplexUnitaryProcrustesDecomposition(
+        singular_values=singular_values,
+        left_singular_vectors=left,
+        right_singular_vectors_adjoint=right_adjoint,
+    )
+
+
 def test_generic_and_scalar_solvers_are_abstract_and_scalar_template_is_final() -> None:
     with pytest.raises(TypeError):
         ComplexUnitaryProcrustesSolver()  # type: ignore[abstract]
@@ -105,8 +124,8 @@ def test_generic_and_scalar_solvers_are_abstract_and_scalar_template_is_final() 
 
 def test_solver_rejects_wrong_definition_type() -> None:
     with pytest.raises(TypeError, match="ComplexUnitaryProcrustesDefinition"):
-        _ConfiguredSolver(((1.0,), _identity(1), _identity(1))).solve(
-            cast(Any, object())
+        _ConfiguredSolver(_decomposition((1.0,), _identity(1), _identity(1))).solve(
+            cast(ComplexUnitaryProcrustesDefinition, "wrong")
         )
 
 
@@ -115,7 +134,13 @@ def test_solver_preserves_source_right_to_target_direction() -> None:
         ((0.0 + 1.0j,),),
         ((1.0 + 0.0j,),),
     )
-    solver = _ConfiguredSolver(((1.0,), ((0.0 - 1.0j,),), ((1.0 + 0.0j,),)))
+    solver = _ConfiguredSolver(
+        _decomposition(
+            (1.0,),
+            ((0.0 - 1.0j,),),
+            ((1.0 + 0.0j,),),
+        )
+    )
 
     result = solver.solve(definition)
 
@@ -131,10 +156,9 @@ def test_solver_withholds_transform_at_rank_cutoff() -> None:
         _diagonal((1.0, 0.5)),
         tolerance,
     )
+    solver = _ConfiguredSolver(_decomposition((1.0, 0.5), _identity(2), _identity(2)))
 
-    result = _ConfiguredSolver(((1.0, 0.5), _identity(2), _identity(2))).solve(
-        definition
-    )
+    result = solver.solve(definition)
 
     assert result.numerical_rank == 1
     assert result.applied_rank_cutoff == 0.5
@@ -145,9 +169,9 @@ def test_solver_withholds_transform_at_rank_cutoff() -> None:
 
 def test_solver_returns_rank_evidence_for_exact_rank_one_overlap() -> None:
     rank_one = _diagonal((1.0, 0.0))
-    result = _ConfiguredSolver(((1.0, 0.0), _identity(2), _identity(2))).solve(
-        ComplexUnitaryProcrustesDefinition(rank_one, rank_one)
-    )
+    solver = _ConfiguredSolver(_decomposition((1.0, 0.0), _identity(2), _identity(2)))
+
+    result = solver.solve(ComplexUnitaryProcrustesDefinition(rank_one, rank_one))
 
     assert result.cross_singular_values == (1.0, 0.0)
     assert result.numerical_rank == 1
@@ -155,21 +179,57 @@ def test_solver_returns_rank_evidence_for_exact_rank_one_overlap() -> None:
     assert result.optimal_residual_frobenius_norm == 0.0
 
 
+def test_solver_rejects_wrong_backend_output_record() -> None:
+    definition = ComplexUnitaryProcrustesDefinition(_identity(1), _identity(1))
+    solver = _MalformedOutputSolver(_decomposition((1.0,), _identity(1), _identity(1)))
+
+    with pytest.raises(TypeError, match="ComplexUnitaryProcrustesDecomposition"):
+        solver.solve(definition)
+
+
 @pytest.mark.parametrize(
-    "output, error, match",
+    ("output", "error", "match"),
     [
-        ([], TypeError, "exact tuple"),
-        (((1.0,), _identity(1)), ValueError, "must contain"),
-        (((1.0, 0.0), _identity(1), _identity(1)), ValueError, "length"),
-        (((-1.0,), _identity(1), _identity(1)), ValueError, "nonnegative"),
-        (((float("nan"),), _identity(1), _identity(1)), FloatingPointError, "finite"),
-        (((1.0,), ((2.0 + 0.0j,),), _identity(1)), ValueError, "unitary"),
-        (((1.0,), _identity(1), ((2.0 + 0.0j,),)), ValueError, "unitary"),
-        (((2.0,), _identity(1), _identity(1)), ValueError, "reconstruction"),
+        pytest.param(
+            _decomposition((1.0, 0.0), _identity(1), _identity(1)),
+            ValueError,
+            "length",
+            id="spectrum-length",
+        ),
+        pytest.param(
+            _decomposition((-1.0,), _identity(1), _identity(1)),
+            ValueError,
+            "nonnegative",
+            id="negative-singular-value",
+        ),
+        pytest.param(
+            _decomposition((float("nan"),), _identity(1), _identity(1)),
+            FloatingPointError,
+            "finite",
+            id="nonfinite-singular-value",
+        ),
+        pytest.param(
+            _decomposition((1.0,), ((2.0 + 0.0j,),), _identity(1)),
+            ValueError,
+            "unitary",
+            id="left-not-unitary",
+        ),
+        pytest.param(
+            _decomposition((1.0,), _identity(1), ((2.0 + 0.0j,),)),
+            ValueError,
+            "unitary",
+            id="right-not-unitary",
+        ),
+        pytest.param(
+            _decomposition((2.0,), _identity(1), _identity(1)),
+            ValueError,
+            "reconstruction",
+            id="inconsistent-reconstruction",
+        ),
     ],
 )
-def test_solver_rejects_malformed_or_inconsistent_backend_output(
-    output: object,
+def test_solver_rejects_inconsistent_backend_decomposition(
+    output: ComplexUnitaryProcrustesDecomposition,
     error: type[Exception],
     match: str,
 ) -> None:
@@ -187,8 +247,11 @@ def test_solver_propagates_undeclared_backend_failure() -> None:
 
 
 @pytest.mark.parametrize(
-    "identifier, version, match",
-    [("", "1", "identifier"), ("test", "", "version")],
+    ("identifier", "version", "match"),
+    [
+        pytest.param("", "1", "identifier", id="empty-identifier"),
+        pytest.param("test", "", "version", id="empty-version"),
+    ],
 )
 def test_solver_rejects_empty_backend_metadata(
     identifier: str,
@@ -196,7 +259,7 @@ def test_solver_rejects_empty_backend_metadata(
     match: str,
 ) -> None:
     solver = _ConfiguredSolver(
-        ((1.0,), _identity(1), _identity(1)),
+        _decomposition((1.0,), _identity(1), _identity(1)),
         identifier=identifier,
         version=version,
     )

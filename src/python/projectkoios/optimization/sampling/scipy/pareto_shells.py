@@ -14,10 +14,11 @@ from typing import cast
 import numpy as np
 from scipy import stats
 
+from projectkoios.numerics.validation import finite_float, integer, u32
+
 from ....numerics.numpy.typing import Float64Array
 from ....numerics.scipy.typing import GaussianKde
 from ...multiobjective.pareto.shells import pareto_shells
-from ...validation.validation import finite_float, integer, u32
 from .kde import KdeBandwidthFactory, KdeBandwidthMethod
 
 

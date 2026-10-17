@@ -5,7 +5,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from ..validation import validation
+from projectkoios.numerics import validation as numerical_validation
+
 from .base import (
     InverseProbabilityDistributionFunction,
     ProbabilityDistribution,
@@ -23,8 +24,8 @@ class UniformProbabilityDistributionParameters:
 
     def __post_init__(self) -> None:
         try:
-            lower = validation.finite_float(self.lower_bound, "lower_bound")
-            upper = validation.finite_float(self.upper_bound, "upper_bound")
+            lower = numerical_validation.finite_float(self.lower_bound, "lower_bound")
+            upper = numerical_validation.finite_float(self.upper_bound, "upper_bound")
         except ValueError as error:
             raise ProbabilityError("uniform bounds must be finite floats") from error
         if lower >= upper:

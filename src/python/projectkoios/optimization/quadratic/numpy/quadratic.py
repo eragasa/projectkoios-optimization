@@ -8,8 +8,9 @@ from typing import final
 
 import numpy as np
 
+from projectkoios.numerics import validation as numerical_validation
+
 from ....numerics.numpy.typing import Float64Array
-from ...validation import validation
 from .. import validation as quadratic_validation
 from ..quadratic import _QuadraticLossBackend
 
@@ -50,7 +51,7 @@ class NumpyPositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
         matrix = quadratic_validation.finite_square_matrix(self.matrix, len(center))
         if not quadratic_validation.symmetric(matrix):
             raise ValueError("matrix must be exactly symmetric")
-        minimum = validation.finite_float(
+        minimum = numerical_validation.finite_float(
             self.minimum_squared_loss,
             "minimum_squared_loss",
         )

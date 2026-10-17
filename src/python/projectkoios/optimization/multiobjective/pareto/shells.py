@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...validation.validation import finite_float, integer
+from projectkoios.numerics.validation import finite_float, integer
+
 from .algorithm import pareto
 
 

@@ -7,6 +7,7 @@ from typing import final
 import numpy as np
 
 from ..procrustes import (
+    ComplexUnitaryProcrustesDecomposition,
     ComplexUnitaryProcrustesMatrix,
     ScalarComplexUnitaryProcrustesSolver,
 )
@@ -44,11 +45,7 @@ class NumpyComplexUnitaryProcrustesSolver(ScalarComplexUnitaryProcrustesSolver):
         self,
         cross_matrix: ComplexUnitaryProcrustesMatrix,
         /,
-    ) -> tuple[
-        tuple[float, ...],
-        ComplexUnitaryProcrustesMatrix,
-        ComplexUnitaryProcrustesMatrix,
-    ]:
+    ) -> ComplexUnitaryProcrustesDecomposition:
         """Compute a complete square SVD of the validated cross matrix.
 
         Parameters
@@ -58,7 +55,7 @@ class NumpyComplexUnitaryProcrustesSolver(ScalarComplexUnitaryProcrustesSolver):
 
         Returns
         -------
-        tuple
+        ComplexUnitaryProcrustesDecomposition
             Singular values, left singular vectors, and adjoint right singular vectors
             converted to exact built-in immutable values.
 
@@ -85,10 +82,14 @@ class NumpyComplexUnitaryProcrustesSolver(ScalarComplexUnitaryProcrustesSolver):
             raise FloatingPointError("NumPy SVD returned nonfinite singular values")
         if not np.all(np.isfinite(left)) or not np.all(np.isfinite(right_adjoint)):
             raise FloatingPointError("NumPy SVD returned nonfinite singular vectors")
-        return (
-            tuple(float(value) for value in singular_values),
-            tuple(tuple(complex(value) for value in row) for row in left),
-            tuple(tuple(complex(value) for value in row) for row in right_adjoint),
+        return ComplexUnitaryProcrustesDecomposition(
+            singular_values=tuple(float(value) for value in singular_values),
+            left_singular_vectors=tuple(
+                tuple(complex(value) for value in row) for row in left
+            ),
+            right_singular_vectors_adjoint=tuple(
+                tuple(complex(value) for value in row) for row in right_adjoint
+            ),
         )
 
 

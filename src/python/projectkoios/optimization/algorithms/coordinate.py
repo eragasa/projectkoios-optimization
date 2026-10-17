@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from projectkoios.numerics.validation import finite_float, u32
+
 from ..engines.records import Candidate, ObjectiveFeedback, OptimizerUpdate
 from ..exceptions import (
     DuplicateObservationError,
@@ -12,12 +14,7 @@ from ..exceptions import (
     UnknownCandidateError,
 )
 from ..spaces.parameters import ParameterSpace
-from ..validation.validation import (
-    candidate_identifier,
-    finite_float,
-    run_identifier,
-    u32,
-)
+from ..validation.validation import candidate_identifier, run_identifier
 
 
 @dataclass(frozen=True, slots=True)

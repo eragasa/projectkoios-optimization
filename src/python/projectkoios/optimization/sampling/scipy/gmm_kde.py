@@ -19,8 +19,9 @@ from typing import Protocol, cast
 
 import numpy as np
 
+from projectkoios.numerics.validation import u32
+
 from ....numerics.numpy.typing import Float64Array, Int64Array
-from ...validation.validation import u32
 from .kde import KdeBandwidthFactory, KdeBandwidthMethod
 
 

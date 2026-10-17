@@ -14,8 +14,9 @@ from typing import Protocol, cast
 
 import numpy as np
 
+from projectkoios.numerics.validation import finite_float
+
 from ....numerics.numpy.typing import Float64Array, Int64Array
-from ...validation.validation import finite_float
 from ..gmm import (
     GaussianMixtureAssignment,
     GaussianMixtureClusteringCompleted,

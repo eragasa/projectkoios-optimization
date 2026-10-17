@@ -17,7 +17,9 @@ from dataclasses import dataclass, fields
 from numbers import Complex, Integral, Real
 from typing import cast, final
 
-type HermitianSpectrumMatrix = tuple[tuple[complex, ...], ...]
+from projectkoios.numerics.typing import FiniteComplexMatrix
+
+type HermitianSpectrumMatrix = FiniteComplexMatrix
 type HermitianSpectrumMatrices = tuple[HermitianSpectrumMatrix, ...]
 type HermitianSpectra = tuple[tuple[float, ...], ...]
 

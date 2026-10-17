@@ -19,176 +19,99 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
-type ComplexUnitaryProcrustesMatrix = tuple[tuple[complex, ...], ...]
-type _BackendOutput = tuple[
-    tuple[float, ...],
-    ComplexUnitaryProcrustesMatrix,
-    ComplexUnitaryProcrustesMatrix,
-]
+from projectkoios.numerics.typing import FiniteComplexMatrix
+from projectkoios.numerics.validation import (
+    exact_nonnegative_float,
+    exact_positive_integer,
+    exact_relative_float,
+    finite_complex_result,
+    finite_float_result,
+    validate_finite_complex_matrix,
+)
+from projectkoios.optimization.validation.validation import text
+
+type ComplexUnitaryProcrustesMatrix = FiniteComplexMatrix
 
 
-def _positive_integer(value: object, name: str, /) -> int:
-    """Validate a positive exact built-in integer.
-
-    Parameters
-    ----------
-    value
-        Candidate value.
-    name
-        Public field name used in failure messages.
-
-    Returns
-    -------
-    int
-        The validated integer.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not an exact built-in integer.
-    ValueError
-        If ``value`` is not positive.
-    """
-    if type(value) is not int:
-        raise TypeError(f"{name} must be an exact built-in integer")
-    if value <= 0:
-        raise ValueError(f"{name} must be positive")
-    return value
-
-
-def _nonnegative_float(value: object, name: str, /) -> float:
-    """Validate a finite nonnegative exact built-in float.
+@dataclass(frozen=True, slots=True)
+class ComplexUnitaryProcrustesDecomposition:
+    """Group one complete square cross-matrix decomposition.
 
     Parameters
     ----------
-    value
-        Candidate value.
-    name
-        Public field name used in failure messages.
-
-    Returns
-    -------
-    float
-        The validated float.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not an exact built-in float.
-    ValueError
-        If ``value`` is nonfinite or negative.
+    singular_values
+        Complete nonincreasing singular spectrum.
+    left_singular_vectors
+        Square left singular-vector matrix.
+    right_singular_vectors_adjoint
+        Adjoint of the square right singular-vector matrix.
     """
-    if type(value) is not float:
-        raise TypeError(f"{name} must be an exact built-in float")
-    if not math.isfinite(value):
-        raise ValueError(f"{name} must be finite")
-    if value < 0.0:
-        raise ValueError(f"{name} must be nonnegative")
-    return value
+
+    singular_values: tuple[float, ...]
+    left_singular_vectors: ComplexUnitaryProcrustesMatrix
+    right_singular_vectors_adjoint: ComplexUnitaryProcrustesMatrix
 
 
-def _relative_float(value: object, name: str, /) -> float:
-    """Validate an exact relative tolerance in ``[0, 1)``.
+@dataclass(frozen=True, slots=True)
+class ComplexUnitaryProcrustesResidualEvidence:
+    """Record one reconstructed squared residual and roundoff cutoff.
 
     Parameters
     ----------
-    value
-        Candidate relative tolerance.
-    name
-        Public field name used in failure messages.
-
-    Returns
-    -------
-    float
-        The validated relative tolerance.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not an exact built-in float.
-    ValueError
-        If ``value`` is nonfinite or lies outside ``[0, 1)``.
+    squared_residual
+        Finite nonnegative optimal squared residual.
+    roundoff_cutoff
+        Finite nonnegative cutoff in squared-residual units.
     """
-    normalized = _nonnegative_float(value, name)
-    if normalized >= 1.0:
-        raise ValueError(f"{name} must be less than 1.0")
-    return normalized
+
+    squared_residual: float
+    roundoff_cutoff: float
+
+    def __post_init__(self) -> None:
+        """Validate finite nonnegative residual evidence.
+
+        Raises
+        ------
+        TypeError
+            If a value is not an exact built-in float.
+        ValueError
+            If a value is nonfinite or negative.
+        """
+        exact_nonnegative_float(self.squared_residual, "squared_residual")
+        exact_nonnegative_float(self.roundoff_cutoff, "roundoff_cutoff")
 
 
-def _matrix(
-    value: object,
-    name: str,
-    /,
-    *,
-    row_count: int | None = None,
-    column_count: int | None = None,
-    nonfinite_backend: bool = False,
-) -> ComplexUnitaryProcrustesMatrix:
-    """Validate a nonempty finite complex tuple matrix.
+@dataclass(frozen=True, slots=True)
+class ComplexUnitaryProcrustesBackendEvidence:
+    """Record trusted metadata for one executed decomposition backend.
 
     Parameters
     ----------
-    value
-        Candidate matrix.
-    name
-        Public field name used in failure messages.
-    row_count
-        Required row count, or ``None`` to infer it.
-    column_count
-        Required column count, or ``None`` to infer it.
-    nonfinite_backend
-        Whether nonfinite entries came from backend output and therefore represent
-        failed arithmetic rather than malformed public input.
-
-    Returns
-    -------
-    ComplexUnitaryProcrustesMatrix
-        The validated immutable rectangular matrix.
-
-    Raises
-    ------
-    TypeError
-        If the container, rows, or entries do not use exact public runtime types.
-    ValueError
-        If the matrix is empty, ragged, shape-inconsistent, or has nonfinite public
-        input entries.
-    FloatingPointError
-        If backend output contains a nonfinite entry.
+    identifier
+        Nonempty API-level backend operation identifier.
+    version
+        Nonempty backend package version.
     """
-    if type(value) is not tuple:
-        raise TypeError(f"{name} must be an exact tuple")
-    if not value:
-        raise ValueError(f"{name} must be nonempty")
-    if row_count is not None and len(value) != row_count:
-        raise ValueError(f"{name} row count is inconsistent")
-    inferred_columns: int | None = None
-    normalized: list[tuple[complex, ...]] = []
-    for row in value:
-        if type(row) is not tuple:
-            raise TypeError(f"{name} rows must be exact tuples")
-        if not row:
-            raise ValueError(f"{name} rows must be nonempty")
-        if inferred_columns is None:
-            inferred_columns = len(row)
-        elif len(row) != inferred_columns:
-            raise ValueError(f"{name} must be rectangular")
-        if column_count is not None and len(row) != column_count:
-            raise ValueError(f"{name} column count is inconsistent")
-        normalized_row: list[complex] = []
-        for entry in row:
-            if type(entry) is not complex:
-                raise TypeError(f"{name} entries must be exact built-in complex values")
-            if not math.isfinite(entry.real) or not math.isfinite(entry.imag):
-                if nonfinite_backend:
-                    raise FloatingPointError(f"{name} entries must be finite")
-                raise ValueError(f"{name} entries must be finite")
-            normalized_row.append(entry)
-        normalized.append(tuple(normalized_row))
-    return tuple(normalized)
+
+    identifier: str
+    version: str
+
+    def __post_init__(self) -> None:
+        """Validate exact nonempty backend metadata.
+
+        Raises
+        ------
+        TypeError
+            If a value is not an exact built-in string.
+        ValueError
+            If a string is empty.
+        """
+        text(self.identifier, "backend_identifier")
+        text(self.version, "backend_version")
 
 
 def _singular_values(
-    value: object,
+    value: tuple[float, ...],
     dimension: int,
     /,
     *,
@@ -241,56 +164,6 @@ def _singular_values(
     return tuple(normalized)
 
 
-def _finite(value: float, message: str, /) -> float:
-    """Require a finite shared real-arithmetic result.
-
-    Parameters
-    ----------
-    value
-        Arithmetic result to validate.
-    message
-        Failure message describing the operation.
-
-    Returns
-    -------
-    float
-        The finite value.
-
-    Raises
-    ------
-    FloatingPointError
-        If ``value`` is not finite.
-    """
-    if not math.isfinite(value):
-        raise FloatingPointError(message)
-    return value
-
-
-def _finite_complex(value: complex, message: str, /) -> complex:
-    """Require a finite shared complex-arithmetic result.
-
-    Parameters
-    ----------
-    value
-        Arithmetic result to validate.
-    message
-        Failure message describing the operation.
-
-    Returns
-    -------
-    complex
-        The finite value.
-
-    Raises
-    ------
-    FloatingPointError
-        If either component is not finite.
-    """
-    if not math.isfinite(value.real) or not math.isfinite(value.imag):
-        raise FloatingPointError(message)
-    return value
-
-
 def _stable_complex_sum(values: list[complex], message: str, /) -> complex:
     """Accumulate complex terms with deterministic componentwise sums.
 
@@ -318,7 +191,7 @@ def _stable_complex_sum(values: list[complex], message: str, /) -> complex:
         )
     except OverflowError as error:
         raise FloatingPointError(message) from error
-    return _finite_complex(result, message)
+    return finite_complex_result(result, message)
 
 
 def _conjugate_transpose(
@@ -376,7 +249,7 @@ def _matrix_product(
         tuple(
             _stable_complex_sum(
                 [
-                    _finite_complex(
+                    finite_complex_result(
                         left[row][inner] * right[inner][column],
                         "matrix product became nonfinite",
                     )
@@ -416,7 +289,7 @@ def _right_diagonal_product(
     """
     return tuple(
         tuple(
-            _finite_complex(
+            finite_complex_result(
                 entry * diagonal[column],
                 "diagonal matrix product became nonfinite",
             )
@@ -452,7 +325,7 @@ def _matrix_difference(
     """
     return tuple(
         tuple(
-            _finite_complex(
+            finite_complex_result(
                 left_entry - right_entry,
                 "matrix difference became nonfinite",
             )
@@ -509,7 +382,9 @@ def _maximum_absolute_entry(
         for entry in row:
             maximum = max(
                 maximum,
-                _finite(abs(entry), "matrix-entry magnitude became nonfinite"),
+                finite_float_result(
+                    abs(entry), "matrix-entry magnitude became nonfinite"
+                ),
             )
     return maximum
 
@@ -565,9 +440,11 @@ def _squared_frobenius_norm(
     terms: list[float] = []
     for row in matrix:
         for entry in row:
-            magnitude = _finite(abs(entry), "matrix magnitude became nonfinite")
+            magnitude = finite_float_result(
+                abs(entry), "matrix magnitude became nonfinite"
+            )
             terms.append(
-                _finite(
+                finite_float_result(
                     magnitude * magnitude,
                     "squared Frobenius term became nonfinite",
                 )
@@ -576,7 +453,7 @@ def _squared_frobenius_norm(
         value = math.fsum(terms)
     except OverflowError as error:
         raise FloatingPointError("squared Frobenius norm became nonfinite") from error
-    return _finite(value, "squared Frobenius norm became nonfinite")
+    return finite_float_result(value, "squared Frobenius norm became nonfinite")
 
 
 def _optimal_residual_evidence(
@@ -584,7 +461,7 @@ def _optimal_residual_evidence(
     target_power: float,
     singular_values: tuple[float, ...],
     /,
-) -> tuple[float, float]:
+) -> ComplexUnitaryProcrustesResidualEvidence:
     """Reconstruct optimal squared-residual evidence from singular values.
 
     Parameters
@@ -598,9 +475,9 @@ def _optimal_residual_evidence(
 
     Returns
     -------
-    tuple[float, float]
-        Optimal squared residual followed by the applied squared-residual roundoff
-        cutoff. Values within the cutoff are represented as exact zero.
+    ComplexUnitaryProcrustesResidualEvidence
+        Optimal squared residual and applied squared-unit roundoff cutoff. Values within
+        the cutoff are represented as exact zero.
 
     Raises
     ------
@@ -613,7 +490,7 @@ def _optimal_residual_evidence(
         raise FloatingPointError("cross nuclear-norm contribution became nonfinite")
     scale = max(source_power, target_power, *twice_singular_values)
     if scale == 0.0:
-        return 0.0, 0.0
+        return ComplexUnitaryProcrustesResidualEvidence(0.0, 0.0)
     normalized_terms = [source_power / scale, target_power / scale]
     normalized_terms.extend(-value / scale for value in twice_singular_values)
     normalized = math.fsum(normalized_terms)
@@ -623,7 +500,7 @@ def _optimal_residual_evidence(
     roundoff_bound = roundoff_coefficient * math.fsum(
         abs(value) for value in normalized_terms
     )
-    applied_roundoff_cutoff = _finite(
+    applied_roundoff_cutoff = finite_float_result(
         roundoff_bound * scale,
         "residual roundoff cutoff became nonfinite",
     )
@@ -635,12 +512,12 @@ def _optimal_residual_evidence(
         raise FloatingPointError(
             "reconstructed optimal squared residual is materially negative"
         )
-    return (
-        _finite(
+    return ComplexUnitaryProcrustesResidualEvidence(
+        squared_residual=finite_float_result(
             normalized * scale,
             "optimal squared residual became nonfinite",
         ),
-        applied_roundoff_cutoff,
+        roundoff_cutoff=applied_roundoff_cutoff,
     )
 
 
@@ -671,39 +548,10 @@ def _validation_bound(
     FloatingPointError
         If bound arithmetic becomes nonfinite.
     """
-    return _finite(
+    return finite_float_result(
         count * (tolerance.validation_absolute + tolerance.validation_relative * scale),
         "validation bound became nonfinite",
     )
-
-
-def _nonempty_string(value: object, name: str, /) -> str:
-    """Validate an exact nonempty built-in metadata string.
-
-    Parameters
-    ----------
-    value
-        Candidate metadata value.
-    name
-        Public field name used in failure messages.
-
-    Returns
-    -------
-    str
-        The validated string.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not an exact built-in string.
-    ValueError
-        If ``value`` is empty.
-    """
-    if type(value) is not str:
-        raise TypeError(f"{name} must be an exact built-in string")
-    if not value:
-        raise ValueError(f"{name} must be nonempty")
-    return value
 
 
 @final
@@ -744,13 +592,13 @@ class ComplexUnitaryProcrustesTolerance:
             If a component is nonfinite, negative, out of range, or if either
             tolerance pair is identically zero.
         """
-        rank_absolute = _nonnegative_float(self.rank_absolute, "rank_absolute")
-        rank_relative = _relative_float(self.rank_relative, "rank_relative")
-        validation_absolute = _nonnegative_float(
+        rank_absolute = exact_nonnegative_float(self.rank_absolute, "rank_absolute")
+        rank_relative = exact_relative_float(self.rank_relative, "rank_relative")
+        validation_absolute = exact_nonnegative_float(
             self.validation_absolute,
             "validation_absolute",
         )
-        validation_relative = _relative_float(
+        validation_relative = exact_relative_float(
             self.validation_relative,
             "validation_relative",
         )
@@ -758,10 +606,6 @@ class ComplexUnitaryProcrustesTolerance:
             raise ValueError("at least one numerical-rank tolerance must be positive")
         if validation_absolute == 0.0 and validation_relative == 0.0:
             raise ValueError("at least one validation tolerance must be positive")
-        object.__setattr__(self, "rank_absolute", rank_absolute)
-        object.__setattr__(self, "rank_relative", rank_relative)
-        object.__setattr__(self, "validation_absolute", validation_absolute)
-        object.__setattr__(self, "validation_relative", validation_relative)
 
 
 DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE = ComplexUnitaryProcrustesTolerance()
@@ -798,8 +642,8 @@ class ComplexUnitaryProcrustesDefinition:
         ValueError
             If either matrix is empty, ragged, nonfinite, or shape-inconsistent.
         """
-        source = _matrix(self.source_matrix, "source_matrix")
-        target = _matrix(
+        source = validate_finite_complex_matrix(self.source_matrix, "source_matrix")
+        validate_finite_complex_matrix(
             self.target_matrix,
             "target_matrix",
             row_count=len(source),
@@ -807,8 +651,6 @@ class ComplexUnitaryProcrustesDefinition:
         )
         if type(self.tolerance) is not ComplexUnitaryProcrustesTolerance:
             raise TypeError("tolerance must be ComplexUnitaryProcrustesTolerance")
-        object.__setattr__(self, "source_matrix", source)
-        object.__setattr__(self, "target_matrix", target)
 
     @property
     def row_count(self) -> int:
@@ -904,8 +746,8 @@ class ComplexUnitaryProcrustesResult:
         FloatingPointError
             If reconstructing relational evidence becomes nonfinite.
         """
-        row_count = _positive_integer(self.row_count, "row_count")
-        column_count = _positive_integer(self.column_count, "column_count")
+        exact_positive_integer(self.row_count, "row_count")
+        column_count = exact_positive_integer(self.column_count, "column_count")
         if type(self.tolerance) is not ComplexUnitaryProcrustesTolerance:
             raise TypeError("tolerance must be ComplexUnitaryProcrustesTolerance")
         if type(self.status) is not ComplexUnitaryProcrustesStatus:
@@ -917,7 +759,7 @@ class ComplexUnitaryProcrustesResult:
         )
         if type(self.numerical_rank) is not int:
             raise TypeError("numerical_rank must be an exact built-in integer")
-        applied_rank_cutoff = _nonnegative_float(
+        applied_rank_cutoff = exact_nonnegative_float(
             self.applied_rank_cutoff,
             "applied_rank_cutoff",
         )
@@ -933,26 +775,26 @@ class ComplexUnitaryProcrustesResult:
         if not 0 <= self.numerical_rank <= column_count:
             raise ValueError("numerical_rank lies outside the dimension bound")
 
-        source_power = _nonnegative_float(
+        source_power = exact_nonnegative_float(
             self.source_squared_frobenius_norm,
             "source_squared_frobenius_norm",
         )
-        target_power = _nonnegative_float(
+        target_power = exact_nonnegative_float(
             self.target_squared_frobenius_norm,
             "target_squared_frobenius_norm",
         )
-        optimal_squared = _nonnegative_float(
+        optimal_squared = exact_nonnegative_float(
             self.optimal_squared_residual,
             "optimal_squared_residual",
         )
-        expected_squared, _ = _optimal_residual_evidence(
+        expected_residual = _optimal_residual_evidence(
             source_power,
             target_power,
             singular_values,
         )
-        if optimal_squared != expected_squared:
+        if optimal_squared != expected_residual.squared_residual:
             raise ValueError("optimal_squared_residual is inconsistent")
-        optimal_norm = _nonnegative_float(
+        optimal_norm = exact_nonnegative_float(
             self.optimal_residual_frobenius_norm,
             "optimal_residual_frobenius_norm",
         )
@@ -963,7 +805,9 @@ class ComplexUnitaryProcrustesResult:
         if expected_rank == column_count:
             if self.status is not ComplexUnitaryProcrustesStatus.UNIQUE:
                 raise ValueError("full numerical rank requires UNIQUE status")
-            transformation = _matrix(
+            if transformation is None:
+                raise ValueError("full numerical rank requires a transformation")
+            transformation = validate_finite_complex_matrix(
                 transformation,
                 "transformation",
                 row_count=column_count,
@@ -991,34 +835,8 @@ class ComplexUnitaryProcrustesResult:
                     "rank-deficient result must not expose a full transformation"
                 )
 
-        backend_identifier = _nonempty_string(
-            self.backend_identifier,
-            "backend_identifier",
-        )
-        backend_version = _nonempty_string(self.backend_version, "backend_version")
-        object.__setattr__(self, "row_count", row_count)
-        object.__setattr__(self, "column_count", column_count)
-        object.__setattr__(self, "transformation", transformation)
-        object.__setattr__(self, "cross_singular_values", singular_values)
-        object.__setattr__(self, "applied_rank_cutoff", applied_rank_cutoff)
-        object.__setattr__(
-            self,
-            "source_squared_frobenius_norm",
-            source_power,
-        )
-        object.__setattr__(
-            self,
-            "target_squared_frobenius_norm",
-            target_power,
-        )
-        object.__setattr__(self, "optimal_squared_residual", optimal_squared)
-        object.__setattr__(
-            self,
-            "optimal_residual_frobenius_norm",
-            optimal_norm,
-        )
-        object.__setattr__(self, "backend_identifier", backend_identifier)
-        object.__setattr__(self, "backend_version", backend_version)
+        text(self.backend_identifier, "backend_identifier")
+        text(self.backend_version, "backend_version")
 
     @property
     def applied_residual_roundoff_cutoff(self) -> float:
@@ -1030,12 +848,12 @@ class ComplexUnitaryProcrustesResult:
             Applied cutoff in squared-residual units. A reconstructed optimum whose
             magnitude does not exceed this value is represented as zero.
         """
-        _, cutoff = _optimal_residual_evidence(
+        evidence = _optimal_residual_evidence(
             self.source_squared_frobenius_norm,
             self.target_squared_frobenius_norm,
             self.cross_singular_values,
         )
-        return cutoff
+        return evidence.roundoff_cutoff
 
 
 class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
@@ -1057,7 +875,7 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
     @staticmethod
     @final
     def validate_tolerance(
-        tolerance: object,
+        tolerance: ComplexUnitaryProcrustesTolerance,
         /,
     ) -> ComplexUnitaryProcrustesTolerance:
         """Return an exact owner tolerance record.
@@ -1083,37 +901,10 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
 
     @classmethod
     @final
-    def rank_cutoff_parameters(
-        cls,
-        tolerance: object,
-        /,
-    ) -> tuple[float, float]:
-        """Return validated additive rank-cutoff coefficients.
-
-        Parameters
-        ----------
-        tolerance
-            Candidate owner tolerance record.
-
-        Returns
-        -------
-        tuple[float, float]
-            Absolute and relative coefficients in additive order.
-
-        Raises
-        ------
-        TypeError
-            If the tolerance has the wrong exact nominal type.
-        """
-        validated = cls.validate_tolerance(tolerance)
-        return validated.rank_absolute, validated.rank_relative
-
-    @classmethod
-    @final
     def rank_cutoff(
         cls,
-        tolerance: object,
-        largest_singular_value: object,
+        tolerance: ComplexUnitaryProcrustesTolerance,
+        largest_singular_value: float,
         /,
     ) -> float:
         """Return the finite additive cutoff for one singular spectrum.
@@ -1139,19 +930,19 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
         FloatingPointError
             If cutoff arithmetic becomes nonfinite.
         """
-        absolute, relative = cls.rank_cutoff_parameters(tolerance)
-        largest = _nonnegative_float(
+        validated = cls.validate_tolerance(tolerance)
+        largest = exact_nonnegative_float(
             largest_singular_value,
             "largest_singular_value",
         )
-        return _finite(
-            absolute + relative * largest,
+        return finite_float_result(
+            validated.rank_absolute + validated.rank_relative * largest,
             "applied numerical-rank cutoff became nonfinite",
         )
 
     @staticmethod
     @final
-    def residual_roundoff_coefficient(singular_value_count: object, /) -> float:
+    def residual_roundoff_coefficient(singular_value_count: int, /) -> float:
         """Return the shared binary64 residual-roundoff coefficient.
 
         Parameters
@@ -1171,16 +962,16 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
         ValueError
             If the count is not positive.
         """
-        count = _positive_integer(singular_value_count, "singular_value_count")
+        count = exact_positive_integer(singular_value_count, "singular_value_count")
         return max(64.0, 8.0 * float(count + 2)) * sys.float_info.epsilon
 
     @staticmethod
     @final
     def validate_backend_evidence(
-        identifier: object,
-        version: object,
+        identifier: str,
+        version: str,
         /,
-    ) -> tuple[str, str]:
+    ) -> ComplexUnitaryProcrustesBackendEvidence:
         """Validate metadata for an executed backend.
 
         Parameters
@@ -1190,8 +981,8 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
 
         Returns
         -------
-        tuple[str, str]
-            Validated nonempty identifier and version.
+        ComplexUnitaryProcrustesBackendEvidence
+            Validated nonempty identifier and version record.
 
         Raises
         ------
@@ -1200,18 +991,15 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
         ValueError
             If a metadata string is empty.
         """
-        return (
-            _nonempty_string(identifier, "backend_identifier"),
-            _nonempty_string(version, "backend_version"),
-        )
+        return ComplexUnitaryProcrustesBackendEvidence(identifier, version)
 
     @staticmethod
     @final
     def validate_absent_backend_evidence(
-        identifier: object,
-        version: object,
+        identifier: str | None,
+        version: str | None,
         /,
-    ) -> tuple[None, None]:
+    ) -> None:
         """Validate metadata for a path that executed no backend.
 
         Parameters
@@ -1221,8 +1009,8 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
 
         Returns
         -------
-        tuple[None, None]
-            Two validated absent values.
+        None
+            Backend evidence remains absent.
 
         Raises
         ------
@@ -1231,7 +1019,7 @@ class ComplexUnitaryProcrustesSolver[DefinitionT, ResultT](ABC):
         """
         if identifier is not None or version is not None:
             raise ValueError("unexecuted backend must not claim backend evidence")
-        return None, None
+        return None
 
     @abstractmethod
     def solve(self, definition: DefinitionT, /) -> ResultT:
@@ -1331,31 +1119,29 @@ class ScalarComplexUnitaryProcrustesSolver(
         tolerance = definition.tolerance
         # A†B fixes the public direction: Q multiplies the source on the right.
         cross = _matrix_product(_conjugate_transpose(source), target)
-        output = self._svd_validated(cross)
-        if type(output) is not tuple:
-            raise TypeError("backend output must be an exact tuple")
-        if len(output) != 3:
-            raise ValueError(
-                "backend output must contain singular values and both factor matrices"
+        decomposition = self._svd_validated(cross)
+        if type(decomposition) is not ComplexUnitaryProcrustesDecomposition:
+            raise TypeError(
+                "backend output must be ComplexUnitaryProcrustesDecomposition"
             )
         singular_values = _singular_values(
-            output[0],
+            decomposition.singular_values,
             dimension,
             nonfinite_backend=True,
         )
-        left = _matrix(
-            output[1],
+        left = validate_finite_complex_matrix(
+            decomposition.left_singular_vectors,
             "backend left singular vectors",
             row_count=dimension,
             column_count=dimension,
-            nonfinite_backend=True,
+            arithmetic_result=True,
         )
-        right_adjoint = _matrix(
-            output[2],
+        right_adjoint = validate_finite_complex_matrix(
+            decomposition.right_singular_vectors_adjoint,
             "backend right singular vectors adjoint",
             row_count=dimension,
             column_count=dimension,
-            nonfinite_backend=True,
+            arithmetic_result=True,
         )
 
         identity = _identity(dimension)
@@ -1390,11 +1176,12 @@ class ScalarComplexUnitaryProcrustesSolver(
         numerical_rank = sum(value > cutoff for value in singular_values)
         source_power = _squared_frobenius_norm(source)
         target_power = _squared_frobenius_norm(target)
-        optimal_squared, _ = _optimal_residual_evidence(
+        residual_evidence = _optimal_residual_evidence(
             source_power,
             target_power,
             singular_values,
         )
+        optimal_squared = residual_evidence.squared_residual
         # Complete SVDs contain arbitrary null-space bases. The deficient branch
         # deliberately does not combine those bases into a public unitary transform.
         transformation: ComplexUnitaryProcrustesMatrix | None = None
@@ -1423,7 +1210,7 @@ class ScalarComplexUnitaryProcrustesSolver(
                     "backend transformation is inconsistent with the optimal residual"
                 )
 
-        backend_identifier, backend_version = self.validate_backend_evidence(
+        backend_evidence = self.validate_backend_evidence(
             self._backend_identifier,
             self._backend_version,
         )
@@ -1440,8 +1227,8 @@ class ScalarComplexUnitaryProcrustesSolver(
             target_power,
             optimal_squared,
             math.sqrt(optimal_squared),
-            backend_identifier,
-            backend_version,
+            backend_evidence.identifier,
+            backend_evidence.version,
         )
 
     @abstractmethod
@@ -1449,7 +1236,7 @@ class ScalarComplexUnitaryProcrustesSolver(
         self,
         cross_matrix: ComplexUnitaryProcrustesMatrix,
         /,
-    ) -> _BackendOutput:
+    ) -> ComplexUnitaryProcrustesDecomposition:
         """Return a complete SVD of a validated square cross matrix.
 
         Parameters
@@ -1459,7 +1246,7 @@ class ScalarComplexUnitaryProcrustesSolver(
 
         Returns
         -------
-        tuple
+        ComplexUnitaryProcrustesDecomposition
             Nonincreasing singular values, left singular vectors, and the adjoint of
             the right singular-vector matrix.
 
@@ -1523,9 +1310,12 @@ class ComplexUnitaryProcrustesSolverFactory:
 
 
 __all__ = [
+    "ComplexUnitaryProcrustesBackendEvidence",
+    "ComplexUnitaryProcrustesDecomposition",
     "ComplexUnitaryProcrustesDefinition",
     "ComplexUnitaryProcrustesMatrix",
     "ComplexUnitaryProcrustesMethod",
+    "ComplexUnitaryProcrustesResidualEvidence",
     "ComplexUnitaryProcrustesResult",
     "ComplexUnitaryProcrustesSolver",
     "ComplexUnitaryProcrustesSolverFactory",

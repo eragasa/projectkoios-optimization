@@ -8,12 +8,29 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes.numerics impor
 )
 from projectkoios.optimization.alignment.procrustes import (
     DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
+    ComplexUnitaryProcrustesDecomposition,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesTolerance,
 )
 from tests.projectkoios.optimization.alignment.fixtures import (
     BatchedProcrustesEvidenceFixture,
 )
+
+
+@pytest.fixture
+def scalar_identity_decomposition() -> ComplexUnitaryProcrustesDecomposition:
+    """Return a named complete scalar decomposition fixture."""
+    dimension = 2
+    identity = tuple(
+        tuple(complex(int(row == column), 0.0) for column in range(dimension))
+        for row in range(dimension)
+    )
+    singular_values = tuple(float(dimension - index) for index in range(dimension))
+    return ComplexUnitaryProcrustesDecomposition(
+        singular_values=singular_values,
+        left_singular_vectors=identity,
+        right_singular_vectors_adjoint=identity,
+    )
 
 
 @pytest.fixture

@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol
 
-from ..validation.validation import finite_float, integer, text, u32
+from projectkoios.numerics.validation import finite_float, integer, u32
+
+from ..validation.validation import text
 
 
 @dataclass(frozen=True, slots=True)

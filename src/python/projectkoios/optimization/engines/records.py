@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from projectkoios.numerics import validation as numerical_validation
+
 from ..validation import validation
 
 
@@ -24,7 +26,7 @@ class Candidate:
     def __post_init__(self) -> None:
         validation.text(self.candidate_id, "candidate_id")
         validation.text(self.optimizer_run_id, "optimizer_run_id")
-        sequence = validation.integer(self.sequence, "sequence")
+        sequence = numerical_validation.integer(self.sequence, "sequence")
         if sequence < 0:
             raise ValueError("sequence must be nonnegative")
         if type(self.values) is not tuple:
@@ -33,7 +35,7 @@ class Candidate:
             self,
             "values",
             tuple(
-                validation.finite_float(value, "candidate coordinate")
+                numerical_validation.finite_float(value, "candidate coordinate")
                 for value in self.values
             ),
         )
@@ -51,7 +53,7 @@ class Measurement:
         object.__setattr__(
             self,
             "value",
-            validation.finite_float(self.value, "measurement value"),
+            numerical_validation.finite_float(self.value, "measurement value"),
         )
 
 
@@ -82,7 +84,7 @@ class ObjectiveValue:
 
     def __post_init__(self) -> None:
         validation.text(self.name, "objective name")
-        value = validation.finite_float(self.value, "objective value")
+        value = numerical_validation.finite_float(self.value, "objective value")
         if value < 0.0:
             raise ValueError("objective value must be nonnegative")
         object.__setattr__(self, "value", value)
@@ -98,7 +100,7 @@ class ObjectiveFeedback:
 
     def __post_init__(self) -> None:
         validation.text(self.candidate_id, "candidate_id")
-        loss = validation.finite_float(self.loss, "loss")
+        loss = numerical_validation.finite_float(self.loss, "loss")
         if loss < 0.0:
             raise ValueError("loss must be nonnegative")
         object.__setattr__(self, "loss", loss)
@@ -123,7 +125,7 @@ class OptimizerUpdate:
 
     def __post_init__(self) -> None:
         validation.text(self.candidate_id, "candidate_id")
-        evaluations = validation.integer(self.evaluations, "evaluations")
+        evaluations = numerical_validation.integer(self.evaluations, "evaluations")
         if evaluations < 1:
             raise ValueError("evaluations must be positive")
         validation.text(self.best_candidate_id, "best_candidate_id")

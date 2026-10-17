@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..validation import validation
+from projectkoios.numerics import validation as numerical_validation
 
 
 def finite_vector(value: object, name: str) -> tuple[float, ...]:
@@ -32,7 +32,7 @@ def finite_vector(value: object, name: str) -> tuple[float, ...]:
     if not value:
         raise ValueError(f"{name} must be nonempty")
     return tuple(
-        validation.finite_float(item, f"{name}[{index}]")
+        numerical_validation.finite_float(item, f"{name}[{index}]")
         for index, item in enumerate(value)
     )
 

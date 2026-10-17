@@ -16,9 +16,10 @@ from typing import cast
 import numpy as np
 from scipy import optimize, stats
 
+from projectkoios.numerics.validation import u32
+
 from ....numerics.numpy.typing import Float64Array
 from ....numerics.scipy.typing import GaussianKde, OptimizeResult
-from ...validation.validation import u32
 
 type KdeBandwidthFunction = Callable[[Float64Array], float]
 type _BandwidthCandidate = Float64Array | type[float]

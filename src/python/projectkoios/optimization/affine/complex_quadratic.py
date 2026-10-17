@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from numbers import Complex
 from typing import final
 
-from ..quadratic.quadratic import PositiveDefiniteQuadraticLoss
-from ..validation.validation import finite_float
+from projectkoios.numerics.typing import FiniteComplexMatrix
+from projectkoios.numerics.validation import finite_float
 
-type ComplexAffineResidualMatrix = tuple[tuple[complex, ...], ...]
+from ..quadratic.quadratic import PositiveDefiniteQuadraticLoss
+
+type ComplexAffineResidualMatrix = FiniteComplexMatrix
 type ComplexAffineResidualVector = tuple[complex, ...]
 
 

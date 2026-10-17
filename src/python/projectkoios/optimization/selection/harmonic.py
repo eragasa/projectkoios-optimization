@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
-from ..validation.validation import finite_float, u32
+from projectkoios.numerics.validation import finite_float, u32
 
 DEFAULT_PERIODIC_HARMONIC_ABSOLUTE_DEGENERACY_TOLERANCE = 1.0e-12
 DEFAULT_PERIODIC_HARMONIC_RELATIVE_DEGENERACY_TOLERANCE = 1.0e-10

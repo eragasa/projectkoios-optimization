@@ -1,14 +1,7 @@
-# Shared legacy validation primitives
+# Optimization identifier validation
 
-`validation/validation.py` retains the established portable scalar and identifier
-boundaries used by pre-existing Optimization contracts. It normalizes supported real
-values to finite binary64, enforces exact built-in integer ranges, and preserves the
-existing identifier limits and candidate-ID construction.
+`validation/validation.py` owns portable text, measurement-name, run-identifier, and candidate-identifier boundaries used by Optimization contracts.
 
-This module is public and directly tested after the source-tree reorganization; it is
-not a generic semantic-validation service and must not be extended to interpret
-scientific meaning. New numerical capabilities should keep their invariant checks with
-the owning mathematical object rather than route inputs through this module.
+Dependency-free numerical representation and range checks live in [`projectkoios.numerics.validation`](../../numerics/validation/index.md). Optimization imports those primitives in the permitted Numerics-to-Optimization dependency direction.
 
-Scientific units, names, channel alignment, schema meaning, thresholds, and acceptance
-remain consumer-owned.
+This module does not interpret scientific meaning. Scientific units, channel alignment, thresholds, dispositions, and acceptance remain consumer-owned.

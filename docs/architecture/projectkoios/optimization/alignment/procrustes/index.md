@@ -67,8 +67,14 @@ materializing one Python object graph per matrix pair.
 - A deficient completion is diagnostic and is not represented as a unique solution.
 - Both scalar and batched families inherit one behaviorful generic policy owner.
 
-## Solver hierarchy
+## Owned records and solver hierarchy
 
+- [`ComplexUnitaryProcrustesDecomposition`](ComplexUnitaryProcrustesDecomposition/index.md)
+  names the scalar backend exchange.
+- [`ComplexUnitaryProcrustesResidualEvidence`](ComplexUnitaryProcrustesResidualEvidence/index.md)
+  names residual reconstruction evidence.
+- [`ComplexUnitaryProcrustesBackendEvidence`](ComplexUnitaryProcrustesBackendEvidence/index.md)
+  names executed-backend metadata.
 - [`ComplexUnitaryProcrustesSolver`](ComplexUnitaryProcrustesSolver/index.md) owns shared
   generic policy.
 - [`ScalarComplexUnitaryProcrustesSolver`](ScalarComplexUnitaryProcrustesSolver/index.md)

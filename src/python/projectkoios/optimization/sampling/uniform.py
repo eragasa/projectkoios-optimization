@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from projectkoios.numerics.validation import integer, u32, u64
+
 from ..probability.sampling import SplitMix64UnitUniformSampler
 from ..spaces.parameters import ParameterSpace
-from ..validation.validation import integer, u32, u64
 
 
 class UniformRandomSampler:

@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
+from projectkoios.numerics.validation import finite_float, integer, u32
+
 from ..spaces.parameters import ParameterSpace
-from ..validation.validation import finite_float, integer, text, u32
+from ..validation.validation import text
 from .constrained import (
     DEFAULT_CONSTRAINED_QUADRATIC_TOLERANCE,
     ConstrainedQuadraticTolerance,

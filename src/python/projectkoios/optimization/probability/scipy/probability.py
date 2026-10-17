@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from ...validation import validation
+from projectkoios.numerics import validation as numerical_validation
+
 from ..base import (
     InverseProbabilityDistributionFunction,
     ProbabilityDistributionFunction,
@@ -35,7 +36,9 @@ class ScipyProbabilityDistributionFunction(ProbabilityDistributionFunction):
             raise TypeError("source must provide a callable cdf")
 
     def _evaluate(self, value: float, /) -> float:
-        return validation.finite_float(self.source.cdf(value), "SciPy CDF result")
+        return numerical_validation.finite_float(
+            self.source.cdf(value), "SciPy CDF result"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,7 +54,7 @@ class ScipyInverseProbabilityDistributionFunction(
             raise TypeError("source must provide a callable ppf")
 
     def _evaluate(self, probability: float, /) -> float:
-        return validation.finite_float(
+        return numerical_validation.finite_float(
             self.source.ppf(probability),
             "SciPy inverse CDF result",
         )

@@ -8,8 +8,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
+from projectkoios.numerics.validation import finite_float
+
 from ..spaces.parameters import ParameterSpace
-from ..validation.validation import finite_float
 from .quadratic import PositiveDefiniteQuadraticLoss
 from .validation import finite_vector
 

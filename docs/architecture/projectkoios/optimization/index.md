@@ -15,7 +15,7 @@ belong to [`projectkoios.numerics`](../numerics/index.md).
 
 | Capability | Current implementation | Owned behavior |
 |---|---|---|
-| Validation | [`validation/`](../../../../src/python/projectkoios/optimization/validation/) | finite scalar and identifier boundaries shared by maintained numerical capabilities |
+| Identifier validation | [`validation/`](../../../../src/python/projectkoios/optimization/validation/) | text, measurement-name, run-ID, and candidate-ID boundaries |
 | Engines | [`engines/`](../../../../src/python/projectkoios/optimization/engines/) | injected evaluation/result handling and scalar weighted handling |
 | Multi-objective | [`multiobjective/`](../../../../src/python/projectkoios/optimization/multiobjective/) | optimizer base, Pareto front/set pullback, and optimized PyPosPack selection |
 | Parameter spaces | [`spaces/`](../../../../src/python/projectkoios/optimization/spaces/) | finite ordered closed parameter boxes |

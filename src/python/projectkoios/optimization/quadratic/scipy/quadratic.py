@@ -9,8 +9,9 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
+from projectkoios.numerics import validation as numerical_validation
+
 from ....numerics.scipy.typing import Float64SparseMatrix
-from ...validation import validation
 from .. import validation as quadratic_validation
 from ..quadratic import _QuadraticLossBackend
 
@@ -45,7 +46,7 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
     ) -> None:
         normalized_center = quadratic_validation.finite_vector(center, "center")
         dimension = len(normalized_center)
-        normalized_minimum = validation.finite_float(
+        normalized_minimum = numerical_validation.finite_float(
             minimum_squared_loss,
             "minimum_squared_loss",
         )

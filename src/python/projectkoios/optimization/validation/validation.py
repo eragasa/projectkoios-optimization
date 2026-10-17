@@ -1,21 +1,16 @@
-"""Public validation primitives shared by optimization capabilities.
+"""Validate text and identifiers shared by optimization capabilities.
 
-The functions in this module define portable input boundaries used by maintained
-optimization APIs. They validate and normalize values only; they do not assign domain
-meaning, execute workflows, or establish scientific acceptance.
+Dependency-free numerical representation checks live in
+:mod:`projectkoios.numerics.validation`. This module owns Optimization-specific text,
+measurement-name, run-identifier, and candidate-identifier boundaries only.
 """
 
 from __future__ import annotations
 
-import math
 import re
-from numbers import Real
 
 MAX_IDENTIFIER_LENGTH = 256
 MAX_OPTIMIZER_FAMILY_LENGTH = 128
-MAX_U32 = 4_294_967_295
-MAX_U64 = 18_446_744_073_709_551_615
-
 OPTIMIZER_FAMILY_PATTERN = re.compile(r"[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*\Z", re.ASCII)
 
 _CANDIDATE_INFIX = ".candidate."
@@ -81,126 +76,6 @@ def measurement_name(value: object, name: str = "measurement name") -> str:
     return text(value, name)
 
 
-def finite_float(value: object, name: str) -> float:
-    """Normalize a non-Boolean real value to finite built-in binary64.
-
-    Parameters
-    ----------
-    value
-        Candidate real numeric value. Booleans, strings, complex numbers, and non-real
-        objects are not accepted.
-    name
-        Public field name included in failure messages.
-
-    Returns
-    -------
-    float
-        Finite built-in binary64 representation of ``value``.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is Boolean or is not an instance of :class:`numbers.Real`.
-    ValueError
-        If conversion fails, overflows, or produces NaN or infinity.
-    """
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError(f"{name} must be a real number excluding bool")
-    try:
-        result = float(value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(f"{name} must be representable as a finite float") from error
-    if type(result) is not float or not math.isfinite(result):
-        raise ValueError(f"{name} must be representable as a finite float")
-    return result
-
-
-def integer(value: object, name: str) -> int:
-    """Validate an exact built-in integer while excluding Boolean values.
-
-    Parameters
-    ----------
-    value
-        Candidate integer value.
-    name
-        Public field name included in failure messages.
-
-    Returns
-    -------
-    int
-        The original exact built-in integer.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not exactly a built-in integer.
-    """
-    if type(value) is not int:
-        raise TypeError(f"{name} must be a built-in integer excluding bool")
-    return value
-
-
-def u32(value: object, name: str, *, allow_zero: bool) -> int:
-    """Validate a built-in integer in a requested unsigned 32-bit interval.
-
-    Parameters
-    ----------
-    value
-        Candidate exact built-in integer.
-    name
-        Public field name included in failure messages.
-    allow_zero
-        If true, accept ``0 <= value <= MAX_U32``; otherwise require
-        ``1 <= value <= MAX_U32``.
-
-    Returns
-    -------
-    int
-        Validated integer.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not exactly a built-in integer.
-    ValueError
-        If ``value`` lies outside the selected interval.
-    """
-    result = integer(value, name)
-    minimum = 0 if allow_zero else 1
-    if not minimum <= result <= MAX_U32:
-        interval = "unsigned u32" if allow_zero else "positive u32"
-        raise ValueError(f"{name} must be in the {interval} range")
-    return result
-
-
-def u64(value: object, name: str) -> int:
-    """Validate a built-in integer in the unsigned 64-bit interval.
-
-    Parameters
-    ----------
-    value
-        Candidate exact built-in integer.
-    name
-        Public field name included in failure messages.
-
-    Returns
-    -------
-    int
-        Validated integer in ``0 <= value <= MAX_U64``.
-
-    Raises
-    ------
-    TypeError
-        If ``value`` is not exactly a built-in integer.
-    ValueError
-        If ``value`` lies outside the unsigned 64-bit interval.
-    """
-    result = integer(value, name)
-    if not 0 <= result <= MAX_U64:
-        raise ValueError(f"{name} must be in the unsigned u64 range")
-    return result
-
-
 def candidate_identifier(run_id: str, sequence: int) -> str:
     """Create and validate a non-truncated sequence-based candidate identifier.
 
@@ -264,15 +139,9 @@ def run_identifier(value: object, maximum_sequence: int) -> str:
 __all__ = [
     "MAX_IDENTIFIER_LENGTH",
     "MAX_OPTIMIZER_FAMILY_LENGTH",
-    "MAX_U32",
-    "MAX_U64",
     "OPTIMIZER_FAMILY_PATTERN",
     "candidate_identifier",
-    "finite_float",
-    "integer",
     "measurement_name",
     "run_identifier",
     "text",
-    "u32",
-    "u64",
 ]

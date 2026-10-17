@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
+from projectkoios.numerics.validation import finite_float, u32, u64
+
 from ...engines.records import Candidate
 from ...exceptions import (
     DuplicateObservationError,
@@ -18,13 +20,7 @@ from ...exceptions import (
     UnknownCandidateError,
 )
 from ...spaces.parameters import ParameterSpace
-from ...validation.validation import (
-    candidate_identifier,
-    finite_float,
-    run_identifier,
-    u32,
-    u64,
-)
+from ...validation.validation import candidate_identifier, run_identifier
 from ..base import MultiObjectiveOptimizer
 from .algorithm import pareto
 

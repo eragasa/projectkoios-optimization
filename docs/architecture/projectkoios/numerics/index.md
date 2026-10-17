@@ -51,5 +51,8 @@ Package initializers remain import-empty. Consumers import exact defining module
 
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
+- [Dependency-free numerical typing](typing/index.md)
+- [Dependency-free numerical validation](validation/index.md)
+- [NumPy numerical support](numpy/index.md)
 - [Linear algebra](linalg/index.md)
 - [Finite-periodic numerics](finite_periodic/index.md)

@@ -4,7 +4,11 @@
 
 ```text
 projectkoios/numerics/
-├── validation/
+├── typing.py
+├── validation.py
+├── numpy/
+│   ├── typing.py
+│   └── validation.py
 ├── geometry/
 ├── linalg/
 ├── sequences/
@@ -32,9 +36,10 @@ enums. Structural protocols are not used. Public result records remain backend-n
 
 ## Implemented namespace foundation
 
-The first implemented namespace slice provides:
+The implemented namespace foundation provides:
 
 - import-empty `projectkoios.numerics` and `finite_periodic` packages;
+- dependency-free built-in numerical typing and validation plus NumPy-specific array validation;
 - dependency-free finite Fourier-series records and nominal evaluator;
 - a lazy ordered NumPy finite-series backend;
 - strict typing and `projectkoios/numerics/py.typed`; and

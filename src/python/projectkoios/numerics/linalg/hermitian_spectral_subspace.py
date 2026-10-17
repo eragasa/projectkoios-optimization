@@ -20,8 +20,10 @@ from dataclasses import dataclass, fields
 from enum import StrEnum
 from typing import final
 
-type HermitianSpectralMatrix = tuple[tuple[complex, ...], ...]
-type _ComplexSquareMatrix = tuple[tuple[complex, ...], ...]
+from projectkoios.numerics.typing import FiniteComplexMatrix
+
+type HermitianSpectralMatrix = FiniteComplexMatrix
+type _ComplexSquareMatrix = FiniteComplexMatrix
 type _HermitianSpectralSubspaceBackendOutput = tuple[
     tuple[float, ...],
     _ComplexSquareMatrix,

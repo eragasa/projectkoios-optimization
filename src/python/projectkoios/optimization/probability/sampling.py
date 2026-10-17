@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from projectkoios.numerics import validation as numerical_validation
+
 from ..sampling.base import Sampler, SamplingError
-from ..validation import validation
 from .base import InverseProbabilityDistributionFunction, ProbabilityError
 
 
@@ -16,7 +17,7 @@ class UnitUniformSampler[SeedT](Sampler[float, SeedT]):
 
     def _normalize_sample(self, sample: float, /) -> float:
         try:
-            fraction = validation.finite_float(sample, "unit-uniform sample")
+            fraction = numerical_validation.finite_float(sample, "unit-uniform sample")
         except (TypeError, ValueError) as error:
             raise SamplingError("unit-uniform samples must be finite floats") from error
         if not 0.0 <= fraction < 1.0:
@@ -57,7 +58,7 @@ class ProbabilityDistributionSampler[SeedT](Sampler[float, SeedT]):
 
     def _normalize_sample(self, sample: float, /) -> float:
         try:
-            return validation.finite_float(
+            return numerical_validation.finite_float(
                 sample,
                 "probability-distribution sample",
             )
@@ -75,13 +76,17 @@ class SplitMix64UnitUniformSampler(UnitUniformSampler[int]):
     @staticmethod
     def unit_fraction(seed: int, counter: int) -> float:
         """Return one upper-53-bit SplitMix64 fraction in ``[0, 1)``."""
-        normalized_seed = validation.u64(seed, "seed")
-        normalized_counter = validation.u64(counter, "counter")
+        normalized_seed = numerical_validation.u64(seed, "seed")
+        normalized_counter = numerical_validation.u64(counter, "counter")
         word = (
             normalized_seed + 0x9E3779B97F4A7C15 * (normalized_counter + 1)
-        ) & validation.MAX_U64
-        word = ((word ^ (word >> 30)) * 0xBF58476D1CE4E5B9) & validation.MAX_U64
-        word = ((word ^ (word >> 27)) * 0x94D049BB133111EB) & validation.MAX_U64
+        ) & numerical_validation.MAX_U64
+        word = (
+            (word ^ (word >> 30)) * 0xBF58476D1CE4E5B9
+        ) & numerical_validation.MAX_U64
+        word = (
+            (word ^ (word >> 27)) * 0x94D049BB133111EB
+        ) & numerical_validation.MAX_U64
         word ^= word >> 31
         return float(word >> 11) / 9_007_199_254_740_992.0
 
@@ -92,7 +97,7 @@ class SplitMix64UnitUniformSampler(UnitUniformSampler[int]):
         *,
         random_seed: int,
     ) -> tuple[float, ...]:
-        seed = validation.u64(random_seed, "random_seed")
+        seed = numerical_validation.u64(random_seed, "random_seed")
         return tuple(self.unit_fraction(seed, index) for index in range(sample_count))
 
 

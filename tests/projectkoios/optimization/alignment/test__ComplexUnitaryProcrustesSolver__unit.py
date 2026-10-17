@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, cast
+from typing import cast
 
 import pytest
 
@@ -13,6 +13,7 @@ from projectkoios.optimization.alignment.numpy.procrustes import (
     NumpyComplexUnitaryProcrustesSolver,
 )
 from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesBackendEvidence,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesTolerance,
     ScalarComplexUnitaryProcrustesSolver,
@@ -44,14 +45,12 @@ def test_shared_tolerance_and_rank_policy(
     tolerance = procrustes_rank_tolerance
 
     assert ComplexUnitaryProcrustesSolver.validate_tolerance(tolerance) is tolerance
-    assert ComplexUnitaryProcrustesSolver.rank_cutoff_parameters(tolerance) == (
-        0.25,
-        0.5,
-    )
     assert ComplexUnitaryProcrustesSolver.rank_cutoff(tolerance, 2.0) == 1.25
 
     with pytest.raises(TypeError, match="ComplexUnitaryProcrustesTolerance"):
-        ComplexUnitaryProcrustesSolver.validate_tolerance(cast(Any, object()))
+        ComplexUnitaryProcrustesSolver.validate_tolerance(
+            cast(ComplexUnitaryProcrustesTolerance, "wrong")
+        )
 
 
 @pytest.mark.parametrize(
@@ -84,13 +83,13 @@ def test_shared_backend_evidence_distinguishes_execution(
     assert ComplexUnitaryProcrustesSolver.validate_backend_evidence(
         identifier,
         version,
-    ) == (identifier, version)
-    assert ComplexUnitaryProcrustesSolver.validate_absent_backend_evidence(
-        None,
-        None,
-    ) == (None, None)
+    ) == ComplexUnitaryProcrustesBackendEvidence(identifier, version)
+    assert (
+        ComplexUnitaryProcrustesSolver.validate_absent_backend_evidence(None, None)
+        is None
+    )
 
     with pytest.raises(ValueError, match="unexecuted backend"):
         ComplexUnitaryProcrustesSolver.validate_absent_backend_evidence("svd", "1")
-    with pytest.raises(ValueError, match="nonempty"):
+    with pytest.raises(ValueError, match="empty"):
         ComplexUnitaryProcrustesSolver.validate_backend_evidence("", "1")

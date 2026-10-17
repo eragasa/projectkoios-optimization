@@ -21,8 +21,14 @@ from projectkoios.numerics.numpy.typing import (
     Float64Array,
     IntpArray,
 )
+from projectkoios.numerics.numpy.validation import (
+    finite_nonnegative_float64_array,
+    immutable_array,
+)
+from projectkoios.numerics.validation import exact_positive_integer
 from projectkoios.optimization.alignment.procrustes import (
     DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
+    ComplexUnitaryProcrustesBackendEvidence,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesTolerance,
 )
@@ -33,79 +39,6 @@ from .numerics import (
     first_true_index,
     validation_bound,
 )
-
-
-def positive_integer(value: object, name: str, /) -> int:
-    """Validate a positive exact built-in integer.
-
-    Parameters
-    ----------
-    value
-        Candidate value.
-    name
-        Field name used in failure messages.
-
-    Returns
-    -------
-    int
-        Validated positive integer.
-
-    Raises
-    ------
-    TypeError
-        If the value is not an exact built-in integer.
-    ValueError
-        If the integer is not positive.
-    """
-    if type(value) is not int:
-        raise TypeError(f"{name} must be an exact built-in integer")
-    if value <= 0:
-        raise ValueError(f"{name} must be positive")
-    return value
-
-
-def immutable_array(
-    value: object,
-    name: str,
-    dtype: np.dtype[np.generic],
-    /,
-) -> np.ndarray:
-    """Validate an exact finite NumPy array with one exact dtype.
-
-    Parameters
-    ----------
-    value
-        Candidate array.
-    name
-        Field name used in failure messages.
-    dtype
-        Required exact NumPy dtype.
-
-    Returns
-    -------
-    numpy.ndarray
-        Defensive C-order read-only copy.
-
-    Raises
-    ------
-    TypeError
-        If the value is not an exact ndarray or has the wrong dtype.
-    ValueError
-        If any entry is nonfinite.
-    """
-    if type(value) is not np.ndarray:
-        raise TypeError(f"{name} must be an exact numpy.ndarray")
-    if value.dtype != dtype:
-        raise TypeError(f"{name} must have exact dtype {dtype.name}")
-    finite = np.isfinite(value)
-    if not bool(finite.all()):
-        first = tuple(int(component) for component in np.argwhere(~finite)[0])
-        raise ValueError(f"{name} contains a nonfinite entry at index {first}")
-    # An immutable bytes backing prevents callers from re-enabling NumPy writes with
-    # ``setflags`` while retaining an ordinary C-contiguous ndarray public surface.
-    backing = value.tobytes(order="C")
-    copied = np.frombuffer(backing, dtype=dtype).reshape(value.shape)
-    return copied
 
 
 @final
@@ -307,16 +240,14 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
         FloatingPointError
             If residual reconstruction or validation bounds become nonfinite.
         """
-        row_count = positive_integer(self.row_count, "row_count")
+        row_count = exact_positive_integer(self.row_count, "row_count")
         ComplexUnitaryProcrustesSolver.validate_tolerance(self.tolerance)
         arrays = self._normalized_arrays()
         batch_shape, dimension = self._validate_array_shapes(arrays)
         self._validate_rank_evidence(arrays, row_count, dimension)
         self._validate_residual_evidence(arrays)
         self._validate_completions(arrays.completions, batch_shape, dimension)
-        backend_identifier, backend_version = self._validated_backend_evidence(
-            batch_shape
-        )
+        self._validated_backend_evidence(batch_shape)
         object.__setattr__(self, "right_unitary_completions", arrays.completions)
         object.__setattr__(self, "cross_singular_values", arrays.spectra)
         object.__setattr__(self, "numerical_ranks", arrays.ranks)
@@ -347,9 +278,6 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
             "applied_residual_roundoff_cutoffs",
             arrays.residual_cutoffs,
         )
-        object.__setattr__(self, "row_count", row_count)
-        object.__setattr__(self, "backend_identifier", backend_identifier)
-        object.__setattr__(self, "backend_version", backend_version)
 
     def _normalized_arrays(self) -> ResultArrays:
         """Return defensive exact-dtype copies of every result array.
@@ -601,7 +529,7 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
         self,
         batch_shape: tuple[int, ...],
         /,
-    ) -> tuple[str | None, str | None]:
+    ) -> ComplexUnitaryProcrustesBackendEvidence | None:
         """Validate coupled backend evidence for empty and nonempty batches.
 
         Parameters
@@ -611,8 +539,8 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
 
         Returns
         -------
-        tuple[str | None, str | None]
-            Validated backend identifier and version, or two absent values.
+        ComplexUnitaryProcrustesBackendEvidence or None
+            Validated executed-backend evidence, or absence for an empty batch.
 
         Raises
         ------
@@ -626,6 +554,8 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
                 self.backend_identifier,
                 self.backend_version,
             )
+        if self.backend_identifier is None or self.backend_version is None:
+            raise ValueError("executed backend must provide complete backend evidence")
         return ComplexUnitaryProcrustesSolver.validate_backend_evidence(
             self.backend_identifier,
             self.backend_version,
@@ -780,18 +710,14 @@ class BatchedComplexUnitaryProcrustesSolver(
         FloatingPointError
             If cutoff arithmetic becomes nonfinite.
         """
-        cls.validate_tolerance(tolerance)
-        if type(largest_singular_values) is not np.ndarray:
-            raise TypeError("largest_singular_values must be an exact numpy.ndarray")
-        if largest_singular_values.dtype != np.dtype(np.float64):
-            raise TypeError("largest_singular_values must have exact dtype float64")
-        if not bool(np.isfinite(largest_singular_values).all()) or bool(
-            (largest_singular_values < 0.0).any()
-        ):
-            raise ValueError("largest_singular_values must be finite and nonnegative")
-        absolute, relative = cls.rank_cutoff_parameters(tolerance)
+        validated_tolerance = cls.validate_tolerance(tolerance)
+        largest = finite_nonnegative_float64_array(
+            largest_singular_values,
+            "largest_singular_values",
+        )
         cutoffs = np.asarray(
-            absolute + relative * largest_singular_values,
+            validated_tolerance.rank_absolute
+            + validated_tolerance.rank_relative * largest,
             dtype=np.float64,
         )
         if not bool(np.isfinite(cutoffs).all()):

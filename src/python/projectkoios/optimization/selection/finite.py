@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
-from ..validation.validation import finite_float, integer
+from projectkoios.numerics.validation import finite_float, integer
 
 
 @final

@@ -5,6 +5,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from projectkoios.numerics import validation as numerical_validation
+
 from ..validation import validation
 
 
@@ -18,8 +20,8 @@ class ParameterBound:
 
     def __post_init__(self) -> None:
         validation.text(self.name, "name")
-        lower = validation.finite_float(self.lower, "lower")
-        upper = validation.finite_float(self.upper, "upper")
+        lower = numerical_validation.finite_float(self.lower, "lower")
+        upper = numerical_validation.finite_float(self.upper, "upper")
         if lower > upper:
             raise ValueError("lower bound must not exceed upper bound")
         if not math.isfinite(upper - lower):
@@ -65,7 +67,7 @@ class ParameterSpace:
         if len(values) != self.dimension:
             return False
         normalized = tuple(
-            validation.finite_float(value, "coordinate") for value in values
+            numerical_validation.finite_float(value, "coordinate") for value in values
         )
         return all(
             bound.lower <= value <= bound.upper

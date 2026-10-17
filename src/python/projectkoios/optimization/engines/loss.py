@@ -10,7 +10,9 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from ..validation.validation import finite_float, measurement_name
+from projectkoios.numerics.validation import finite_float
+
+from ..validation.validation import measurement_name
 from .records import Measurement, ObjectiveValue, RawEvaluation
 
 
