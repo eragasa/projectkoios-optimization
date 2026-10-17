@@ -10,7 +10,13 @@ from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.numerics.numpy.validation import (
     finite_nonnegative_float64_array,
     immutable_array,
+    immutable_complex128_array,
+    immutable_float64_array,
+    immutable_int64_array,
     validate_immutable_array,
+    validate_immutable_complex128_array,
+    validate_immutable_float64_array,
+    validate_immutable_int64_array,
 )
 
 
@@ -48,6 +54,29 @@ def test_immutable_array_returns_independent_byte_backed_copy(
     assert validate_immutable_array(result, "result", np.dtype(np.complex128)) is result
     with pytest.raises(ValueError):
         result.setflags(write=True)
+
+
+def test_typed_immutable_array_operations_preserve_exact_dtype_aliases() -> None:
+    complex_values = np.array([1.0 + 2.0j], dtype=np.complex128)
+    float_values = np.array([1.0], dtype=np.float64)
+    integer_values = np.array([1], dtype=np.int64)
+
+    complex_copy = immutable_complex128_array(complex_values, "complex_values")
+    float_copy = immutable_float64_array(float_values, "float_values")
+    integer_copy = immutable_int64_array(integer_values, "integer_values")
+
+    assert complex_copy.dtype == complex_values.dtype
+    assert float_copy.dtype == float_values.dtype
+    assert integer_copy.dtype == integer_values.dtype
+    assert not complex_copy.flags.writeable
+    assert not float_copy.flags.writeable
+    assert not integer_copy.flags.writeable
+    assert (
+        validate_immutable_complex128_array(complex_copy, "complex_copy")
+        is complex_copy
+    )
+    assert validate_immutable_float64_array(float_copy, "float_copy") is float_copy
+    assert validate_immutable_int64_array(integer_copy, "integer_copy") is integer_copy
 
 
 def test_validate_immutable_array_rejects_non_canonical_order() -> None:

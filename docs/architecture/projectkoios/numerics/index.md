@@ -6,11 +6,10 @@ contract.
 
 ## Status
 
-The finite Fourier-series evaluator is implemented at owner commit
-`6c3f73cd5f1810c8de915e1559658ea4b79c2357`. Invariant-only Hermitian
-spectral-subspace decomposition is implemented and independently qualified locally under
-explicit authorization; it is not committed or bound downstream. Other capabilities remain architecture candidates unless their pages
-explicitly identify implemented source.
+Finite-series evaluation, centered uniform finite-mesh matrix transforms, Frobenius
+values, Hermitian spectral-subspace decomposition, dense complete Hermitian spectra,
+and sparse partial Hermitian spectra are implemented. Other capabilities remain
+architecture candidates unless their pages explicitly identify implemented source.
 
 ## Capability organization
 
@@ -42,6 +41,14 @@ from projectkoios.numerics.finite_periodic.finite_series import (
     FiniteFourierSeriesEvaluationDefinition,
     FiniteFourierSeriesEvaluatorFactory,
     FiniteFourierSeriesMethod,
+)
+from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
+from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
+    NumpyFiniteFourierMatrixSeriesEvaluator,
+    NumpyTensorProductFourierMatrixSeriesEvaluator,
+)
+from projectkoios.numerics.finite_periodic.numpy.transforms import (
+    NumpyCenteredUniformMeshMatrixFourierTransformer,
 )
 ```
 

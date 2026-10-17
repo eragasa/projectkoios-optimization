@@ -4,8 +4,9 @@
 
 ```mermaid
 flowchart LR
-    M[Finite periodic mesh] --> T[Forward/inverse transform]
-    M --> S[Sewing map]
+    M[Centered uniform mesh] --> T[Implemented matrix forward/inverse transform]
+    T --> D[Parseval and cyclic Hermiticity diagnostics]
+    M --> S[Prospective sewing map]
     F[Orthonormal frame path] --> P[Projector path]
     F --> O[Projected-operator path]
     S --> B[Sewn boundary overlap]

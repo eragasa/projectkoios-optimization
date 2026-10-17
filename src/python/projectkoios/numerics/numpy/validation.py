@@ -12,7 +12,7 @@ from typing import cast
 
 import numpy as np
 
-from .typing import Float64Array
+from .typing import Complex128Array, Float64Array, Int64Array
 
 
 def _validate_exact_finite_array(
@@ -147,6 +147,150 @@ def validate_immutable_array(
     return validated
 
 
+def immutable_complex128_array(
+    value: Complex128Array,
+    name: str,
+    /,
+) -> Complex128Array:
+    """Return a canonical immutable copy of an exact complex128 array.
+
+    Parameters
+    ----------
+    value
+        Candidate exact finite complex128 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Immutable byte-backed complex128 copy.
+    """
+    return cast(
+        Complex128Array,
+        immutable_array(value, name, np.dtype(np.complex128)),
+    )
+
+
+def immutable_float64_array(
+    value: Float64Array,
+    name: str,
+    /,
+) -> Float64Array:
+    """Return a canonical immutable copy of an exact float64 array.
+
+    Parameters
+    ----------
+    value
+        Candidate exact finite float64 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Immutable byte-backed float64 copy.
+    """
+    return cast(Float64Array, immutable_array(value, name, np.dtype(np.float64)))
+
+
+def immutable_int64_array(
+    value: Int64Array,
+    name: str,
+    /,
+) -> Int64Array:
+    """Return a canonical immutable copy of an exact int64 array.
+
+    Parameters
+    ----------
+    value
+        Candidate exact int64 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Immutable byte-backed int64 copy.
+    """
+    return cast(Int64Array, immutable_array(value, name, np.dtype(np.int64)))
+
+
+def validate_immutable_complex128_array(
+    value: Complex128Array,
+    name: str,
+    /,
+) -> Complex128Array:
+    """Validate canonical immutable complex128 storage without copying.
+
+    Parameters
+    ----------
+    value
+        Candidate exact finite complex128 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Original validated complex128 array.
+    """
+    return cast(
+        Complex128Array,
+        validate_immutable_array(value, name, np.dtype(np.complex128)),
+    )
+
+
+def validate_immutable_float64_array(
+    value: Float64Array,
+    name: str,
+    /,
+) -> Float64Array:
+    """Validate canonical immutable float64 storage without copying.
+
+    Parameters
+    ----------
+    value
+        Candidate exact finite float64 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Original validated float64 array.
+    """
+    return cast(
+        Float64Array,
+        validate_immutable_array(value, name, np.dtype(np.float64)),
+    )
+
+
+def validate_immutable_int64_array(
+    value: Int64Array,
+    name: str,
+    /,
+) -> Int64Array:
+    """Validate canonical immutable int64 storage without copying.
+
+    Parameters
+    ----------
+    value
+        Candidate exact int64 array.
+    name
+        Field name included in failures.
+
+    Returns
+    -------
+    numpy.ndarray
+        Original validated int64 array.
+    """
+    return cast(
+        Int64Array,
+        validate_immutable_array(value, name, np.dtype(np.int64)),
+    )
+
+
 def finite_nonnegative_float64_array(
     value: Float64Array,
     name: str,
@@ -185,5 +329,11 @@ def finite_nonnegative_float64_array(
 __all__ = [
     "finite_nonnegative_float64_array",
     "immutable_array",
+    "immutable_complex128_array",
+    "immutable_float64_array",
+    "immutable_int64_array",
     "validate_immutable_array",
+    "validate_immutable_complex128_array",
+    "validate_immutable_float64_array",
+    "validate_immutable_int64_array",
 ]

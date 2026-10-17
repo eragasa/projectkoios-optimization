@@ -40,15 +40,13 @@ The implemented namespace foundation provides:
 
 - import-empty `projectkoios.numerics` and `finite_periodic` packages;
 - dependency-free built-in numerical typing and validation plus NumPy-specific array validation;
-- dependency-free finite Fourier-series records and nominal evaluator;
-- a lazy ordered NumPy finite-series backend;
+- dependency-free scalar and shared-grid finite Fourier-series contracts;
+- centered uniform one-, two-, and three-dimensional mesh and diagnostic records;
+- optional NumPy finite-series, centered matrix-transform, bounded evaluation, Parseval,
+  and cyclic-Hermiticity implementations;
+- dense and sparse linear-algebra capabilities documented under `linalg`;
 - strict typing and `projectkoios/numerics/py.typed`; and
-- isolated dependency-free and NumPy wheel imports.
-
-The next local slice adds invariant-only dense Hermitian spectral-subspace decomposition
-under `linalg`. Its source and qualification were separately authorized and
-independent review closed without blocking findings; no commit or downstream binding is
-implied.
+- isolated dependency-free and optional-backend wheel imports.
 
 ## Cross-namespace use
 

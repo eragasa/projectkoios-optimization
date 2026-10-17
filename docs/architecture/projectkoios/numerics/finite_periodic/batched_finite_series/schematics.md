@@ -5,7 +5,8 @@ ownership separation.
 
 - Public inputs contain no array backend or physics semantics.
 - Empty cases return before backend execution.
-- Nontrivial channels share one phase matrix and dense reduction.
+- Nontrivial channels share one phase matrix and dense reduction per bounded point
+  batch.
 
 ## Evaluation flow
 
@@ -13,7 +14,7 @@ The public template validates structure before choosing an exact empty result or
 concrete backend path.
 
 - Every nonempty channel shares the same coordinate and mode arrays.
-- Backend output is checked again at the nominal boundary.
+- The final template correlates backend result metadata with the definition.
 
 ```mermaid
 flowchart LR
@@ -21,11 +22,10 @@ flowchart LR
     V --> E[_trivial_values checks exact empty cases]
     E -->|exact values| Z[Return P x S result without backend evidence]
     E -->|nontrivial| A[Convert shared arrays]
-    A --> P[Construct one P x M phase matrix]
-    P --> M[One dense P x M by M x S multiplication]
+    A --> P[Construct bounded B x M phase batches]
+    P --> M[Dense B x M by M x S multiplication per batch]
     M --> S[Correlate result metadata]
-    S --> R[Validate complete value surface]
-    R --> B[Require paired backend evidence]
+    S --> B[Require paired backend evidence]
 ```
 
 ## Consumer composition
@@ -51,11 +51,12 @@ The scalar and batched capabilities share mathematical orientation but make diff
 floating-point reduction guarantees.
 
 - Scalar evaluation exposes ordered accumulation.
-- Batched evaluation exposes dense backend evidence and tolerance-qualified values.
+- Batched evaluation exposes bounded dense backend evidence and tolerance-qualified
+  values.
 
 ```mermaid
 flowchart TD
     Q[Finite Fourier request] --> O{Required numerical behavior}
     O -->|observable scalar reduction order| S[Scalar finite-series evaluator]
-    O -->|shared-grid channel throughput| B[Batched dense evaluator]
+    O -->|shared-grid channel throughput| B[Batched bounded evaluator]
 ```

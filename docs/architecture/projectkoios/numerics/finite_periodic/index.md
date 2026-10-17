@@ -5,17 +5,19 @@ geometric calculations that do not choose an optimum through their public contra
 
 ## Status
 
-`finite_series.py` and its ordered NumPy backend are implemented. The other modules in
-the inventory below remain prospective and require capability-specific architecture
-review before implementation.
+Ordered scalar and shared-grid batched finite-series evaluation are implemented.
+Centered uniform one-, two-, and three-dimensional matrix transforms, bounded selected-
+mode evaluation, Parseval evidence, and cyclic Hermiticity evidence are implemented in
+`meshes.py`, `transforms.py`, and their NumPy backend. Other inventory modules remain
+prospective and require capability-specific architecture review before implementation.
 
 ## Modules
 
 | Module | Owned behavior |
 |---|---|
-| `meshes.py` | finite periodic indices, wrapped neighbors, and integer translations |
-| `finite_series.py` | ordered finite Fourier-series evaluation at supplied real coordinates |
-| `transforms.py` | exact finite-mesh Fourier transforms, inverse transforms, truncation, and Parseval diagnostics |
+| `meshes.py` | centered uniform mesh geometry; other finite indices and wrapped-neighbor records remain prospective |
+| `finite_series.py` / `batched_finite_series.py` | ordered finite Fourier-series evaluation at supplied real coordinates |
+| `transforms.py` | exact centered finite-mesh matrix transforms, bounded inverse evaluation, Parseval diagnostics, and cyclic Hermiticity diagnostics; generic truncation remains prospective |
 | `sewing.py` | explicit nonunitary partial-shift maps between finite reciprocal bases |
 | `frames.py` | frame paths, projectors, and projected-operator paths |
 | `wilson.py` | ordered link products, unitarity defects, principal phases, unwrapping, and winding |
@@ -47,6 +49,8 @@ localization remains Wannier90-owned.
 ## Pages
 
 - [Finite Fourier-series evaluation](finite_series/index.md)
+- [Shared-grid batched finite Fourier-series evaluation](batched_finite_series/index.md)
+- [Centered uniform finite-mesh matrix transforms](transforms/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
 - [Numerics namespace](../index.md)

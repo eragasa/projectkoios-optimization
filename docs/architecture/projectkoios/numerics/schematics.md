@@ -22,7 +22,7 @@ flowchart LR
     C[Dependency-free contract and records] --> N[NumPy implementation]
     C --> S[SciPy implementation]
     C --> K[scikit-learn implementation]
-    N --> R[Backend-neutral immutable result]
+    N --> R[Canonical immutable result]
     S --> R
     K --> R
 ```

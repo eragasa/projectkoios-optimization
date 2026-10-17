@@ -119,6 +119,40 @@ preserved selector and bandwidth capability but are not donor translations. Thei
 Pareto ownership, origin distinction, and protection rules are recorded with the Pareto
 capability rather than in this general inventory.
 
+## Centered finite-periodic matrix transform evidence
+
+The centered uniform matrix-transform slice uses read-only KSD experiment evidence from
+repository `https://github.com/eragasa/ksdft2effmass.git`, commit
+`5e3e97f8465a22e20127ab37373b851733460cc5`, root tree
+`58cd14d3e846baad9e8dc3de0ed49118c7849af7`, under the Apache-2.0 license. The exact
+source path is
+`python/src/ksdft2effmass/analysis/model_adequacy/band_equivalence_locality/fourier.py`,
+blob `c8d05542e55286d7b59b229c688ecda7eae7e030`, SHA-256
+`9758029e5b4d310cf75010c63d1630fa7930e7bfed2eb1a477d83e3661ef19e3`.
+
+The owner extraction retains reduced-coordinate phases, normalized centered forward
+transforms, selected-mode reconstruction, Parseval arithmetic, and origin-aware cyclic
+Hermiticity. It rewrites experiment-local functions as class-oriented canonical records
+and NumPy operations under `projectkoios.numerics.finite_periodic`, adds one-dimensional
+support, vector axis offsets, exact immutable arrays, bounded point-and-mode phase
+batches, and bounded separable tensor-grid contractions for large complete or
+Cartesian-product inventories. It generalizes the donor's conventional Monkhorst--Pack
+sign to the exact signed wrap phase for any retained origin.
+
+The extraction excludes complete-shell selection, physical lattice metrics,
+energy-reference normalization, Hamiltonian/band error channels, threshold selection,
+and scientific dispositions. Those remain with KSD or PhysKit. No Cartesian metric,
+material model, orbital-overlap metric, or nonorthogonal-state-basis behavior is copied
+or inferred.
+
+Owner tests use independent single-mode and complete-roundtrip oracles rather than
+copying donor expected arrays. Oblique-2D and FCC-primitive tests explicitly use the
+angular reciprocal convention `B = 2*pi*A^{-T}` and verify
+`exp(i k·R) = exp(2*pi*i*q·n)`. The donor integration evidence consulted for test design
+is `development.py`, blob `953eb9e0058294ccc19aa419d5df7ac1eb058825`, SHA-256
+`20841610f45853b52a33dc0e0e21f0116a36de516b95dd7dbc4c2f0909651907`.
+Exact source-to-target and test mapping is recorded in `TRANSFER.toml`.
+
 ## Test mapping
 
 The recovery software-test tree is

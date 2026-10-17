@@ -21,6 +21,15 @@ relevant_tree = "9a58c5fa4ce0240c55377bf2347df492d101ff6a"
 status = "read-only recovery evidence; relevant tree identical to primary"
 
 [[sources]]
+role = "finite-periodic-consumer-evidence"
+repository = "https://github.com/eragasa/ksdft2effmass.git"
+repository_path = "/Users/eugene/repos/ksdft2effmass"
+commit = "5e3e97f8465a22e20127ab37373b851733460cc5"
+root_tree = "58cd14d3e846baad9e8dc3de0ed49118c7849af7"
+relevant_tree = "f9aa08fa88d11275fbd59b33992fa23088a08e27"
+status = "read-only experiment-local Fourier mechanics evidence; not canonical or release authority"
+
+[[sources]]
 role = "owner-export-candidate"
 repository_path = "/Users/eugene/worktrees/ksdft2effmass-hsh-owner-export-foundations"
 commit = "879996761b67f8b78dc30dead3f03d28ff7cbea6"
@@ -87,6 +96,25 @@ targets = [
   "tests/projectkoios/optimization/clustering/scipy/test__ScipyGaussianMixtureClusterer__integration.py",
 ]
 adaptation = "Removed potential, QoI, report, campaign, and feature-name semantics; retained standardization, exact-zero scale replacement, bounded full-covariance model inventory, AIC/BIC diagnostics, BIC selection, canonical component order, posterior assignment probability, exact input-row pullback, and the single-observation result."
+
+[[files]]
+source_role = "finite-periodic-consumer-evidence"
+source_repository = "https://github.com/eragasa/ksdft2effmass.git"
+source_commit = "5e3e97f8465a22e20127ab37373b851733460cc5"
+source_path = "python/src/ksdft2effmass/analysis/model_adequacy/band_equivalence_locality/fourier.py"
+blob = "c8d05542e55286d7b59b229c688ecda7eae7e030"
+sha256 = "9758029e5b4d310cf75010c63d1630fa7930e7bfed2eb1a477d83e3661ef19e3"
+license = "Apache-2.0"
+targets = [
+  "src/python/projectkoios/numerics/finite_periodic/meshes.py",
+  "src/python/projectkoios/numerics/finite_periodic/transforms.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/transforms.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/matrix_series.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/matrix_evaluation.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/transform_diagnostics.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/batched_finite_series.py",
+]
+adaptation = "Extracted metric-free reduced-coordinate matrix Fourier mechanics from experiment-local functions into canonical class-oriented owner records and NumPy operations; added d=1, vector axis offsets, immutable exact arrays, bounded point-and-mode phase batches, bounded separable tensor-grid contractions, general signed origin-wrap phases, and separate threshold-free diagnostics; excluded shell selection, physical metrics, normalization policy, error channels, thresholds, and scientific dispositions."
 
 [[files]]
 source_repository = "https://github.com/eragasa/pypospack"
@@ -161,6 +189,33 @@ blob = "191fb449f1f797fe3b288f1aceffa3cbd8725fc0"
 sha256 = "576e84d81abc245a5f37b05e79a6c7ee4cfbccb240e73a5e6fc3bc139e227efc"
 targets = ["src/python/projectkoios/optimization/metric/metric.py"]
 adaptation = "Retained the immutable unit-free positive diagonal primal and dual geometry; rewrote imports for the owner namespace."
+
+[[tests]]
+role = "finite-periodic-independent-owner-verification"
+commit = "5e3e97f8465a22e20127ab37373b851733460cc5"
+source_paths = [
+  "python/src/ksdft2effmass/analysis/model_adequacy/band_equivalence_locality/fourier.py",
+  "python/src/ksdft2effmass/analysis/model_adequacy/band_equivalence_locality/development.py",
+]
+source_blobs = [
+  "c8d05542e55286d7b59b229c688ecda7eae7e030",
+  "953eb9e0058294ccc19aa419d5df7ac1eb058825",
+]
+source_sha256 = [
+  "9758029e5b4d310cf75010c63d1630fa7930e7bfed2eb1a477d83e3661ef19e3",
+  "20841610f45853b52a33dc0e0e21f0116a36de516b95dd7dbc4c2f0909651907",
+]
+targets = [
+  "tests/projectkoios/numerics/finite_periodic/test__CenteredUniformMesh__unit.py",
+  "tests/projectkoios/numerics/finite_periodic/test__FinitePeriodicTransformDiagnostics__unit.py",
+  "tests/projectkoios/numerics/finite_periodic/numpy/test__NumpyFinitePeriodicTransformContracts__unit.py",
+  "tests/projectkoios/numerics/finite_periodic/numpy/test__NumpyFinitePeriodicTransforms__integration.py",
+  "tests/projectkoios/numerics/finite_periodic/numpy/test__NumpyFinitePeriodicTransforms__numerical.py",
+  "tests/projectkoios/numerics/finite_periodic/numpy/test__NumpyTensorProductFourierMatrixEvaluationDefinition__unit.py",
+  "tests/projectkoios/numerics/finite_periodic/numpy/test__NumpyTensorProductFourierMatrixSeriesEvaluator__integration.py",
+  "tests/projectkoios/numerics/finite_periodic/transforms/test__FinitePeriodicTransformsWheel__integration.py",
+]
+adaptation = "Replaced experiment-coupled evidence with independently derived single-mode, complete-roundtrip, Parseval, cyclic-Hermiticity, bounded-memory, oblique-2D angular-duality, FCC-primitive angular-duality, malformed-input, immutability, and isolated-wheel evidence."
 
 [[tests]]
 role = "software"

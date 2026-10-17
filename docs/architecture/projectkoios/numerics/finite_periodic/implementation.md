@@ -5,9 +5,10 @@
 ```text
 projectkoios/numerics/finite_periodic/
 ├── __init__.py
-├── meshes.py
+├── meshes.py                 # centered uniform mesh record
 ├── finite_series.py
-├── transforms.py
+├── batched_finite_series.py
+├── transforms.py             # dependency-free diagnostic records
 ├── sewing.py
 ├── frames.py
 ├── wilson.py
@@ -17,7 +18,8 @@ projectkoios/numerics/finite_periodic/
 ├── numpy/
 │   ├── __init__.py
 │   ├── finite_series.py
-│   ├── transforms.py
+│   ├── batched_finite_series.py
+│   ├── transforms.py         # centered matrix transforms and bounded evaluation
 │   ├── sewing.py
 │   ├── frames.py
 │   ├── wilson.py
@@ -38,12 +40,19 @@ Current records:
 
 - `FiniteFourierSeriesEvaluationDefinition`
 - `FiniteFourierSeriesEvaluationResult`
+- `BatchedFiniteFourierSeriesEvaluationDefinition`
+- `BatchedFiniteFourierSeriesEvaluationResult`
+- `CenteredUniformMesh`
+- `FinitePeriodicParsevalDiagnostics`
+- `FinitePeriodicHermiticityDiagnostics`
+- the array-owning records in `finite_periodic.numpy.matrix_series`,
+  `finite_periodic.numpy.matrix_evaluation`, and `finite_periodic.numpy.transforms`
 
 Planned records:
 
 - `PeriodicMeshNeighbor`
 - `ReciprocalMeshTranslation`
-- `FinitePeriodicTransformResult`
+- backend-neutral transform arrays beyond the current NumPy capability
 - `FinitePeriodicTruncationResult`
 - `ReciprocalSewingMap`
 - `OrthonormalFramePath`
@@ -79,7 +88,9 @@ Planned records:
 
 ## Status
 
-`finite_series.py`, `numpy/finite_series.py`, their import-empty package initializers, and
-the Numerics `py.typed` marker are implemented. The remaining modules and records shown
-above are planned. Optimization alignment and assignment contracts are designed
-separately so this package remains free of objective-selection behavior.
+Scalar and batched finite-series evaluation plus centered uniform one-, two-, and
+three-dimensional matrix transforms are implemented. Package initializers remain
+import-empty and the Numerics distribution includes a `py.typed` marker. Remaining
+modules and records shown above are planned. Optimization alignment and assignment
+contracts are designed separately so this package remains free of objective-selection
+behavior.

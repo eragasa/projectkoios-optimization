@@ -18,14 +18,15 @@ normalization.
 - Mode columns retain supplied order, including duplicates.
 - Coefficients are neither normalized nor coalesced.
 
-## Dense reduction
+## Bounded dense reductions
 
-Channel evaluation uses one backend-owned dense matrix multiplication after the phase
-matrix is formed once.
+Channel evaluation processes point batches while sharing each batch's phase work across
+all channels.
 
-- The phase matrix has shape `P × M`.
-- Transposed coefficient channels have shape `M × S`.
-- The result has point-major shape `P × S`.
+- Every phase matrix has shape `B × M_b` with `B * M_b <= 1_000_000`.
+- Corresponding coefficient-channel slices have shape `M_b × S`.
+- The complete result has point-major shape `P × S`.
+- Problems below the bound use one phase matrix and one multiplication.
 - Dense mode reduction may be reassociated by NumPy or its linked numerical libraries.
 - Bitwise equality with the scalar ordered evaluator is not promised.
 

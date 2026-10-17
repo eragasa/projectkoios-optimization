@@ -6,7 +6,8 @@ integer-mode grid while preserving a dependency-free public boundary.
 - Public values use point-major shape `P × S`.
 - Channel column order exactly matches coefficient-channel order.
 - The positive exponential and absence of normalization are fixed.
-- The NumPy backend reuses one point-mode phase matrix.
+- The NumPy backend reuses one point-batch-by-mode phase matrix and bounds large
+  evaluations to one million phase elements per batch.
 
 ## Mathematical operation
 

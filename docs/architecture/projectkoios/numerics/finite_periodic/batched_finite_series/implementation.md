@@ -32,14 +32,14 @@ invoked.
 
 ## NumPy execution
 
-The nontrivial backend constructs shared work once and performs one dense channel
-reduction.
+The nontrivial backend shares phase work across channels and bounds large evaluations.
 
 - Coordinates become a `P × d` binary64 array.
 - Modes become an `M × d` binary64 array.
-- Inner products accumulate one coordinate component at a time into `P × M`.
-- One complex128 exponential produces the shared `P × M` phase matrix.
-- One `numpy.matmul` multiplies `P × M` phases by `M × S` coefficients.
+- Point and mode batches contain at most one million phase elements per temporary.
+- Inner products accumulate one coordinate component at a time into `B × M_b`.
+- One complex128 exponential and one `numpy.matmul` are used per point/mode batch pair.
+- Small problems retain a single shared phase matrix and reduction.
 - Public output is converted to immutable built-in complex tuples with shape `P × S`.
 
 ## Verification organization
@@ -50,6 +50,8 @@ numerical claims.
 - Core unit tests cover canonical shapes, scalar types, mode bounds, empty cases, and
   evidence through public records.
 - Contract tests exercise public template behavior and preserve undeclared exceptions.
-- NumPy integration tests verify one phase construction and one dense multiplication.
+- NumPy integration tests verify shared phase construction and dense multiplication for
+  representative small problems; the matrix-series integration tests verify the shared
+  bounded backend across multiple batches.
 - Numerical tests compare representative columns with the scalar backend under an explicit scale-aware bound.
 - The isolated-wheel test verifies dependency-free import before NumPy backend import.
