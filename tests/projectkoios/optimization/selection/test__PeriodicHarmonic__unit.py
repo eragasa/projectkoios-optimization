@@ -12,8 +12,14 @@ from projectkoios.optimization.selection.harmonic import PeriodicHarmonic
 pytestmark = pytest.mark.unit
 
 
-def test_definition_normalizes_real_coefficients_and_exposes_interval() -> None:
-    harmonic = PeriodicHarmonic(1, 2, -3, 2, -math.pi / 2.0)
+def test_definition_factory_normalizes_real_coefficients_and_exposes_interval() -> None:
+    harmonic = PeriodicHarmonic.from_values(
+        offset=1,
+        cosine_coefficient=2,
+        sine_coefficient=-3,
+        harmonic_order=2,
+        fundamental_interval_start=-math.pi / 2.0,
+    )
 
     assert harmonic.offset == 1.0
     assert harmonic.cosine_coefficient == 2.0
@@ -22,6 +28,11 @@ def test_definition_normalizes_real_coefficients_and_exposes_interval() -> None:
     assert harmonic.fundamental_interval_start == -math.pi / 2.0
     assert harmonic.fundamental_period == math.pi
     assert harmonic.fundamental_interval_stop == math.pi / 2.0
+
+
+def test_raw_definition_rejects_noncanonical_coefficients() -> None:
+    with pytest.raises(TypeError, match="exact built-in float"):
+        PeriodicHarmonic(1, 2.0, -3.0, 2, -math.pi / 2.0)
 
 
 @pytest.mark.parametrize("value", (True, "1", 1.0 + 0.0j))

@@ -36,6 +36,7 @@ sequenceDiagram
     end
     T->>Q: fresh loss evaluation
     T->>T: classify bounds, reconstruct gradient and coordinate-local KKT evidence
+    T->>T: construct canonical frozen result and validate named evidence groups
     T-->>C: immutable BoxQuadraticMinimum
 ```
 

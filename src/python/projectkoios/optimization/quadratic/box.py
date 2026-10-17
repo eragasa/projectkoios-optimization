@@ -6,9 +6,15 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import final
+from typing import Self, final
 
-from projectkoios.numerics.validation import finite_float, integer, u32
+from projectkoios.numerics.validation import (
+    exact_nonnegative_float,
+    finite_float,
+    integer,
+    u32,
+    validate_finite_float_tuple,
+)
 
 from ..spaces.parameters import ParameterSpace
 from ..validation.validation import text
@@ -83,86 +89,308 @@ class BoxQuadraticMinimum:
     backend_identifier: str
     backend_version: str
 
+    @classmethod
+    def from_values(
+        cls,
+        *,
+        coordinates: object,
+        squared_loss: object,
+        bound_statuses: tuple[BoxQuadraticBoundStatus, ...],
+        gradient: object,
+        kkt_tolerance_bounds: object,
+        maximum_kkt_violation: object,
+        maximum_kkt_ratio: object,
+        iteration_count: int,
+        active_set_change_count: int,
+        linear_solve_count: int,
+        maximum_iterations: int,
+        backend_identifier: str,
+        backend_version: str,
+    ) -> Self:
+        """Construct canonical immutable evidence from finite real values.
+
+        Parameters
+        ----------
+        coordinates
+            Candidate finite minimizing vector.
+        squared_loss
+            Candidate nonnegative loss.
+        bound_statuses
+            Exact bound classifications.
+        gradient
+            Candidate finite full gradient.
+        kkt_tolerance_bounds
+            Candidate positive row-local bounds.
+        maximum_kkt_violation, maximum_kkt_ratio
+            Candidate nonnegative aggregate KKT evidence.
+        iteration_count, active_set_change_count, linear_solve_count
+            Exact candidate execution counts.
+        maximum_iterations
+            Exact positive iteration limit.
+        backend_identifier, backend_version
+            Exact nonempty backend identity strings.
+
+        Returns
+        -------
+        BoxQuadraticMinimum
+            Frozen record containing canonical built-in values from initial
+            construction.
+
+        Raises
+        ------
+        TypeError
+            If an input has the wrong nominal or exact runtime type.
+        ValueError
+            If normalization fails or retained evidence is relationally inconsistent.
+        """
+        return cls(
+            coordinates=finite_vector(coordinates, "coordinates"),
+            squared_loss=finite_float(squared_loss, "squared_loss"),
+            bound_statuses=bound_statuses,
+            gradient=finite_vector(gradient, "gradient"),
+            kkt_tolerance_bounds=finite_vector(
+                kkt_tolerance_bounds,
+                "kkt_tolerance_bounds",
+            ),
+            maximum_kkt_violation=finite_float(
+                maximum_kkt_violation,
+                "maximum_kkt_violation",
+            ),
+            maximum_kkt_ratio=finite_float(
+                maximum_kkt_ratio,
+                "maximum_kkt_ratio",
+            ),
+            iteration_count=iteration_count,
+            active_set_change_count=active_set_change_count,
+            linear_solve_count=linear_solve_count,
+            maximum_iterations=maximum_iterations,
+            backend_identifier=backend_identifier,
+            backend_version=backend_version,
+        )
+
     def __post_init__(self) -> None:
-        coordinates = finite_vector(self.coordinates, "coordinates")
-        squared_loss = finite_float(self.squared_loss, "squared_loss")
-        if squared_loss < 0.0:
-            raise ValueError("squared_loss must be nonnegative")
-        if type(self.bound_statuses) is not tuple or any(
-            type(value) is not BoxQuadraticBoundStatus for value in self.bound_statuses
-        ):
-            raise TypeError("bound_statuses must be a tuple of BoxQuadraticBoundStatus")
-        gradient = finite_vector(self.gradient, "gradient")
-        tolerance_bounds = finite_vector(
-            self.kkt_tolerance_bounds,
-            "kkt_tolerance_bounds",
-        )
-        dimension = len(coordinates)
-        if len(self.bound_statuses) != dimension:
-            raise ValueError("bound_statuses must match the coordinate dimension")
-        if len(gradient) != dimension:
-            raise ValueError("gradient must match the coordinate dimension")
-        if len(tolerance_bounds) != dimension:
-            raise ValueError("kkt_tolerance_bounds must match the coordinate dimension")
-        if any(value <= 0.0 for value in tolerance_bounds):
-            raise ValueError("kkt_tolerance_bounds must be positive")
+        vectors = _validate_box_minimum_vectors(self)
+        _validate_box_minimum_kkt(self, vectors)
+        _validate_box_minimum_execution(self)
 
-        maximum_violation = finite_float(
-            self.maximum_kkt_violation,
-            "maximum_kkt_violation",
-        )
-        maximum_ratio = finite_float(self.maximum_kkt_ratio, "maximum_kkt_ratio")
-        if maximum_violation < 0.0:
-            raise ValueError("maximum_kkt_violation must be nonnegative")
-        if maximum_ratio < 0.0:
-            raise ValueError("maximum_kkt_ratio must be nonnegative")
-        violations = _kkt_violations(gradient, self.bound_statuses)
-        expected_maximum = max(violations)
-        expected_ratio = max(
-            violation / bound
-            for violation, bound in zip(
-                violations,
-                tolerance_bounds,
-                strict=True,
-            )
-        )
-        if maximum_violation != expected_maximum:
-            raise ValueError("maximum_kkt_violation is inconsistent")
-        if maximum_ratio != expected_ratio:
-            raise ValueError("maximum_kkt_ratio is inconsistent")
-        if maximum_ratio > 1.0:
-            raise ValueError("maximum_kkt_ratio must not exceed one")
 
-        iterations = _positive_int(self.iteration_count, "iteration_count")
-        changes = _nonnegative_int(
-            self.active_set_change_count,
-            "active_set_change_count",
-        )
-        solves = _nonnegative_int(self.linear_solve_count, "linear_solve_count")
-        maximum_iterations = u32(
-            self.maximum_iterations,
-            "maximum_iterations",
-            allow_zero=False,
-        )
-        if iterations > maximum_iterations:
-            raise ValueError("iteration_count must not exceed maximum_iterations")
-        if solves > iterations:
-            raise ValueError("linear_solve_count must not exceed iteration_count")
-        identifier = text(self.backend_identifier, "backend_identifier")
-        version = text(self.backend_version, "backend_version")
+@dataclass(frozen=True, slots=True)
+class _BoxMinimumVectors:
+    """Hold validated canonical box-minimum vectors and scalar loss.
 
-        object.__setattr__(self, "coordinates", coordinates)
-        object.__setattr__(self, "squared_loss", squared_loss)
-        object.__setattr__(self, "gradient", gradient)
-        object.__setattr__(self, "kkt_tolerance_bounds", tolerance_bounds)
-        object.__setattr__(self, "maximum_kkt_violation", maximum_violation)
-        object.__setattr__(self, "maximum_kkt_ratio", maximum_ratio)
-        object.__setattr__(self, "iteration_count", iterations)
-        object.__setattr__(self, "active_set_change_count", changes)
-        object.__setattr__(self, "linear_solve_count", solves)
-        object.__setattr__(self, "maximum_iterations", maximum_iterations)
-        object.__setattr__(self, "backend_identifier", identifier)
-        object.__setattr__(self, "backend_version", version)
+    Parameters
+    ----------
+    coordinates
+        Finite minimizing coordinates.
+    squared_loss
+        Finite nonnegative loss at the coordinates.
+    gradient
+        Finite full gradient.
+    tolerance_bounds
+        Positive row-local KKT bounds.
+    """
+
+    coordinates: tuple[float, ...]
+    squared_loss: float
+    gradient: tuple[float, ...]
+    tolerance_bounds: tuple[float, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _BoxMinimumKktEvidence:
+    """Hold validated aggregate KKT evidence.
+
+    Parameters
+    ----------
+    maximum_violation
+        Maximum per-coordinate KKT violation.
+    maximum_ratio
+        Maximum per-coordinate violation-to-bound ratio.
+    """
+
+    maximum_violation: float
+    maximum_ratio: float
+
+
+@dataclass(frozen=True, slots=True)
+class _BoxMinimumExecutionEvidence:
+    """Hold validated execution counts and backend identity.
+
+    Parameters
+    ----------
+    iterations
+        Positive number of inspected active-set states.
+    changes
+        Nonnegative number of active-set changes.
+    solves
+        Nonnegative number of free-face linear solves.
+    maximum_iterations
+        Positive applied iteration bound.
+    identifier, version
+        Nonempty trimmed backend identity strings.
+    """
+
+    iterations: int
+    changes: int
+    solves: int
+    maximum_iterations: int
+    identifier: str
+    version: str
+
+
+def _validate_box_minimum_vectors(
+    result: BoxQuadraticMinimum,
+    /,
+) -> _BoxMinimumVectors:
+    """Validate canonical vector-shaped minimum evidence.
+
+    Parameters
+    ----------
+    result
+        Box minimum under construction.
+
+    Returns
+    -------
+    _BoxMinimumVectors
+        Validated canonical coordinates, loss, gradient, and tolerance bounds.
+
+    Raises
+    ------
+    TypeError
+        If a vector, entry, or bound-status container has the wrong nominal type.
+    ValueError
+        If a value is nonfinite, empty, negative, nonpositive, or dimensionally
+        inconsistent.
+    """
+    coordinates = validate_finite_float_tuple(result.coordinates, "coordinates")
+    squared_loss = exact_nonnegative_float(result.squared_loss, "squared_loss")
+    if type(result.bound_statuses) is not tuple or any(
+        type(value) is not BoxQuadraticBoundStatus for value in result.bound_statuses
+    ):
+        raise TypeError("bound_statuses must be a tuple of BoxQuadraticBoundStatus")
+    gradient = validate_finite_float_tuple(result.gradient, "gradient")
+    tolerance_bounds = validate_finite_float_tuple(
+        result.kkt_tolerance_bounds,
+        "kkt_tolerance_bounds",
+    )
+    dimension = len(coordinates)
+    if len(result.bound_statuses) != dimension:
+        raise ValueError("bound_statuses must match the coordinate dimension")
+    if len(gradient) != dimension:
+        raise ValueError("gradient must match the coordinate dimension")
+    if len(tolerance_bounds) != dimension:
+        raise ValueError("kkt_tolerance_bounds must match the coordinate dimension")
+    if any(value <= 0.0 for value in tolerance_bounds):
+        raise ValueError("kkt_tolerance_bounds must be positive")
+    return _BoxMinimumVectors(
+        coordinates=coordinates,
+        squared_loss=squared_loss,
+        gradient=gradient,
+        tolerance_bounds=tolerance_bounds,
+    )
+
+
+def _validate_box_minimum_kkt(
+    result: BoxQuadraticMinimum,
+    vectors: _BoxMinimumVectors,
+    /,
+) -> _BoxMinimumKktEvidence:
+    """Validate aggregate KKT evidence against coordinate-local values.
+
+    Parameters
+    ----------
+    result
+        Structurally validated box minimum.
+    vectors
+        Normalized vector evidence.
+
+    Returns
+    -------
+    _BoxMinimumKktEvidence
+        Canonical and relationally validated aggregate evidence.
+
+    Raises
+    ------
+    TypeError
+        If an aggregate has the wrong nominal numeric type.
+    ValueError
+        If an aggregate is negative, inconsistent, or exceeds acceptance.
+    """
+    maximum_violation = exact_nonnegative_float(
+        result.maximum_kkt_violation,
+        "maximum_kkt_violation",
+    )
+    maximum_ratio = exact_nonnegative_float(
+        result.maximum_kkt_ratio,
+        "maximum_kkt_ratio",
+    )
+    violations = _kkt_violations(vectors.gradient, result.bound_statuses)
+    expected_maximum = max(violations)
+    expected_ratio = max(
+        violation / bound
+        for violation, bound in zip(
+            violations,
+            vectors.tolerance_bounds,
+            strict=True,
+        )
+    )
+    if maximum_violation != expected_maximum:
+        raise ValueError("maximum_kkt_violation is inconsistent")
+    if maximum_ratio != expected_ratio:
+        raise ValueError("maximum_kkt_ratio is inconsistent")
+    if maximum_ratio > 1.0:
+        raise ValueError("maximum_kkt_ratio must not exceed one")
+    return _BoxMinimumKktEvidence(maximum_violation, maximum_ratio)
+
+
+def _validate_box_minimum_execution(
+    result: BoxQuadraticMinimum,
+    /,
+) -> _BoxMinimumExecutionEvidence:
+    """Validate execution counts and declared backend identity.
+
+    Parameters
+    ----------
+    result
+        Structurally and numerically validated box minimum.
+
+    Returns
+    -------
+    _BoxMinimumExecutionEvidence
+        Validated counts and backend strings.
+
+    Raises
+    ------
+    TypeError
+        If a count or backend field has the wrong nominal type.
+    ValueError
+        If counts are invalid or inconsistent, or backend text is empty or untrimmed.
+    """
+    iterations = _positive_int(result.iteration_count, "iteration_count")
+    changes = _nonnegative_int(
+        result.active_set_change_count,
+        "active_set_change_count",
+    )
+    solves = _nonnegative_int(result.linear_solve_count, "linear_solve_count")
+    maximum_iterations = u32(
+        result.maximum_iterations,
+        "maximum_iterations",
+        allow_zero=False,
+    )
+    if iterations > maximum_iterations:
+        raise ValueError("iteration_count must not exceed maximum_iterations")
+    if solves > iterations:
+        raise ValueError("linear_solve_count must not exceed iteration_count")
+    identifier = text(result.backend_identifier, "backend_identifier")
+    version = text(result.backend_version, "backend_version")
+    return _BoxMinimumExecutionEvidence(
+        iterations=iterations,
+        changes=changes,
+        solves=solves,
+        maximum_iterations=maximum_iterations,
+        identifier=identifier,
+        version=version,
+    )
 
 
 @final
@@ -176,19 +404,15 @@ class _BoxQuadraticBackendResult:
     linear_solve_count: int
 
     def __post_init__(self) -> None:
-        coordinates = finite_vector(self.coordinates, "coordinates")
+        validate_finite_float_tuple(self.coordinates, "coordinates")
         iterations = _positive_int(self.iteration_count, "iteration_count")
-        changes = _nonnegative_int(
+        _nonnegative_int(
             self.active_set_change_count,
             "active_set_change_count",
         )
         solves = _nonnegative_int(self.linear_solve_count, "linear_solve_count")
         if solves > iterations:
             raise ValueError("linear_solve_count must not exceed iteration_count")
-        object.__setattr__(self, "coordinates", coordinates)
-        object.__setattr__(self, "iteration_count", iterations)
-        object.__setattr__(self, "active_set_change_count", changes)
-        object.__setattr__(self, "linear_solve_count", solves)
 
 
 class BoxQuadraticMinimizer(ABC):
@@ -301,7 +525,7 @@ class BoxQuadraticMinimizer(ABC):
         if not math.isfinite(maximum_ratio):
             raise FloatingPointError("KKT ratio must be finite")
 
-        return BoxQuadraticMinimum(
+        return BoxQuadraticMinimum.from_values(
             coordinates=backend_result.coordinates,
             squared_loss=squared_loss,
             bound_statuses=statuses,

@@ -8,6 +8,7 @@ import pytest
 
 from projectkoios.numerics.typing import FiniteComplexMatrix
 from projectkoios.numerics.validation import (
+    exact_finite_float,
     exact_nonnegative_float,
     exact_positive_integer,
     exact_relative_float,
@@ -18,6 +19,7 @@ from projectkoios.numerics.validation import (
     u32,
     u64,
     validate_finite_complex_matrix,
+    validate_finite_float_tuple,
 )
 
 
@@ -134,6 +136,34 @@ def test_exact_positive_integer_rejects_invalid_values(
 ) -> None:
     with pytest.raises(error, match=match):
         exact_positive_integer(value, "value")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [pytest.param(-2.0, id="negative"), pytest.param(0.0, id="zero")],
+)
+def test_exact_finite_float_returns_original_value(value: float) -> None:
+    assert exact_finite_float(value, "value") == value
+
+
+def test_exact_finite_float_rejects_wrong_type_and_nonfinite_value() -> None:
+    with pytest.raises(TypeError, match="exact built-in float"):
+        exact_finite_float(cast(float, 1), "value")
+    with pytest.raises(ValueError, match="finite"):
+        exact_finite_float(math.inf, "value")
+
+
+def test_finite_float_tuple_validation_preserves_canonical_input() -> None:
+    values = (-1.0, 0.0, 2.0)
+
+    assert validate_finite_float_tuple(values, "values") is values
+
+
+def test_finite_float_tuple_validation_rejects_coercion_and_nonfinite_values() -> None:
+    with pytest.raises(TypeError, match="exact built-in float"):
+        validate_finite_float_tuple(cast(tuple[float, ...], (1,)), "values")
+    with pytest.raises(ValueError, match="finite"):
+        validate_finite_float_tuple((math.inf,), "values")
 
 
 @pytest.mark.parametrize(

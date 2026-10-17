@@ -14,7 +14,15 @@ from projectkoios.optimization.alignment.procrustes import (
 )
 from tests.projectkoios.optimization.alignment.fixtures import (
     BatchedProcrustesEvidenceFixture,
+    UniqueScalarResultCase,
+    unique_scalar_result_case,
 )
+
+
+@pytest.fixture
+def unique_scalar_result() -> UniqueScalarResultCase:
+    """Return a named analytically derived scalar result fixture."""
+    return unique_scalar_result_case()
 
 
 @pytest.fixture

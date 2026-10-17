@@ -13,7 +13,9 @@ the backend and independently validates:
   agreement with the singular-value optimum.
 
 The validation cutoff has separate absolute and relative components. It validates the
-software/backend correlation only and does not affect the numerical-rank decision.
+software/backend correlation only and does not affect the numerical-rank decision. The
+immutable scalar result independently applies named structural, rank, residual,
+rank-dependent transformation, and backend-evidence validators in public field order.
 
 ## Numerical rank
 

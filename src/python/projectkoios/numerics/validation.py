@@ -279,6 +279,70 @@ def exact_positive_integer(value: int, name: str, /) -> int:
     return value
 
 
+def exact_finite_float(value: float, name: str, /) -> float:
+    """Validate a finite exact built-in float without coercion.
+
+    Parameters
+    ----------
+    value
+        Candidate binary64 value.
+    name
+        Field name included in failure messages.
+
+    Returns
+    -------
+    float
+        Original validated float.
+
+    Raises
+    ------
+    TypeError
+        If the value is not an exact built-in float.
+    ValueError
+        If the value is nonfinite.
+    """
+    if type(value) is not float:
+        raise TypeError(f"{name} must be an exact built-in float")
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    return value
+
+
+def validate_finite_float_tuple(
+    value: tuple[float, ...],
+    name: str,
+    /,
+) -> tuple[float, ...]:
+    """Validate a nonempty exact tuple of exact finite built-in floats.
+
+    Parameters
+    ----------
+    value
+        Candidate immutable float vector.
+    name
+        Field name included in failure messages.
+
+    Returns
+    -------
+    tuple[float, ...]
+        Original validated tuple without copying.
+
+    Raises
+    ------
+    TypeError
+        If the container or an entry has the wrong exact runtime type.
+    ValueError
+        If the tuple is empty or an entry is nonfinite.
+    """
+    if type(value) is not tuple:
+        raise TypeError(f"{name} must be an exact tuple")
+    if not value:
+        raise ValueError(f"{name} must be nonempty")
+    for index, entry in enumerate(value):
+        exact_finite_float(entry, f"{name}[{index}]")
+    return value
+
+
 def exact_nonnegative_float(value: float, name: str, /) -> float:
     """Validate a finite nonnegative exact built-in float.
 
@@ -301,13 +365,10 @@ def exact_nonnegative_float(value: float, name: str, /) -> float:
     ValueError
         If the value is nonfinite or negative.
     """
-    if type(value) is not float:
-        raise TypeError(f"{name} must be an exact built-in float")
-    if not math.isfinite(value):
-        raise ValueError(f"{name} must be finite")
-    if value < 0.0:
+    result = exact_finite_float(value, name)
+    if result < 0.0:
         raise ValueError(f"{name} must be nonnegative")
-    return value
+    return result
 
 
 def exact_relative_float(value: float, name: str, /) -> float:
@@ -399,6 +460,7 @@ def finite_complex_result(value: complex, message: str, /) -> complex:
 __all__ = [
     "MAX_U32",
     "MAX_U64",
+    "exact_finite_float",
     "exact_nonnegative_float",
     "exact_positive_integer",
     "exact_relative_float",
@@ -409,4 +471,5 @@ __all__ = [
     "integer",
     "u32",
     "u64",
+    "validate_finite_float_tuple",
 ]

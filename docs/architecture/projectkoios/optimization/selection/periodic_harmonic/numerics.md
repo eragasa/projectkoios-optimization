@@ -45,6 +45,10 @@ where $a$ and $r$ are the absolute and relative degeneracy tolerances. If $A\le 
 the status is `numerically-constant` and no maximizing argument is returned. Otherwise
 the status is `unique` and the canonical argument is returned.
 
+The frozen result validates canonical exact binary64 fields without postconstruction
+replacement. Callers with other finite real representations use `from_values(...)` to
+normalize before construction.
+
 The status is a numerical resolution statement, not a claim that $c=s=0$ exactly.
 `maximum_value` remains $o+A$ in either status, so the result does not silently replace
 a small nonzero amplitude by zero.

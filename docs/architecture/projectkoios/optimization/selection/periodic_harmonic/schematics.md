@@ -11,9 +11,10 @@ flowchart LR
     M --> S{Amplitude resolved?}
     S -->|yes| A[Canonical argument in half-open interval]
     S -->|no| N[No unique argument]
-    R --> E[Consumer evidence and interpretation]
-    A --> E
-    N --> E
+    R --> V[Validate canonical scalar and relational evidence]
+    A --> V
+    N --> V
+    V --> E[Consumer evidence and interpretation]
 ```
 
 ## Canonicalization

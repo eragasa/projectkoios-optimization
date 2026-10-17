@@ -116,7 +116,9 @@ one active coordinate therefore cannot mask nonstationarity on a different free
 coordinate. The summation is checked for overflow and nonfinite terms.
 
 The result retains every $t_i$, $v_{\max}=\max_i v_i$, and
-$\rho_{\max}=\max_i(v_i/t_i)$. Because at least one tolerance component is positive,
+$\rho_{\max}=\max_i(v_i/t_i)$. Its frozen constructor validates canonical exact
+binary64 tuples and scalars; `from_values(...)` is the separate normalization boundary
+for other finite real representations. Because at least one tolerance component is positive,
 every $t_i$ is positive. The accepted result has $\rho_{\max}\leq 1$. These values are
 software acceptance diagnostics, not a backward-error bound, exact certificate, or
 consumer scientific resolution.

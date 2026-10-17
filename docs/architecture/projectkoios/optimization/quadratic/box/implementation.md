@@ -7,6 +7,12 @@ src/python/projectkoios/optimization/quadratic/
 ├── box.py
 │   ├── BoxQuadraticBoundStatus
 │   ├── BoxQuadraticMinimum
+│   ├── _BoxMinimumVectors
+│   ├── _BoxMinimumKktEvidence
+│   ├── _BoxMinimumExecutionEvidence
+│   ├── _validate_box_minimum_vectors
+│   ├── _validate_box_minimum_kkt
+│   ├── _validate_box_minimum_execution
 │   ├── _BoxQuadraticBackendResult
 │   └── BoxQuadraticMinimizer
 ├── factory.py
@@ -69,7 +75,11 @@ through the nominal constructor and returns `NumpyBoxQuadraticMinimizer` lazily.
 - `backend_version`.
 
 The record does not retain coordinate names, units, consumer thresholds, or scientific
-dispositions.
+dispositions. `BoxQuadraticMinimum.from_values(...)` normalizes accepted finite-real
+inputs before frozen construction. The raw constructor accepts canonical exact tuples and
+built-in floats and validates them without `object.__setattr__` or any other
+postconstruction replacement. Named vector, KKT, and execution-evidence validators keep
+those responsibilities independently reviewable.
 
 ## Final-template validation
 
@@ -128,8 +138,12 @@ Mapped contract, result, factory, wheel, integration, and numerical tests live u
 - `tests/projectkoios/optimization/quadratic/box/`; and
 - `tests/projectkoios/optimization/quadratic/numpy/box/`.
 
-They directly exercise the named KKT-evidence, free-direction, blocking-step, and
-coordinate-advance operations in addition to covering 1-D, interior, faces, edges,
+The capability-local `tests/projectkoios/optimization/quadratic/box/fixtures/` package
+owns named analytical case records instead of repeating numeric setup literals. These
+fixtures span all bound statuses and directly exercise the public-result vector, KKT,
+and execution validators, the immutable value
+factory, and the backend KKT-evidence, free-direction, blocking-step,
+and coordinate-advance operations in addition to covering 1-D, interior, faces, edges,
 corners, fixed coordinates, parity with the
 existing exact 2-D rectangle minimizer, coordinate permutation, ill-conditioned admitted
 matrices, deterministic repetition, simultaneous-hit sets, smallest-index release,

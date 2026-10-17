@@ -5,9 +5,14 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import final
+from typing import Self, cast, final
 
-from projectkoios.numerics.validation import finite_float, u32
+from projectkoios.numerics.validation import (
+    exact_finite_float,
+    exact_nonnegative_float,
+    finite_float,
+    u32,
+)
 
 DEFAULT_PERIODIC_HARMONIC_ABSOLUTE_DEGENERACY_TOLERANCE = 1.0e-12
 DEFAULT_PERIODIC_HARMONIC_RELATIVE_DEGENERACY_TOLERANCE = 1.0e-10
@@ -35,13 +40,64 @@ class PeriodicHarmonic:
     harmonic_order: int
     fundamental_interval_start: float
 
+    @classmethod
+    def from_values(
+        cls,
+        *,
+        offset: object,
+        cosine_coefficient: object,
+        sine_coefficient: object,
+        harmonic_order: int,
+        fundamental_interval_start: object,
+    ) -> Self:
+        """Construct a canonical immutable harmonic from finite real values.
+
+        Parameters
+        ----------
+        offset, cosine_coefficient, sine_coefficient
+            Candidate finite real coefficients.
+        harmonic_order
+            Exact positive unsigned-32-bit harmonic order.
+        fundamental_interval_start
+            Candidate finite real included interval start.
+
+        Returns
+        -------
+        PeriodicHarmonic
+            Frozen harmonic containing canonical built-in values from initial
+            construction.
+
+        Raises
+        ------
+        TypeError
+            If a coefficient, interval start, or order has the wrong nominal type.
+        ValueError
+            If normalization fails or the order or represented interval is invalid.
+        """
+        return cls(
+            offset=finite_float(offset, "offset"),
+            cosine_coefficient=finite_float(
+                cosine_coefficient,
+                "cosine_coefficient",
+            ),
+            sine_coefficient=finite_float(
+                sine_coefficient,
+                "sine_coefficient",
+            ),
+            harmonic_order=harmonic_order,
+            fundamental_interval_start=finite_float(
+                fundamental_interval_start,
+                "fundamental_interval_start",
+            ),
+        )
+
     def __post_init__(self) -> None:
-        """Normalize finite binary64 coefficients and validate the interval."""
-        offset = finite_float(self.offset, "offset")
-        cosine = finite_float(self.cosine_coefficient, "cosine_coefficient")
-        sine = finite_float(self.sine_coefficient, "sine_coefficient")
+        """Validate canonical binary64 coefficients and the interval."""
+        exact_finite_float(self.offset, "offset")
+        exact_finite_float(self.cosine_coefficient, "cosine_coefficient")
+        exact_finite_float(self.sine_coefficient, "sine_coefficient")
         order = u32(self.harmonic_order, "harmonic_order", allow_zero=False)
-        start = finite_float(
+        start = exact_finite_float(
             self.fundamental_interval_start,
             "fundamental_interval_start",
         )
@@ -53,11 +109,6 @@ class PeriodicHarmonic:
             raise ValueError(
                 "fundamental interval endpoint must be finite and distinguishable"
             )
-        object.__setattr__(self, "offset", offset)
-        object.__setattr__(self, "cosine_coefficient", cosine)
-        object.__setattr__(self, "sine_coefficient", sine)
-        object.__setattr__(self, "harmonic_order", order)
-        object.__setattr__(self, "fundamental_interval_start", start)
 
     @property
     def fundamental_period(self) -> float:
@@ -83,71 +134,237 @@ class PeriodicHarmonicMaximum:
     applied_degeneracy_cutoff: float
     status: PeriodicHarmonicMaximumStatus
 
-    def __post_init__(self) -> None:
-        """Validate all derived values against the retained harmonic."""
-        if type(self.harmonic) is not PeriodicHarmonic:
-            raise TypeError("harmonic must be PeriodicHarmonic")
-        maximum = finite_float(self.maximum_value, "maximum_value")
-        amplitude = finite_float(self.amplitude, "amplitude")
-        period = finite_float(self.fundamental_period, "fundamental_period")
+    @classmethod
+    def from_values(
+        cls,
+        *,
+        harmonic: PeriodicHarmonic,
+        maximum_value: object,
+        amplitude: object,
+        canonical_maximizing_argument: object | None,
+        fundamental_period: object,
+        applied_degeneracy_cutoff: object,
+        status: PeriodicHarmonicMaximumStatus,
+    ) -> Self:
+        """Construct canonical immutable evidence from finite real values.
+
+        Parameters
+        ----------
+        harmonic
+            Exact retained harmonic.
+        maximum_value, amplitude
+            Candidate real maximum and nonnegative amplitude.
+        canonical_maximizing_argument
+            Candidate real canonical argument, or ``None`` for degeneracy.
+        fundamental_period
+            Candidate positive real period.
+        applied_degeneracy_cutoff
+            Candidate nonnegative real cutoff.
+        status
+            Exact uniqueness disposition.
+
+        Returns
+        -------
+        PeriodicHarmonicMaximum
+            Frozen result containing exact built-in floats from initial construction.
+
+        Raises
+        ------
+        TypeError
+            If a candidate is Boolean, non-real, or violates a nominal owner type.
+        ValueError
+            If conversion or relational validation fails.
+        FloatingPointError
+            If canonical-argument reconstruction becomes nonfinite.
+        """
+        maximum = finite_float(maximum_value, "maximum_value")
+        normalized_amplitude = finite_float(amplitude, "amplitude")
+        period = finite_float(fundamental_period, "fundamental_period")
         cutoff = finite_float(
-            self.applied_degeneracy_cutoff,
+            applied_degeneracy_cutoff,
             "applied_degeneracy_cutoff",
         )
-        if amplitude < 0.0:
-            raise ValueError("amplitude must be nonnegative")
-        if period <= 0.0:
-            raise ValueError("fundamental_period must be positive")
-        if cutoff < 0.0:
-            raise ValueError("applied_degeneracy_cutoff must be nonnegative")
-        if type(self.status) is not PeriodicHarmonicMaximumStatus:
-            raise TypeError("status must be PeriodicHarmonicMaximumStatus")
-
-        expected_amplitude = math.hypot(
-            self.harmonic.cosine_coefficient,
-            self.harmonic.sine_coefficient,
-        )
-        expected_maximum = self.harmonic.offset + expected_amplitude
-        if not math.isfinite(expected_amplitude) or not math.isfinite(expected_maximum):
-            raise ValueError("harmonic maximum arithmetic must be finite")
-        if amplitude != expected_amplitude:
-            raise ValueError("amplitude is inconsistent with harmonic coefficients")
-        if maximum != expected_maximum:
-            raise ValueError("maximum_value is inconsistent with harmonic coefficients")
-        if period != self.harmonic.fundamental_period:
-            raise ValueError("fundamental_period is inconsistent with harmonic order")
-
-        is_degenerate = amplitude <= cutoff
-        expected_status = (
-            PeriodicHarmonicMaximumStatus.NUMERICALLY_CONSTANT
-            if is_degenerate
-            else PeriodicHarmonicMaximumStatus.UNIQUE
-        )
-        if self.status is not expected_status:
-            raise ValueError("status is inconsistent with amplitude and cutoff")
-        argument = self.canonical_maximizing_argument
-        if is_degenerate:
-            if argument is not None:
-                raise ValueError(
-                    "numerically constant harmonics must not select one argument"
-                )
-        else:
-            normalized_argument = finite_float(
-                argument,
+        argument = (
+            None
+            if canonical_maximizing_argument is None
+            else finite_float(
+                canonical_maximizing_argument,
                 "canonical_maximizing_argument",
             )
-            expected_argument = _canonical_maximizing_argument(self.harmonic)
-            if normalized_argument != expected_argument:
-                raise ValueError(
-                    "canonical_maximizing_argument is inconsistent with the harmonic"
-                )
-            argument = normalized_argument
+        )
+        return cls(
+            harmonic=harmonic,
+            maximum_value=maximum,
+            amplitude=normalized_amplitude,
+            canonical_maximizing_argument=argument,
+            fundamental_period=period,
+            applied_degeneracy_cutoff=cutoff,
+            status=status,
+        )
 
-        object.__setattr__(self, "maximum_value", maximum)
-        object.__setattr__(self, "amplitude", amplitude)
-        object.__setattr__(self, "canonical_maximizing_argument", argument)
-        object.__setattr__(self, "fundamental_period", period)
-        object.__setattr__(self, "applied_degeneracy_cutoff", cutoff)
+    def __post_init__(self) -> None:
+        """Validate all derived values against the retained harmonic."""
+        values = _validate_harmonic_maximum_values(self)
+        is_degenerate = _validate_harmonic_maximum_relations(self, values)
+        _validate_harmonic_maximum_argument(self, is_degenerate)
+
+
+@dataclass(frozen=True, slots=True)
+class _HarmonicMaximumValues:
+    """Hold validated canonical scalar values for maximum validation.
+
+    Parameters
+    ----------
+    maximum
+        Finite retained maximum value.
+    amplitude
+        Finite nonnegative retained amplitude.
+    period
+        Finite positive retained fundamental period.
+    cutoff
+        Finite nonnegative applied degeneracy cutoff.
+    """
+
+    maximum: float
+    amplitude: float
+    period: float
+    cutoff: float
+
+
+def _validate_harmonic_maximum_values(
+    result: PeriodicHarmonicMaximum,
+    /,
+) -> _HarmonicMaximumValues:
+    """Validate canonical nominal scalar maximum fields.
+
+    Parameters
+    ----------
+    result
+        Periodic harmonic maximum under construction.
+
+    Returns
+    -------
+    _HarmonicMaximumValues
+        Validated canonical maximum, amplitude, period, and cutoff.
+
+    Raises
+    ------
+    TypeError
+        If the harmonic, status, or scalar fields have invalid nominal types.
+    ValueError
+        If a scalar is nonfinite or violates its sign constraint.
+    """
+    if type(result.harmonic) is not PeriodicHarmonic:
+        raise TypeError("harmonic must be PeriodicHarmonic")
+    maximum = exact_finite_float(result.maximum_value, "maximum_value")
+    amplitude = exact_nonnegative_float(result.amplitude, "amplitude")
+    period = exact_finite_float(result.fundamental_period, "fundamental_period")
+    cutoff = exact_nonnegative_float(
+        result.applied_degeneracy_cutoff,
+        "applied_degeneracy_cutoff",
+    )
+    if period <= 0.0:
+        raise ValueError("fundamental_period must be positive")
+    if type(result.status) is not PeriodicHarmonicMaximumStatus:
+        raise TypeError("status must be PeriodicHarmonicMaximumStatus")
+    return _HarmonicMaximumValues(maximum, amplitude, period, cutoff)
+
+
+def _validate_harmonic_maximum_relations(
+    result: PeriodicHarmonicMaximum,
+    values: _HarmonicMaximumValues,
+    /,
+) -> bool:
+    """Validate harmonic-derived values, period, and degeneracy status.
+
+    Parameters
+    ----------
+    result
+        Nominally validated periodic harmonic maximum.
+    values
+        Normalized scalar result values.
+
+    Returns
+    -------
+    bool
+        Whether the retained amplitude is tolerance-qualified as degenerate.
+
+    Raises
+    ------
+    ValueError
+        If derived arithmetic is nonfinite or retained values and status are
+        relationally inconsistent.
+    """
+    expected_amplitude = math.hypot(
+        result.harmonic.cosine_coefficient,
+        result.harmonic.sine_coefficient,
+    )
+    expected_maximum = result.harmonic.offset + expected_amplitude
+    if not math.isfinite(expected_amplitude) or not math.isfinite(expected_maximum):
+        raise ValueError("harmonic maximum arithmetic must be finite")
+    if values.amplitude != expected_amplitude:
+        raise ValueError("amplitude is inconsistent with harmonic coefficients")
+    if values.maximum != expected_maximum:
+        raise ValueError("maximum_value is inconsistent with harmonic coefficients")
+    if values.period != result.harmonic.fundamental_period:
+        raise ValueError("fundamental_period is inconsistent with harmonic order")
+
+    is_degenerate = values.amplitude <= values.cutoff
+    expected_status = (
+        PeriodicHarmonicMaximumStatus.NUMERICALLY_CONSTANT
+        if is_degenerate
+        else PeriodicHarmonicMaximumStatus.UNIQUE
+    )
+    if result.status is not expected_status:
+        raise ValueError("status is inconsistent with amplitude and cutoff")
+    return is_degenerate
+
+
+def _validate_harmonic_maximum_argument(
+    result: PeriodicHarmonicMaximum,
+    is_degenerate: bool,
+    /,
+) -> float | None:
+    """Validate the canonical rank-like argument disposition.
+
+    Parameters
+    ----------
+    result
+        Relationally validated periodic harmonic maximum.
+    is_degenerate
+        Whether amplitude is tolerance-qualified as numerically constant.
+
+    Returns
+    -------
+    float or None
+        No argument for a degenerate harmonic, otherwise the canonical finite argument.
+
+    Raises
+    ------
+    TypeError
+        If a required argument has the wrong nominal numeric type.
+    ValueError
+        If argument presence or value is inconsistent with the harmonic and status.
+    FloatingPointError
+        If independent canonicalization arithmetic becomes nonfinite.
+    """
+    argument = result.canonical_maximizing_argument
+    if is_degenerate:
+        if argument is not None:
+            raise ValueError(
+                "numerically constant harmonics must not select one argument"
+            )
+        return None
+    normalized_argument = exact_finite_float(
+        cast(float, argument),
+        "canonical_maximizing_argument",
+    )
+    expected_argument = _canonical_maximizing_argument(result.harmonic)
+    if normalized_argument != expected_argument:
+        raise ValueError(
+            "canonical_maximizing_argument is inconsistent with the harmonic"
+        )
+    return normalized_argument
 
 
 @final
@@ -225,7 +442,7 @@ class PeriodicHarmonicMaximizer:
         else:
             argument = _canonical_maximizing_argument(harmonic)
             status = PeriodicHarmonicMaximumStatus.UNIQUE
-        return PeriodicHarmonicMaximum(
+        return PeriodicHarmonicMaximum.from_values(
             harmonic=harmonic,
             maximum_value=maximum,
             amplitude=amplitude,
