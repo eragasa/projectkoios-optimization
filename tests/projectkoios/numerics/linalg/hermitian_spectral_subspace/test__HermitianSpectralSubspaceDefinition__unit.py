@@ -27,7 +27,7 @@ def test_definition_retains_matrix_range_and_derived_dimensions() -> None:
     )
     definition = HermitianSpectralSubspaceDefinition(matrix, 1, 3, _tolerance())
 
-    assert definition.matrix == matrix
+    assert definition.matrix is matrix
     assert definition.dimension == 3
     assert definition.selected_rank == 2
     assert definition.start_index == 1

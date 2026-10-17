@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import math
 from numbers import Real
+from typing import SupportsFloat
 
 from projectkoios.numerics.typing import FiniteComplexMatrix
 
@@ -132,7 +133,7 @@ def validate_finite_complex_matrix(
     return value
 
 
-def finite_float(value: object, name: str, /) -> float:
+def finite_float(value: SupportsFloat, name: str, /) -> float:
     """Normalize a non-Boolean real value to finite built-in binary64.
 
     Parameters
@@ -165,7 +166,7 @@ def finite_float(value: object, name: str, /) -> float:
     return result
 
 
-def integer(value: object, name: str, /) -> int:
+def integer(value: int, name: str, /) -> int:
     """Validate an exact built-in integer while excluding Boolean values.
 
     Parameters
@@ -190,7 +191,7 @@ def integer(value: object, name: str, /) -> int:
     return value
 
 
-def u32(value: object, name: str, /, *, allow_zero: bool) -> int:
+def u32(value: int, name: str, /, *, allow_zero: bool) -> int:
     """Validate an exact integer in a requested unsigned 32-bit interval.
 
     Parameters
@@ -222,7 +223,7 @@ def u32(value: object, name: str, /, *, allow_zero: bool) -> int:
     return result
 
 
-def u64(value: object, name: str, /) -> int:
+def u64(value: int, name: str, /) -> int:
     """Validate an exact integer in the unsigned 64-bit interval.
 
     Parameters

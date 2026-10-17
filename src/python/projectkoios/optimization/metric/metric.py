@@ -10,6 +10,9 @@ import math
 import sys
 from dataclasses import dataclass
 from numbers import Real
+from typing import SupportsFloat
+
+from projectkoios.numerics.validation import exact_finite_float
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +27,7 @@ class PositiveDiagonalMetric:
 
     Notes
     -----
-    Numeric entries are normalized to built-in binary64 floats. The object is frozen
+    Numeric entries must be canonical built-in binary64 floats. The object is frozen
     and slotted. Physical callers must nondimensionalize coordinates, covectors, and
     metric entries before construction. Scientific names, units, channel alignment,
     thresholds, separating-direction requirements, and certificate meaning remain
@@ -49,11 +52,10 @@ class PositiveDiagonalMetric:
             raise TypeError("diagonal must be a tuple")
         if not self.diagonal:
             raise ValueError("diagonal must be nonempty")
-        object.__setattr__(
-            self,
-            "diagonal",
-            tuple(_positive_metric_entry(value) for value in self.diagonal),
-        )
+        for index, value in enumerate(self.diagonal):
+            exact_finite_float(value, f"diagonal[{index}]")
+            if value <= 0.0:
+                raise ValueError("metric entries must be strictly positive")
 
     @property
     def dimension(self) -> int:
@@ -229,23 +231,7 @@ class PositiveDiagonalMetric:
         return tuple(_covector_component(item) for item in value)
 
 
-def _positive_metric_entry(value: object) -> float:
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError("metric entry must be a real number excluding bool")
-    try:
-        result = float(value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(
-            "metric entry must be representable as a finite float"
-        ) from error
-    if not math.isfinite(result):
-        raise ValueError("metric entry must be representable as a finite float")
-    if result <= 0.0:
-        raise ValueError("metric entries must be strictly positive")
-    return result
-
-
-def _point_coordinate(value: object) -> float:
+def _point_coordinate(value: SupportsFloat) -> float:
     if isinstance(value, bool) or not isinstance(value, Real):
         raise TypeError("metric point coordinate must be a real number excluding bool")
     try:
@@ -261,7 +247,7 @@ def _point_coordinate(value: object) -> float:
     return result
 
 
-def _covector_component(value: object) -> float:
+def _covector_component(value: SupportsFloat) -> float:
     if isinstance(value, bool) or not isinstance(value, Real):
         raise TypeError("covector component must be a real number excluding bool")
     try:

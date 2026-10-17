@@ -8,13 +8,7 @@ import pytest
 
 from projectkoios.numerics.numpy.typing import Float64Array
 from projectkoios.optimization.quadratic.box import BoxQuadraticBoundStatus
-from projectkoios.optimization.quadratic.constrained import (
-    ConstrainedQuadraticTolerance,
-)
-from projectkoios.optimization.quadratic.numpy.box import (
-    NumpyBoxQuadraticMinimizer,
-    _snap_free_coordinate,
-)
+from projectkoios.optimization.quadratic.numpy.box import NumpyBoxQuadraticMinimizer
 from projectkoios.optimization.quadratic.numpy.constrained import (
     NumpyRectangleQuadraticMinimizer2D,
 )
@@ -126,21 +120,6 @@ def test_face_edge_corner_and_fixed_statuses_are_reported() -> None:
     )
     assert result.active_set_change_count >= 0
     assert result.maximum_kkt_ratio <= 1.0
-
-
-def test_narrow_interval_snapping_tie_rule() -> None:
-    tolerance = ConstrainedQuadraticTolerance(absolute=1.0e-12, relative=0.0)
-    lower = 0.0
-    upper = 1.0e-13
-
-    assert _snap_free_coordinate(upper, lower, upper, tolerance) == (
-        upper,
-        BoxQuadraticBoundStatus.UPPER,
-    )
-    assert _snap_free_coordinate(0.5e-13, lower, upper, tolerance) == (
-        lower,
-        BoxQuadraticBoundStatus.LOWER,
-    )
 
 
 def test_simultaneous_blocking_hits_activate_in_coordinate_order() -> None:

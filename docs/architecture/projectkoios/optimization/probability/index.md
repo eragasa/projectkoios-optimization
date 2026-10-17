@@ -2,6 +2,11 @@
 
 `probability/base.py` owns finite scalar CDF, inverse-CDF, and composed distribution
 contracts. `probability/distributions.py` owns the finite continuous uniform distribution.
+`UniformProbabilityDistributionParameters` has one strict canonical constructor that
+requires exact finite built-in float endpoints and validates without field replacement.
+`UniformProbabilityDistribution` stores only that canonical parameter record. Its
+properties construct immutable CDF and inverse-CDF evaluators on demand rather than
+mutating frozen storage to install private caches.
 
 `ProbabilityDistributionSampler` composes a unit-uniform source with an inverse CDF.
 `SplitMix64UnitUniformSampler` is the dependency-free deterministic source;

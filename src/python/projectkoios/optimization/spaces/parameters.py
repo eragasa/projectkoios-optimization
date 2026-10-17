@@ -20,14 +20,12 @@ class ParameterBound:
 
     def __post_init__(self) -> None:
         validation.text(self.name, "name")
-        lower = numerical_validation.finite_float(self.lower, "lower")
-        upper = numerical_validation.finite_float(self.upper, "upper")
-        if lower > upper:
+        numerical_validation.exact_finite_float(self.lower, "lower")
+        numerical_validation.exact_finite_float(self.upper, "upper")
+        if self.lower > self.upper:
             raise ValueError("lower bound must not exceed upper bound")
-        if not math.isfinite(upper - lower):
+        if not math.isfinite(self.upper - self.lower):
             raise ValueError("bound width must be representable as a finite float")
-        object.__setattr__(self, "lower", lower)
-        object.__setattr__(self, "upper", upper)
 
     @property
     def width(self) -> float:

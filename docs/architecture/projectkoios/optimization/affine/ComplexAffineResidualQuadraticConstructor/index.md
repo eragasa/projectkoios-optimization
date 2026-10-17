@@ -36,6 +36,10 @@ The API has no complex parameter-coordinate mode and assigns no tensor semantics
 
 ## Contract and backend
 
+`ComplexAffineResidualQuadraticTolerance` has one strict canonical constructor. It
+accepts exact finite nonnegative built-in floats and validates without postconstruction
+field replacement.
+
 `ComplexAffineResidualQuadraticConstructor.construct()` is a final public template
 method. It normalizes dependency-free tuple inputs, calls one nominal backend subclass,
 and validates the returned dense quadratic against independently reconstructed normal,

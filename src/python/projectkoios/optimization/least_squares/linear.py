@@ -10,7 +10,12 @@ from numbers import Complex
 from typing import final
 
 from projectkoios.numerics.typing import FiniteComplexMatrix
-from projectkoios.numerics.validation import finite_float
+from projectkoios.numerics.validation import (
+    exact_nonnegative_float,
+    finite_float,
+    validate_finite_complex_matrix,
+    validate_finite_float_tuple,
+)
 
 type LinearLeastSquaresMatrix = FiniteComplexMatrix
 
@@ -24,16 +29,10 @@ class LinearLeastSquaresTolerance:
     relative: float = 1.0e-10
 
     def __post_init__(self) -> None:
-        absolute = finite_float(self.absolute, "absolute")
-        relative = finite_float(self.relative, "relative")
-        if absolute < 0.0:
-            raise ValueError("absolute must be nonnegative")
-        if relative < 0.0:
-            raise ValueError("relative must be nonnegative")
-        if absolute == 0.0 and relative == 0.0:
+        exact_nonnegative_float(self.absolute, "absolute")
+        exact_nonnegative_float(self.relative, "relative")
+        if self.absolute == 0.0 and self.relative == 0.0:
             raise ValueError("at least one tolerance must be positive")
-        object.__setattr__(self, "absolute", absolute)
-        object.__setattr__(self, "relative", relative)
 
     def accepts(self, left: complex, right: complex, /) -> bool:
         """Return whether two finite scalars satisfy the scale-aware tolerance."""
@@ -78,105 +77,77 @@ class LinearLeastSquaresResult:
     singular_values: tuple[float, ...]
     full_rank_condition_number: float | None
 
-    def __post_init__(self) -> None:
-        coefficients = _finite_matrix(self.coefficients, "coefficients")
-        fitted_values = _finite_matrix(self.fitted_values, "fitted_values")
-        residuals = _finite_matrix(self.residuals, "residuals")
-        coefficient_columns = len(coefficients[0])
-        if len(fitted_values[0]) != coefficient_columns:
+    def __post_init__(self) -> None:  # noqa: C901
+        """Validate canonical solution storage and correlated evidence."""
+        validate_finite_complex_matrix(self.coefficients, "coefficients")
+        validate_finite_complex_matrix(self.fitted_values, "fitted_values")
+        validate_finite_complex_matrix(self.residuals, "residuals")
+        coefficient_columns = len(self.coefficients[0])
+        if len(self.fitted_values[0]) != coefficient_columns:
             raise ValueError(
                 "coefficients and fitted_values must have one target-column count"
             )
-        if _matrix_shape(residuals) != _matrix_shape(fitted_values):
+        if _matrix_shape(self.residuals) != _matrix_shape(self.fitted_values):
             raise ValueError("residuals must match fitted_values shape")
 
-        residual_norms = _nonnegative_vector(
-            self.residual_norms,
-            "residual_norms",
-        )
-        weighted_residual_norms = _nonnegative_vector(
+        validate_finite_float_tuple(self.residual_norms, "residual_norms")
+        if any(value < 0.0 for value in self.residual_norms):
+            raise ValueError("residual_norms must be nonnegative")
+        validate_finite_float_tuple(
             self.weighted_residual_norms,
             "weighted_residual_norms",
         )
-        if len(residual_norms) != coefficient_columns:
+        if any(value < 0.0 for value in self.weighted_residual_norms):
+            raise ValueError("weighted_residual_norms must be nonnegative")
+        if len(self.residual_norms) != coefficient_columns:
             raise ValueError("one residual_norm is required per target column")
-        if len(weighted_residual_norms) != coefficient_columns:
+        if len(self.weighted_residual_norms) != coefficient_columns:
             raise ValueError("one weighted_residual_norm is required per target column")
-
-        residual_frobenius_norm = _nonnegative_float(
+        exact_nonnegative_float(
             self.residual_frobenius_norm,
             "residual_frobenius_norm",
         )
-        weighted_residual_frobenius_norm = _nonnegative_float(
+        exact_nonnegative_float(
             self.weighted_residual_frobenius_norm,
             "weighted_residual_frobenius_norm",
         )
-        maximum_row_residual_norm = _nonnegative_float(
+        exact_nonnegative_float(
             self.maximum_row_residual_norm,
             "maximum_row_residual_norm",
         )
 
         if type(self.rank) is not int:
             raise TypeError("rank must be a built-in int")
-        maximum_rank = min(len(fitted_values), len(coefficients))
+        maximum_rank = min(len(self.fitted_values), len(self.coefficients))
         if self.rank < 0 or self.rank > maximum_rank:
             raise ValueError("rank must lie within the matrix rank bound")
-        singular_values = _nonnegative_vector(
-            self.singular_values,
-            "singular_values",
-        )
-        if len(singular_values) != maximum_rank:
+        validate_finite_float_tuple(self.singular_values, "singular_values")
+        if any(value < 0.0 for value in self.singular_values):
+            raise ValueError("singular_values must be nonnegative")
+        if len(self.singular_values) != maximum_rank:
             raise ValueError("singular_values must match the matrix rank bound")
         if any(
             left < right
             for left, right in zip(
-                singular_values,
-                singular_values[1:],
+                self.singular_values,
+                self.singular_values[1:],
                 strict=False,
             )
         ):
             raise ValueError("singular_values must be nonincreasing")
 
         condition = self.full_rank_condition_number
-        has_full_column_rank = self.rank == len(coefficients)
+        has_full_column_rank = self.rank == len(self.coefficients)
         if has_full_column_rank:
-            condition = _nonnegative_float(
-                condition,
-                "full_rank_condition_number",
-            )
+            if condition is None:
+                raise TypeError("full_rank_condition_number must be an exact float")
+            exact_nonnegative_float(condition, "full_rank_condition_number")
             if condition < 1.0:
                 raise ValueError("full_rank_condition_number must be at least one")
         elif condition is not None:
             raise ValueError(
                 "full_rank_condition_number is defined only at full column rank"
             )
-
-        object.__setattr__(self, "coefficients", coefficients)
-        object.__setattr__(self, "fitted_values", fitted_values)
-        object.__setattr__(self, "residuals", residuals)
-        object.__setattr__(self, "residual_norms", residual_norms)
-        object.__setattr__(
-            self,
-            "weighted_residual_norms",
-            weighted_residual_norms,
-        )
-        object.__setattr__(
-            self,
-            "residual_frobenius_norm",
-            residual_frobenius_norm,
-        )
-        object.__setattr__(
-            self,
-            "weighted_residual_frobenius_norm",
-            weighted_residual_frobenius_norm,
-        )
-        object.__setattr__(
-            self,
-            "maximum_row_residual_norm",
-            maximum_row_residual_norm,
-        )
-        object.__setattr__(self, "singular_values", singular_values)
-        object.__setattr__(self, "full_rank_condition_number", condition)
 
 
 class LinearLeastSquaresSolver(ABC):
@@ -201,7 +172,7 @@ class LinearLeastSquaresSolver(ABC):
         return self._tolerance
 
     @final
-    def solve(
+    def solve(  # noqa: C901
         self,
         design_matrix: LinearLeastSquaresMatrix,
         target_matrix: LinearLeastSquaresMatrix,
@@ -338,7 +309,7 @@ class LinearLeastSquaresSolver(ABC):
         raise NotImplementedError
 
 
-def _finite_complex(value: object, name: str, /) -> complex:
+def _finite_complex(value: complex, name: str, /) -> complex:
     if isinstance(value, bool) or not isinstance(value, Complex):
         raise TypeError(f"{name} must be a real or complex number excluding bool")
     try:
@@ -352,7 +323,11 @@ def _finite_complex(value: object, name: str, /) -> complex:
     return result
 
 
-def _finite_matrix(value: object, name: str, /) -> LinearLeastSquaresMatrix:
+def _finite_matrix(
+    value: LinearLeastSquaresMatrix,
+    name: str,
+    /,
+) -> LinearLeastSquaresMatrix:
     if type(value) is not tuple or not value:
         raise TypeError(f"{name} must be a nonempty tuple of nonempty tuples")
     rows: list[tuple[complex, ...]] = []
@@ -373,7 +348,11 @@ def _matrix_shape(matrix: LinearLeastSquaresMatrix, /) -> tuple[int, int]:
     return (len(matrix), len(matrix[0]))
 
 
-def _weights(value: object, row_count: int, /) -> tuple[float, ...] | None:
+def _weights(
+    value: tuple[float, ...] | None,
+    row_count: int,
+    /,
+) -> tuple[float, ...] | None:
     if value is None:
         return None
     if type(value) is not tuple:
@@ -387,7 +366,7 @@ def _weights(value: object, row_count: int, /) -> tuple[float, ...] | None:
 
 
 def _rank_tolerance(
-    value: object,
+    value: float | None,
     row_count: int,
     column_count: int,
     /,
@@ -398,19 +377,6 @@ def _rank_tolerance(
     if tolerance < 0.0 or tolerance >= 1.0:
         raise ValueError("rank_tolerance must be at least zero and less than one")
     return tolerance
-
-
-def _nonnegative_float(value: object, name: str, /) -> float:
-    result = finite_float(value, name)
-    if result < 0.0:
-        raise ValueError(f"{name} must be nonnegative")
-    return result
-
-
-def _nonnegative_vector(value: object, name: str, /) -> tuple[float, ...]:
-    if type(value) is not tuple or not value:
-        raise TypeError(f"{name} must be a nonempty tuple")
-    return tuple(_nonnegative_float(entry, name) for entry in value)
 
 
 def _finite_complex_sum(values: list[complex], /) -> complex:

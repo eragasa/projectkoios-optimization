@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from projectkoios.numerics import validation as numerical_validation
 
@@ -24,18 +24,16 @@ class UniformProbabilityDistributionParameters:
 
     def __post_init__(self) -> None:
         try:
-            lower = numerical_validation.finite_float(self.lower_bound, "lower_bound")
-            upper = numerical_validation.finite_float(self.upper_bound, "upper_bound")
+            numerical_validation.exact_finite_float(self.lower_bound, "lower_bound")
+            numerical_validation.exact_finite_float(self.upper_bound, "upper_bound")
         except ValueError as error:
             raise ProbabilityError("uniform bounds must be finite floats") from error
-        if lower >= upper:
+        if self.lower_bound >= self.upper_bound:
             raise ProbabilityError("lower_bound must be less than upper_bound")
-        if not math.isfinite(upper - lower):
+        if not math.isfinite(self.upper_bound - self.lower_bound):
             raise ProbabilityError(
                 "uniform width must be representable as a finite float"
             )
-        object.__setattr__(self, "lower_bound", lower)
-        object.__setattr__(self, "upper_bound", upper)
 
     @property
     def width(self) -> float:
@@ -90,42 +88,24 @@ class UniformProbabilityDistribution(ProbabilityDistribution):
     """Immutable dependency-free continuous uniform distribution."""
 
     parameters: UniformProbabilityDistributionParameters
-    _cumulative_function: UniformProbabilityDistributionFunction = field(
-        init=False,
-        repr=False,
-    )
-    _quantile_function: UniformInverseProbabilityDistributionFunction = field(
-        init=False,
-        repr=False,
-    )
 
     def __post_init__(self) -> None:
         if type(self.parameters) is not UniformProbabilityDistributionParameters:
             raise TypeError(
                 "parameters must be UniformProbabilityDistributionParameters"
             )
-        object.__setattr__(
-            self,
-            "_cumulative_function",
-            UniformProbabilityDistributionFunction(self.parameters),
-        )
-        object.__setattr__(
-            self,
-            "_quantile_function",
-            UniformInverseProbabilityDistributionFunction(self.parameters),
-        )
 
     @property
     def distribution_function(self) -> ProbabilityDistributionFunction:
         """Return the uniform cumulative distribution function."""
-        return self._cumulative_function
+        return UniformProbabilityDistributionFunction(self.parameters)
 
     @property
     def inverse_distribution_function(
         self,
     ) -> InverseProbabilityDistributionFunction:
         """Return the uniform inverse cumulative distribution function."""
-        return self._quantile_function
+        return UniformInverseProbabilityDistributionFunction(self.parameters)
 
 
 __all__ = [

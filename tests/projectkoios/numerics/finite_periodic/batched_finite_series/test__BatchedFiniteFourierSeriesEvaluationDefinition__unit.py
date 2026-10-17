@@ -14,21 +14,27 @@ pytestmark = pytest.mark.unit
 
 
 def test_definition_records_shared_grid_and_channel_counts() -> None:
+    coordinates = ((0.0, 0.5), (0.25, -0.25))
+    integer_modes = ((0, 0), (1, -1), (-2, 3))
+    coefficient_channels = (
+        (1.0 + 0.0j, 2.0 - 1.0j, -0.5 + 0.25j),
+        (0.0 + 1.0j, 3.0 + 0.0j, 4.0 - 2.0j),
+    )
+
     definition = BatchedFiniteFourierSeriesEvaluationDefinition(
         2,
-        ((0.0, 0.5), (0.25, -0.25)),
-        ((0, 0), (1, -1), (-2, 3)),
-        (
-            (1.0 + 0.0j, 2.0 - 1.0j, -0.5 + 0.25j),
-            (0.0 + 1.0j, 3.0 + 0.0j, 4.0 - 2.0j),
-        ),
+        coordinates,
+        integer_modes,
+        coefficient_channels,
     )
 
     assert definition.dimension == 2
     assert definition.point_count == 2
     assert definition.term_count == 3
     assert definition.channel_count == 2
-    assert definition.coefficient_channels[1][2] == 4.0 - 2.0j
+    assert definition.coordinates is coordinates
+    assert definition.integer_modes is integer_modes
+    assert definition.coefficient_channels is coefficient_channels
 
 
 def test_definition_permits_each_empty_collection_unambiguously() -> None:

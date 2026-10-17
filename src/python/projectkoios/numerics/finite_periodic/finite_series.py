@@ -32,7 +32,7 @@ type FiniteFourierIntegerModes = tuple[tuple[int, ...], ...]
 type FiniteFourierCoefficients = tuple[complex, ...]
 
 
-def _exact_positive_integer(value: object, name: str, /) -> int:
+def _exact_positive_integer(value: int, name: str, /) -> int:
     """Validate a positive built-in integer without accepting booleans."""
     if type(value) is not int:
         raise TypeError(f"{name} must be an exact built-in integer")
@@ -41,7 +41,7 @@ def _exact_positive_integer(value: object, name: str, /) -> int:
     return value
 
 
-def _exact_nonnegative_integer(value: object, name: str, /) -> int:
+def _exact_nonnegative_integer(value: int, name: str, /) -> int:
     """Validate a nonnegative built-in integer without accepting booleans."""
     if type(value) is not int:
         raise TypeError(f"{name} must be an exact built-in integer")
@@ -51,7 +51,7 @@ def _exact_nonnegative_integer(value: object, name: str, /) -> int:
 
 
 def _coordinates(
-    value: object,
+    value: FiniteFourierCoordinates,
     dimension: int,
     /,
 ) -> FiniteFourierCoordinates:
@@ -76,7 +76,7 @@ def _coordinates(
 
 
 def _integer_modes(
-    value: object,
+    value: FiniteFourierIntegerModes,
     dimension: int,
     /,
 ) -> FiniteFourierIntegerModes:
@@ -103,7 +103,7 @@ def _integer_modes(
 
 
 def _complex_values(
-    value: object,
+    value: tuple[complex, ...],
     name: str,
     /,
 ) -> tuple[complex, ...]:
@@ -141,15 +141,11 @@ class FiniteFourierSeriesEvaluationDefinition:
     def __post_init__(self) -> None:
         """Reject malformed, nonfinite, or ambiguously typed public inputs."""
         dimension = _exact_positive_integer(self.dimension, "dimension")
-        coordinates = _coordinates(self.coordinates, dimension)
-        integer_modes = _integer_modes(self.integer_modes, dimension)
-        coefficients = _complex_values(self.coefficients, "coefficients")
-        if len(coefficients) != len(integer_modes):
+        _coordinates(self.coordinates, dimension)
+        _integer_modes(self.integer_modes, dimension)
+        _complex_values(self.coefficients, "coefficients")
+        if len(self.coefficients) != len(self.integer_modes):
             raise ValueError("coefficients must contain one value per integer mode")
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "coordinates", coordinates)
-        object.__setattr__(self, "integer_modes", integer_modes)
-        object.__setattr__(self, "coefficients", coefficients)
 
     @property
     def point_count(self) -> int:
@@ -179,24 +175,20 @@ class FiniteFourierSeriesEvaluationResult:
 
     def __post_init__(self) -> None:
         """Validate dependency-free result shape and finite values."""
-        dimension = _exact_positive_integer(self.dimension, "dimension")
+        _exact_positive_integer(self.dimension, "dimension")
         point_count = _exact_nonnegative_integer(self.point_count, "point_count")
-        term_count = _exact_nonnegative_integer(self.term_count, "term_count")
-        values = _complex_values(self.values, "values")
-        if len(values) != point_count:
+        _exact_nonnegative_integer(self.term_count, "term_count")
+        _complex_values(self.values, "values")
+        if len(self.values) != point_count:
             raise ValueError("values length must equal point_count")
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "point_count", point_count)
-        object.__setattr__(self, "term_count", term_count)
-        object.__setattr__(self, "values", values)
 
 
 class FiniteFourierSeriesEvaluator(ABC):
     """Nominal SDK boundary for positive-exponent finite Fourier series.
 
     Subclasses implement only :meth:`_evaluate_validated`. The final public template
-    method owns exact input typing, backend-independent empty cases, result correlation,
-    and failure classification. External backends opt in through nominal inheritance;
+    method owns exact input typing, backend-independent empty cases, and result
+    correlation. External backends opt in through nominal inheritance;
     structural duck typing is not part of this contract.
     """
 
@@ -213,7 +205,7 @@ class FiniteFourierSeriesEvaluator(ABC):
         Empty point and empty term collections are resolved without loading or invoking
         an optional numerical backend. For nontrivial definitions, undeclared backend
         exceptions propagate unchanged. Malformed backend records raise ``TypeError`` or
-        ``ValueError``; nonfinite backend output raises ``FloatingPointError``.
+        ``ValueError``.
         """
         if type(definition) is not FiniteFourierSeriesEvaluationDefinition:
             raise TypeError(
@@ -237,8 +229,7 @@ class FiniteFourierSeriesEvaluator(ABC):
 
         result = self._evaluate_validated(definition)
 
-        # Treat backend records as untrusted at the nominal extension boundary. These
-        # checks establish structural correlation, not numerical correctness.
+        # Correlate the already validated immutable result with its definition.
         if type(result) is not FiniteFourierSeriesEvaluationResult:
             raise TypeError("backend must return FiniteFourierSeriesEvaluationResult")
         if result.dimension != definition.dimension:
@@ -247,13 +238,6 @@ class FiniteFourierSeriesEvaluator(ABC):
             raise ValueError("backend result point_count is inconsistent")
         if result.term_count != definition.term_count:
             raise ValueError("backend result term_count is inconsistent")
-        if len(result.values) != definition.point_count:
-            raise ValueError("backend result values length is inconsistent")
-        if any(
-            not math.isfinite(value.real) or not math.isfinite(value.imag)
-            for value in result.values
-        ):
-            raise FloatingPointError("backend result values must be finite")
         return result
 
     @abstractmethod

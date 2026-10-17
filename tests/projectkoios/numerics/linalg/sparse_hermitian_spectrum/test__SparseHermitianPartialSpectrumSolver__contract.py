@@ -62,7 +62,13 @@ def test_solver_constructs_explicit_sparse_hermitian_representative() -> None:
         3,
         (0, 2, 4, 5),
         (0, 1, 0, 1, 2),
-        (1.0 + 2.0e-9j, 2.0 + 4.0e-9j, 2.0 - 2.0e-9j, 3.0, 4.0),
+        (
+            1.0 + 2.0e-9j,
+            2.0 + 4.0e-9j,
+            2.0 - 2.0e-9j,
+            3.0 + 0.0j,
+            4.0 + 0.0j,
+        ),
     )
     solver = _ConfiguredSolver()
 
@@ -84,7 +90,10 @@ def test_solver_constructs_explicit_sparse_hermitian_representative() -> None:
 
 def test_sparse_cutoff_equality_is_accepted() -> None:
     matrix = SparseComplexCsrMatrix(
-        3, (0, 1, 2, 3), (0, 1, 2), (1.0 + 2.0e-9j, 2.0, 3.0)
+        3,
+        (0, 1, 2, 3),
+        (0, 1, 2),
+        (1.0 + 2.0e-9j, 2.0 + 0.0j, 3.0 + 0.0j),
     )
     solver = _ConfiguredSolver()
 
@@ -95,7 +104,10 @@ def test_sparse_cutoff_equality_is_accepted() -> None:
 
 def test_sparse_defect_above_cutoff_fails_before_backend() -> None:
     matrix = SparseComplexCsrMatrix(
-        3, (0, 1, 2, 3), (0, 1, 2), (1.0 + 2.1e-9j, 2.0, 3.0)
+        3,
+        (0, 1, 2, 3),
+        (0, 1, 2),
+        (1.0 + 2.1e-9j, 2.0 + 0.0j, 3.0 + 0.0j),
     )
     solver = _ConfiguredSolver()
 

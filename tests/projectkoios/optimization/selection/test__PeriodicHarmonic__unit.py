@@ -12,11 +12,11 @@ from projectkoios.optimization.selection.harmonic import PeriodicHarmonic
 pytestmark = pytest.mark.unit
 
 
-def test_definition_factory_normalizes_real_coefficients_and_exposes_interval() -> None:
-    harmonic = PeriodicHarmonic.from_values(
-        offset=1,
-        cosine_coefficient=2,
-        sine_coefficient=-3,
+def test_definition_exposes_the_canonical_fundamental_interval() -> None:
+    harmonic = PeriodicHarmonic(
+        offset=1.0,
+        cosine_coefficient=2.0,
+        sine_coefficient=-3.0,
         harmonic_order=2,
         fundamental_interval_start=-math.pi / 2.0,
     )

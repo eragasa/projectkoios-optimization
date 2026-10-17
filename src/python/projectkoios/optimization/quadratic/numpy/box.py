@@ -11,9 +11,9 @@ import numpy as np
 from ....numerics.numpy.typing import Float64Array
 from ...spaces.parameters import ParameterSpace
 from ..box import (
+    BoxQuadraticBackendResult,
     BoxQuadraticBoundStatus,
     BoxQuadraticMinimizer,
-    _BoxQuadraticBackendResult,
     _gradient_and_row_scales,
     _kkt_tolerance_bound,
     _kkt_violations,
@@ -43,7 +43,7 @@ class NumpyBoxQuadraticMinimizer(BoxQuadraticMinimizer):
         loss: PositiveDefiniteQuadraticLoss,
         bounds: ParameterSpace,
         /,
-    ) -> _BoxQuadraticBackendResult:
+    ) -> BoxQuadraticBackendResult:
         """Return a candidate from the deterministic primal active-set method.
 
         Parameters
@@ -55,7 +55,7 @@ class NumpyBoxQuadraticMinimizer(BoxQuadraticMinimizer):
 
         Returns
         -------
-        _BoxQuadraticBackendResult
+        BoxQuadraticBackendResult
             Candidate coordinates and bounded execution counts.
 
         Raises
@@ -97,7 +97,7 @@ class NumpyBoxQuadraticMinimizer(BoxQuadraticMinimizer):
             )
             if not evidence.free_violations:
                 if not evidence.active_violations:
-                    return _BoxQuadraticBackendResult(
+                    return BoxQuadraticBackendResult(
                         coordinates=evidence.coordinates,
                         iteration_count=iteration_count,
                         active_set_change_count=active_set_change_count,

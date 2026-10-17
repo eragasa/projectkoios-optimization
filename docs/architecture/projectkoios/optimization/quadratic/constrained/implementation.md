@@ -22,9 +22,14 @@ consumers must not reimplement it as an application-local generic algorithm.
 
 `ConstrainedQuadraticTolerance` retains finite nonnegative absolute and relative backend-
 acceptance tolerances, requires at least one positive value, and defaults to `1.0e-12`
-and `1.0e-10`, respectively. Its scale-aware scalar comparison is
+and `1.0e-10`, respectively. Its sole constructor requires canonical exact built-in
+floats and validates without field replacement. Its scale-aware scalar comparison is
 `abs(left - right) <= absolute + relative * max(abs(left), abs(right))`. It never changes
 candidate ordering or defines scientific acceptance.
+
+`RectangleQuadraticMinimum` and `QuadraticSublevelSupportResult` each have one strict
+canonical constructor. They require exact finite built-in float tuples and scalars,
+validate relational invariants, and never replace frozen fields after construction.
 
 `RectangleQuadraticMinimum` retains:
 

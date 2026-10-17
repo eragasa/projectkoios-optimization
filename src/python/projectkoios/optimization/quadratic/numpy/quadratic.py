@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import final
 
 import numpy as np
 
 from projectkoios.numerics import validation as numerical_validation
 
-from ....numerics.numpy.typing import Float64Array
 from .. import validation as quadratic_validation
 from ..quadratic import _QuadraticLossBackend
 
@@ -33,47 +32,33 @@ class NumpyPositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
     center: tuple[float, ...]
     matrix: tuple[tuple[float, ...], ...]
     minimum_squared_loss: float
-    _center_array: Float64Array = field(
-        init=False,
-        repr=False,
-        compare=False,
-        hash=False,
-    )
-    _matrix_array: Float64Array = field(
-        init=False,
-        repr=False,
-        compare=False,
-        hash=False,
-    )
 
     def __post_init__(self) -> None:
-        center = quadratic_validation.finite_vector(self.center, "center")
-        matrix = quadratic_validation.finite_square_matrix(self.matrix, len(center))
-        if not quadratic_validation.symmetric(matrix):
+        numerical_validation.validate_finite_float_tuple(self.center, "center")
+        if type(self.matrix) is not tuple:
+            raise TypeError("matrix must be an exact tuple")
+        if len(self.matrix) != len(self.center):
+            raise ValueError("matrix row count must match center dimension")
+        for row_index, row in enumerate(self.matrix):
+            numerical_validation.validate_finite_float_tuple(
+                row,
+                f"matrix[{row_index}]",
+            )
+            if len(row) != len(self.center):
+                raise ValueError("matrix must be square with center dimension")
+        if not quadratic_validation.symmetric(self.matrix):
             raise ValueError("matrix must be exactly symmetric")
-        minimum = numerical_validation.finite_float(
+        numerical_validation.exact_nonnegative_float(
             self.minimum_squared_loss,
             "minimum_squared_loss",
         )
-        if minimum < 0.0:
-            raise ValueError("minimum_squared_loss must be nonnegative")
 
-        center_array = np.asarray(center, dtype=np.float64)
-        matrix_array = np.asarray(matrix, dtype=np.float64)
+        matrix_array = np.asarray(self.matrix, dtype=np.float64)
         # NumPy owns dense positive-definiteness acceptance for this adapter.
         try:
             np.linalg.cholesky(matrix_array)
         except np.linalg.LinAlgError as error:
             raise ValueError("matrix must be positive definite") from error
-        # Prevent backend arrays from becoming a mutation path around frozen state.
-        center_array.flags.writeable = False
-        matrix_array.flags.writeable = False
-
-        object.__setattr__(self, "center", center)
-        object.__setattr__(self, "matrix", matrix)
-        object.__setattr__(self, "minimum_squared_loss", minimum)
-        object.__setattr__(self, "_center_array", center_array)
-        object.__setattr__(self, "_matrix_array", matrix_array)
 
     @property
     def dimension(self) -> int:
@@ -109,9 +94,12 @@ class NumpyPositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
         normalized = quadratic_validation.finite_vector(coordinates, "coordinates")
         if len(normalized) != self.dimension:
             raise ValueError("coordinates must match the quadratic dimension")
-        delta = np.asarray(normalized, dtype=np.float64) - self._center_array
+        delta = np.asarray(normalized, dtype=np.float64) - np.asarray(
+            self.center,
+            dtype=np.float64,
+        )
         # Keep the numerical action in the backend selected by this concrete class.
-        quadratic = float(delta @ self._matrix_array @ delta)
+        quadratic = float(delta @ np.asarray(self.matrix, dtype=np.float64) @ delta)
         if not math.isfinite(quadratic):
             raise ValueError("quadratic evaluation must be finite")
         if quadratic < 0.0:

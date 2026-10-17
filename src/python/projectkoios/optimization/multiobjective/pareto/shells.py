@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from projectkoios.numerics.validation import finite_float, integer
+from projectkoios.numerics.validation import exact_finite_float, finite_float, integer
 
 from .algorithm import pareto
 
@@ -40,10 +40,14 @@ class ParetoShell:
             self.decision_vectors,
             self.objective_vectors,
         )
+        for vector in self.decision_vectors:
+            for value in vector:
+                exact_finite_float(value, "decision value")
+        for vector in self.objective_vectors:
+            for value in vector:
+                exact_finite_float(value, "objective value")
         if len(indices) != len(decisions):
             raise ValueError("indices and shell vector counts must match")
-        object.__setattr__(self, "decision_vectors", decisions)
-        object.__setattr__(self, "objective_vectors", objectives)
 
 
 def pareto_shells(

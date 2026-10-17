@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
@@ -30,7 +30,7 @@ type _HermitianSpectralSubspaceBackendOutput = tuple[
 ]
 
 
-def _exact_nonnegative_float(value: object, name: str, /) -> float:
+def _exact_nonnegative_float(value: float, name: str, /) -> float:
     """Validate one finite, nonnegative exact built-in float."""
     if type(value) is not float:
         raise TypeError(f"{name} must be an exact built-in float")
@@ -41,7 +41,7 @@ def _exact_nonnegative_float(value: object, name: str, /) -> float:
     return value
 
 
-def _exact_relative_float(value: object, name: str, /) -> float:
+def _exact_relative_float(value: float, name: str, /) -> float:
     """Validate one exact built-in float in the half-open interval [0, 1)."""
     normalized = _exact_nonnegative_float(value, name)
     if normalized >= 1.0:
@@ -49,7 +49,7 @@ def _exact_relative_float(value: object, name: str, /) -> float:
     return normalized
 
 
-def _exact_positive_integer(value: object, name: str, /) -> int:
+def _exact_positive_integer(value: int, name: str, /) -> int:
     """Validate a positive exact built-in integer without accepting booleans."""
     if type(value) is not int:
         raise TypeError(f"{name} must be an exact built-in integer")
@@ -58,7 +58,7 @@ def _exact_positive_integer(value: object, name: str, /) -> int:
     return value
 
 
-def _exact_index(value: object, name: str, /) -> int:
+def _exact_index(value: int, name: str, /) -> int:
     """Validate a nonnegative exact built-in integer index."""
     if type(value) is not int:
         raise TypeError(f"{name} must be an exact built-in integer")
@@ -67,8 +67,8 @@ def _exact_index(value: object, name: str, /) -> int:
     return value
 
 
-def _matrix(
-    value: object,
+def _matrix(  # noqa: C901
+    value: HermitianSpectralMatrix,
     name: str,
     /,
     *,
@@ -104,7 +104,7 @@ def _matrix(
 
 
 def _eigenvalues(
-    value: object,
+    value: tuple[float, ...],
     dimension: int,
     /,
     *,
@@ -131,14 +131,14 @@ def _eigenvalues(
     return tuple(normalized)
 
 
-def _optional_gap(value: object, name: str, /) -> float | None:
+def _optional_gap(value: float | None, name: str, /) -> float | None:
     """Validate one optional finite nonnegative exact built-in boundary gap."""
     if value is None:
         return None
     return _exact_nonnegative_float(value, name)
 
 
-def _nonempty_string(value: object, name: str, /) -> str:
+def _nonempty_string(value: str, name: str, /) -> str:
     """Validate one exact nonempty built-in string."""
     if type(value) is not str:
         raise TypeError(f"{name} must be an exact built-in string")
@@ -383,55 +383,27 @@ class HermitianSpectralSubspaceTolerance:
 
     def __post_init__(self) -> None:
         """Reject non-built-in, nonfinite, negative, or out-of-range controls."""
-        object.__setattr__(
-            self,
+        _exact_nonnegative_float(
+            self.hermiticity_absolute,
             "hermiticity_absolute",
-            _exact_nonnegative_float(
-                self.hermiticity_absolute,
-                "hermiticity_absolute",
-            ),
         )
-        object.__setattr__(
-            self,
+        _exact_relative_float(
+            self.hermiticity_relative,
             "hermiticity_relative",
-            _exact_relative_float(
-                self.hermiticity_relative,
-                "hermiticity_relative",
-            ),
         )
-        object.__setattr__(
-            self,
-            "boundary_absolute",
-            _exact_nonnegative_float(self.boundary_absolute, "boundary_absolute"),
-        )
-        object.__setattr__(
-            self,
-            "boundary_relative",
-            _exact_relative_float(self.boundary_relative, "boundary_relative"),
-        )
-        object.__setattr__(
-            self,
+        _exact_nonnegative_float(self.boundary_absolute, "boundary_absolute")
+        _exact_relative_float(self.boundary_relative, "boundary_relative")
+        _exact_nonnegative_float(
+            self.projector_validation_absolute,
             "projector_validation_absolute",
-            _exact_nonnegative_float(
-                self.projector_validation_absolute,
-                "projector_validation_absolute",
-            ),
         )
-        object.__setattr__(
-            self,
+        _exact_nonnegative_float(
+            self.spectral_validation_absolute,
             "spectral_validation_absolute",
-            _exact_nonnegative_float(
-                self.spectral_validation_absolute,
-                "spectral_validation_absolute",
-            ),
         )
-        object.__setattr__(
-            self,
+        _exact_relative_float(
+            self.spectral_validation_relative,
             "spectral_validation_relative",
-            _exact_relative_float(
-                self.spectral_validation_relative,
-                "spectral_validation_relative",
-            ),
         )
 
 
@@ -447,18 +419,15 @@ class HermitianSpectralSubspaceDefinition:
 
     def __post_init__(self) -> None:
         """Validate dependency-free matrix, range, and tolerance invariants."""
-        matrix = _matrix(self.matrix, "matrix")
-        start_index = _exact_index(self.start_index, "start_index")
-        stop_index = _exact_index(self.stop_index, "stop_index")
-        if start_index >= stop_index:
+        _matrix(self.matrix, "matrix")
+        _exact_index(self.start_index, "start_index")
+        _exact_index(self.stop_index, "stop_index")
+        if self.start_index >= self.stop_index:
             raise ValueError("start_index must be less than stop_index")
-        if stop_index > len(matrix):
+        if self.stop_index > len(self.matrix):
             raise ValueError("stop_index must not exceed matrix dimension")
         if type(self.tolerance) is not HermitianSpectralSubspaceTolerance:
             raise TypeError("tolerance must be HermitianSpectralSubspaceTolerance")
-        object.__setattr__(self, "matrix", matrix)
-        object.__setattr__(self, "start_index", start_index)
-        object.__setattr__(self, "stop_index", stop_index)
 
     @property
     def dimension(self) -> int:
@@ -497,12 +466,75 @@ class HermitianSpectralSubspaceDiagnostics:
 
     def __post_init__(self) -> None:
         """Require exact finite nonnegative built-in float diagnostics."""
-        for field in fields(self):
-            object.__setattr__(
-                self,
-                field.name,
-                _exact_nonnegative_float(getattr(self, field.name), field.name),
-            )
+        _exact_nonnegative_float(
+            self.input_hermiticity_maximum_absolute_defect,
+            "input_hermiticity_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.representative_adjustment_maximum_absolute_defect,
+            "representative_adjustment_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.eigenvector_orthonormality_maximum_absolute_defect,
+            "eigenvector_orthonormality_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.eigensystem_residual_maximum_absolute_defect,
+            "eigensystem_residual_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.representative_reconstruction_maximum_absolute_defect,
+            "representative_reconstruction_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.projector_hermiticity_maximum_absolute_defect,
+            "projector_hermiticity_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.projector_idempotence_maximum_absolute_defect,
+            "projector_idempotence_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.projector_trace_absolute_defect,
+            "projector_trace_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.projector_commutator_maximum_absolute_defect,
+            "projector_commutator_maximum_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.selected_spectral_trace_absolute_defect,
+            "selected_spectral_trace_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.full_spectral_trace_absolute_defect,
+            "full_spectral_trace_absolute_defect",
+        )
+        _exact_nonnegative_float(
+            self.input_matrix_maximum_absolute_entry,
+            "input_matrix_maximum_absolute_entry",
+        )
+        _exact_nonnegative_float(
+            self.representative_matrix_maximum_absolute_entry,
+            "representative_matrix_maximum_absolute_entry",
+        )
+        _exact_nonnegative_float(
+            self.applied_hermiticity_cutoff,
+            "applied_hermiticity_cutoff",
+        )
+        _exact_nonnegative_float(self.spectral_diameter, "spectral_diameter")
+        _exact_nonnegative_float(
+            self.applied_boundary_cutoff,
+            "applied_boundary_cutoff",
+        )
+        _exact_nonnegative_float(
+            self.applied_projector_validation_cutoff,
+            "applied_projector_validation_cutoff",
+        )
+        _exact_nonnegative_float(
+            self.applied_spectral_validation_cutoff,
+            "applied_spectral_validation_cutoff",
+        )
 
 
 @final
@@ -537,12 +569,12 @@ class HermitianSpectralSubspaceResult:
             raise ValueError("stop_index must not exceed dimension")
         if type(self.tolerance) is not HermitianSpectralSubspaceTolerance:
             raise TypeError("tolerance must be HermitianSpectralSubspaceTolerance")
-        eigenvalues = _eigenvalues(
+        _eigenvalues(
             self.eigenvalues,
             dimension,
             nonfinite_backend=False,
         )
-        projector = _matrix(self.projector, "projector", dimension=dimension)
+        _matrix(self.projector, "projector", dimension=dimension)
         lower_boundary_gap = _optional_gap(
             self.lower_boundary_gap,
             "lower_boundary_gap",
@@ -561,20 +593,11 @@ class HermitianSpectralSubspaceResult:
             raise ValueError("upper_boundary_gap is required away from the upper edge")
         if type(self.diagnostics) is not HermitianSpectralSubspaceDiagnostics:
             raise TypeError("diagnostics must be HermitianSpectralSubspaceDiagnostics")
-        backend_identifier = _nonempty_string(
+        _nonempty_string(
             self.backend_identifier,
             "backend_identifier",
         )
-        backend_version = _nonempty_string(self.backend_version, "backend_version")
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "start_index", start_index)
-        object.__setattr__(self, "stop_index", stop_index)
-        object.__setattr__(self, "eigenvalues", eigenvalues)
-        object.__setattr__(self, "projector", projector)
-        object.__setattr__(self, "lower_boundary_gap", lower_boundary_gap)
-        object.__setattr__(self, "upper_boundary_gap", upper_boundary_gap)
-        object.__setattr__(self, "backend_identifier", backend_identifier)
-        object.__setattr__(self, "backend_version", backend_version)
+        _nonempty_string(self.backend_version, "backend_version")
 
 
 class HermitianSpectralSubspaceSolver(ABC):

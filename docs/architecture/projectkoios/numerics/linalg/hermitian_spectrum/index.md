@@ -23,16 +23,15 @@ for every matrix in the supplied batch.
 
 ## Shape contract
 
-The definition stores one matrix dimension without requiring callers to duplicate shape
-information that already exists in a nonempty batch.
+The definition infers a nonempty dimension from canonical immutable matrix storage.
 
-- `BatchedHermitianSpectrumDefinition(matrices, tolerance)` infers the common dimension
-  from a nonempty batch.
-- `BatchedHermitianSpectrumDefinition.empty(dimension, tolerance)` supplies the dimension
-  only when the batch contains no matrix.
-- A dimension supplied alongside a nonempty batch is rejected as redundant.
-- Python and array-like iterables are normalized to immutable built-in tuples.
-- Finite real and complex numeric scalars are normalized to built-in complex values.
+- `BatchedHermitianSpectrumDefinition(matrices, tolerance)` accepts only exact tuple
+  containers and exact finite built-in complex entries.
+- Every matrix must share the inferred positive square dimension.
+- `BatchedHermitianSpectrumDefinition.empty(dimension, tolerance)` names empty-batch
+  construction without inventing a zero-dimensional matrix.
+- NumPy and SciPy arrays remain transient backend representations rather than immutable
+  contract storage.
 
 ## Public API
 
@@ -54,11 +53,11 @@ implementation.
 
 ## Usage
 
-The following example shows nonempty dimension inference and explicit empty construction
+The following example shows canonical nonempty storage and explicit empty construction
 without importing NumPy through the contract module.
 
-- A nonempty batch uses the ordinary definition constructor, while an empty batch uses
-  the named empty constructor.
+- A nonempty batch uses the strict definition constructor, while an empty batch uses the
+  named empty constructor.
 - NumPy and SciPy provide interchangeable dense complete-spectrum implementations.
 
   ```python
@@ -80,17 +79,23 @@ without importing NumPy through the contract module.
   solver = NumpyBatchedHermitianSpectrumSolver()
   result = solver.solve(
       BatchedHermitianSpectrumDefinition(
-          [
-              [[2.0, 1.0 - 1.0j], [1.0 + 1.0j, 3.0]],
-              [[4.0, 0.0], [0.0, 5.0]],
-          ],
+          (
+              (
+                  (2.0 + 0.0j, 1.0 - 1.0j),
+                  (1.0 + 1.0j, 3.0 + 0.0j),
+              ),
+              (
+                  (4.0 + 0.0j, 0.0 + 0.0j),
+                  (0.0 + 0.0j, 5.0 + 0.0j),
+              ),
+          ),
           policy,
       )
   )
   empty = solver.solve(BatchedHermitianSpectrumDefinition.empty(2, policy))
   scipy_result = ScipyBatchedHermitianSpectrumSolver().solve(
       BatchedHermitianSpectrumDefinition(
-          [[[2.0, 1.0 - 1.0j], [1.0 + 1.0j, 3.0]]],
+          (((2.0 + 0.0j, 1.0 - 1.0j), (1.0 + 1.0j, 3.0 + 0.0j)),),
           policy,
       )
   )
@@ -103,7 +108,7 @@ without importing NumPy through the contract module.
 
 The capability owns only reusable matrix numerics and represented-input evidence.
 
-- It owns normalization, Hermiticity measurement, representative construction, complete
+- It owns canonical storage validation, Hermiticity measurement, representative construction, complete
   spectra, and backend-neutral result correlation.
 - It does not own eigenvectors, projectors, spectral-gap policy, degeneracy decisions,
   units, lattice or hopping semantics, band identity, mesh meaning, or scientific

@@ -12,7 +12,9 @@ def test_first_minimum_preserves_first_exact_tie() -> None:
 
 
 def test_finite_minimum_validates_index_and_value() -> None:
-    assert FiniteMinimum(0, 1) == FiniteMinimum(0, 1.0)
+    assert FiniteMinimum(0, 1.0) == FiniteMinimum(0, 1.0)
+    with pytest.raises(TypeError, match="exact built-in float"):
+        FiniteMinimum(0, 1)
 
     with pytest.raises(TypeError, match="index"):
         FiniteMinimum(True, 1.0)

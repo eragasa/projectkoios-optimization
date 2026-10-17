@@ -97,6 +97,8 @@ class SplitMix64UnitUniformSampler(UnitUniformSampler):
         *,
         random_seed: RandomSeed,
     ) -> tuple[float, ...]:
+        if random_seed is None:
+            raise TypeError("random_seed must be an exact built-in integer")
         seed = numerical_validation.u64(random_seed, "random_seed")
         return tuple(self.unit_fraction(seed, index) for index in range(sample_count))
 

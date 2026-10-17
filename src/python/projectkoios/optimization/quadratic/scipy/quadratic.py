@@ -13,7 +13,7 @@ from projectkoios.numerics import validation as numerical_validation
 
 from ....numerics.scipy.typing import Float64SparseMatrix
 from .. import validation as quadratic_validation
-from ..quadratic import _QuadraticLossBackend
+from ..quadratic import DenseQuadraticInput, _QuadraticLossBackend
 
 
 @final
@@ -38,10 +38,10 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
 
     __slots__ = ("_center", "_matrix", "_minimum_squared_loss")
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         center: tuple[float, ...],
-        matrix: object,
+        matrix: DenseQuadraticInput | Float64SparseMatrix,
         minimum_squared_loss: float,
     ) -> None:
         normalized_center = quadratic_validation.finite_vector(center, "center")
@@ -67,7 +67,7 @@ class ScipySparsePositiveDefiniteQuadraticLoss(_QuadraticLossBackend):
                 ) from error
         else:
             normalized_matrix = quadratic_validation.finite_square_matrix(
-                matrix,
+                cast(DenseQuadraticInput, matrix),
                 dimension,
             )
             sparse_matrix = sp.csr_array(

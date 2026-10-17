@@ -37,9 +37,8 @@ visible positive iteration limit. Sparse variants are not implied.
   quadratic or bounds record.
 - Dimensions must agree and must be positive.
 - Equal endpoints are admitted and reported as `fixed` coordinates.
-- Exact built-in nominal records remain required. Value factories perform explicit
-  finite-real normalization before frozen construction; raw frozen constructors reject
-  implicit coercion and never replace fields after construction.
+- Exact built-in nominal records remain required. Frozen constructors accept canonical
+  storage, reject implicit coercion, and never replace fields after construction.
 - The initial point is the unconstrained center clipped into the box. Nonfixed clipped
   coordinates begin active at their exact endpoint; all other nonfixed coordinates begin
   free.

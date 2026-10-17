@@ -10,14 +10,9 @@ from projectkoios.optimization.quadratic.numpy.quadratic import (  # noqa: E402
 )
 from projectkoios.optimization.quadratic.quadratic import (  # noqa: E402
     PositiveDefiniteQuadraticLoss,
-    _QuadraticLossBackend,
 )
 
 pytestmark = pytest.mark.integration
-
-
-def test_numpy_quadratic_backend_is_an_explicit_nominal_subclass() -> None:
-    assert issubclass(NumpyPositiveDefiniteQuadraticLoss, _QuadraticLossBackend)
 
 
 def test_dense_quadratic_uses_numpy_backend_and_retains_tuple_state() -> None:
@@ -33,6 +28,21 @@ def test_dense_quadratic_uses_numpy_backend_and_retains_tuple_state() -> None:
     assert loss.dimension == 2
     assert loss.squared_loss((3.0, -1.0)) == 23.25
     assert loss.root_loss((1.0, -2.0)) == 0.5
+
+
+def test_direct_numpy_quadratic_retains_canonical_tuple_storage() -> None:
+    center = (0.0,)
+    matrix = ((2.0,),)
+
+    loss = NumpyPositiveDefiniteQuadraticLoss(center, matrix, 0.0)
+
+    assert loss.center is center
+    assert loss.matrix is matrix
+
+
+def test_direct_numpy_quadratic_rejects_noncanonical_storage() -> None:
+    with pytest.raises(TypeError, match="exact built-in float"):
+        NumpyPositiveDefiniteQuadraticLoss((0,), ((1.0,),), 0.0)  # type: ignore[arg-type]
 
 
 def test_direct_numpy_quadratic_rejects_non_positive_definite_matrix() -> None:

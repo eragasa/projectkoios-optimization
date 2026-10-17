@@ -10,6 +10,7 @@ import pytest
 from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumTolerance,
+    HermitianSpectrumMatrices,
 )
 from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
     NumpyBatchedHermitianSpectrumSolver,
@@ -19,17 +20,19 @@ from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 pytestmark = pytest.mark.integration
 
 
-def _array_batch() -> Complex128Array:
-    return np.asarray(
-        [
-            [[2.0, 1.0 - 1.0j], [1.0 + 1.0j, 3.0]],
-            [[4.0, 0.0], [0.0, 5.0]],
-        ],
-        dtype=np.complex128,
-    )
+HERMITIAN_MATRIX_BATCH: HermitianSpectrumMatrices = (
+    (
+        (2.0 + 0.0j, 1.0 - 1.0j),
+        (1.0 + 1.0j, 3.0 + 0.0j),
+    ),
+    (
+        (4.0 + 0.0j, 0.0 + 0.0j),
+        (0.0 + 0.0j, 5.0 + 0.0j),
+    ),
+)
 
 
-def test_backend_accepts_numpy_arrays_and_uses_one_batched_call(
+def test_backend_uses_one_batched_numpy_call(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     original = np.linalg.eigvalsh
@@ -46,8 +49,8 @@ def test_backend_accepts_numpy_arrays_and_uses_one_batched_call(
     monkeypatch.setattr(np.linalg, "eigvalsh", recording_eigvalsh)
     result = NumpyBatchedHermitianSpectrumSolver().solve(
         BatchedHermitianSpectrumDefinition(
-            _array_batch(),
-            BatchedHermitianSpectrumTolerance(np.float64(0.0), np.float64(0.0)),
+            HERMITIAN_MATRIX_BATCH,
+            BatchedHermitianSpectrumTolerance(0.0, 0.0),
         )
     )
 
@@ -55,7 +58,7 @@ def test_backend_accepts_numpy_arrays_and_uses_one_batched_call(
     assert result.batch_size == 2
     np.testing.assert_allclose(
         np.asarray(result.eigenvalues),
-        original(_array_batch()),
+        original(np.asarray(HERMITIAN_MATRIX_BATCH, dtype=np.complex128)),
         rtol=0.0,
         atol=1.0e-15,
     )
@@ -74,7 +77,7 @@ def test_empty_batch_does_not_call_numpy(
     monkeypatch.setattr(np.linalg, "eigvalsh", forbidden_eigvalsh)
     result = NumpyBatchedHermitianSpectrumSolver().solve(
         BatchedHermitianSpectrumDefinition.empty(
-            np.int64(4),
+            4,
             BatchedHermitianSpectrumTolerance(0.0, 0.0),
         )
     )
@@ -99,7 +102,7 @@ def test_backend_translates_only_eigensolver_nonconvergence(
     with pytest.raises(RuntimeError, match="did not converge"):
         NumpyBatchedHermitianSpectrumSolver().solve(
             BatchedHermitianSpectrumDefinition(
-                _array_batch(),
+                HERMITIAN_MATRIX_BATCH,
                 BatchedHermitianSpectrumTolerance(0.0, 0.0),
             )
         )
@@ -120,7 +123,7 @@ def test_backend_rejects_nonfinite_eigenvalues(
     with pytest.raises(FloatingPointError, match="nonfinite eigenvalues"):
         NumpyBatchedHermitianSpectrumSolver().solve(
             BatchedHermitianSpectrumDefinition(
-                _array_batch(),
+                HERMITIAN_MATRIX_BATCH,
                 BatchedHermitianSpectrumTolerance(0.0, 0.0),
             )
         )

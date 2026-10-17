@@ -83,9 +83,10 @@ def test_probability_and_inverse_results_are_validated() -> None:
 def test_probability_sampler_is_a_slot_composed_sampler() -> None:
     distribution = UniformProbabilityDistribution(parameters())
     source = SplitMix64UnitUniformSampler()
+    transform = distribution.inverse_distribution_function
     sampler = ProbabilityDistributionSampler(
         source_slot=source,
-        transform_slot=distribution.inverse_distribution_function,
+        transform_slot=transform,
     )
 
     first = sampler.sample(4, random_seed=7)
@@ -93,7 +94,7 @@ def test_probability_sampler_is_a_slot_composed_sampler() -> None:
 
     assert isinstance(sampler, Sampler)
     assert sampler.source_slot is source
-    assert sampler.transform_slot is distribution.inverse_distribution_function
+    assert sampler.transform_slot is transform
     assert first == second
     assert first == tuple(
         1.5 + SplitMix64UnitUniformSampler.unit_fraction(7, index) for index in range(4)

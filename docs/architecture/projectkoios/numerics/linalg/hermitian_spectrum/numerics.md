@@ -12,11 +12,9 @@ representative construction, eigensolver execution, and result validation.
 Each matrix receives an independent scale and Hermiticity cutoff, so one large matrix
 cannot relax acceptance for another matrix in the same batch.
 
-- Nonempty batches infer their common positive dimension.
-- Empty batches require a positive integral dimension through the named empty
-  constructor.
-- Finite real and complex numeric inputs are normalized to immutable built-in complex
-  values.
+- Nonempty batches infer their common positive dimension from canonical matrices.
+- Empty batches declare an exact built-in dimension through the named empty constructor.
+- Matrices use exact immutable tuple storage with finite built-in complex entries.
 - Matrix scale and represented Hermiticity defect are
   $$
   s_b=\max_{i,j}|(A_b)_{ij}|,

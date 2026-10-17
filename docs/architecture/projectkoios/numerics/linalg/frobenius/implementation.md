@@ -8,7 +8,9 @@ src/python/projectkoios/numerics/linalg/
 ```
 
 The module validates immutable built-in values, performs the reduction directly, and
-imports no optional backend. Package initializers remain import-empty.
+imports no optional backend. `ComplexMatrixFrobenius` validates its canonical fields
+explicitly and never replaces them after frozen construction. Package initializers
+remain import-empty.
 
 ## Mapped tests
 

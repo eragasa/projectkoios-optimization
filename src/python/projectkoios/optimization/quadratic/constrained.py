@@ -8,7 +8,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import final
 
-from projectkoios.numerics.validation import finite_float
+from projectkoios.numerics.validation import (
+    exact_finite_float,
+    exact_nonnegative_float,
+    finite_float,
+    validate_finite_float_tuple,
+)
 
 from ..spaces.parameters import ParameterSpace
 from .quadratic import PositiveDefiniteQuadraticLoss
@@ -24,16 +29,10 @@ class ConstrainedQuadraticTolerance:
     relative: float = 1.0e-10
 
     def __post_init__(self) -> None:
-        absolute = finite_float(self.absolute, "absolute")
-        relative = finite_float(self.relative, "relative")
-        if absolute < 0.0:
-            raise ValueError("absolute must be nonnegative")
-        if relative < 0.0:
-            raise ValueError("relative must be nonnegative")
-        if absolute == 0.0 and relative == 0.0:
+        exact_nonnegative_float(self.absolute, "absolute")
+        exact_nonnegative_float(self.relative, "relative")
+        if self.absolute == 0.0 and self.relative == 0.0:
             raise ValueError("at least one tolerance must be positive")
-        object.__setattr__(self, "absolute", absolute)
-        object.__setattr__(self, "relative", relative)
 
     def accepts(self, left: float, right: float, /) -> bool:
         """Return whether two finite scalars satisfy the scale-aware tolerance."""
@@ -72,16 +71,15 @@ class RectangleQuadraticMinimum:
     candidate: RectangleQuadraticCandidate
 
     def __post_init__(self) -> None:
-        coordinates = finite_vector(self.coordinates, "coordinates")
-        if len(coordinates) != 2:
+        if type(self.coordinates) is not tuple:
+            raise TypeError("coordinates must be an exact tuple")
+        if len(self.coordinates) != 2:
             raise ValueError("coordinates must contain exactly two values")
-        squared_loss = finite_float(self.squared_loss, "squared_loss")
-        if squared_loss < 0.0:
-            raise ValueError("squared_loss must be nonnegative")
+        exact_finite_float(self.coordinates[0], "coordinates[0]")
+        exact_finite_float(self.coordinates[1], "coordinates[1]")
+        exact_nonnegative_float(self.squared_loss, "squared_loss")
         if type(self.candidate) is not RectangleQuadraticCandidate:
             raise TypeError("candidate must be RectangleQuadraticCandidate")
-        object.__setattr__(self, "coordinates", (coordinates[0], coordinates[1]))
-        object.__setattr__(self, "squared_loss", squared_loss)
 
 
 @final
@@ -95,20 +93,14 @@ class QuadraticSublevelSupportResult:
     squared_loss: float
 
     def __post_init__(self) -> None:
-        point = finite_vector(self.point, "point")
-        direction = finite_vector(self.direction, "direction")
-        if len(point) != len(direction):
+        validate_finite_float_tuple(self.point, "point")
+        validate_finite_float_tuple(self.direction, "direction")
+        if len(self.point) != len(self.direction):
             raise ValueError("point and direction dimensions must match")
-        if not any(value != 0.0 for value in direction):
+        if not any(value != 0.0 for value in self.direction):
             raise ValueError("direction must be nonzero")
-        support_value = finite_float(self.support_value, "support_value")
-        squared_loss = finite_float(self.squared_loss, "squared_loss")
-        if squared_loss < 0.0:
-            raise ValueError("squared_loss must be nonnegative")
-        object.__setattr__(self, "point", point)
-        object.__setattr__(self, "direction", direction)
-        object.__setattr__(self, "support_value", support_value)
-        object.__setattr__(self, "squared_loss", squared_loss)
+        exact_finite_float(self.support_value, "support_value")
+        exact_nonnegative_float(self.squared_loss, "squared_loss")
 
 
 class RectangleQuadraticMinimizer2D(ABC):
@@ -192,7 +184,7 @@ class QuadraticSublevelSupportSolver(ABC):
         return self._tolerance
 
     @final
-    def solve(
+    def solve(  # noqa: C901
         self,
         loss: PositiveDefiniteQuadraticLoss,
         squared_loss_ceiling: float,

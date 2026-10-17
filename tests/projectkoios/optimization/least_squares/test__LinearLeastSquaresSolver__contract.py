@@ -101,8 +101,8 @@ class _WrongResultSolver(LinearLeastSquaresSolver):
 def test_solver_boundary_is_nominal_abstract_and_public_solve_is_final() -> None:
     assert inspect.isabstract(LinearLeastSquaresSolver)
     assert issubclass(NumpyLinearLeastSquaresSolver, LinearLeastSquaresSolver)
-    assert LinearLeastSquaresSolver.solve.__final__ is True
-    assert NumpyLinearLeastSquaresSolver.__final__ is True
+    assert vars(LinearLeastSquaresSolver.solve)["__final__"] is True
+    assert vars(NumpyLinearLeastSquaresSolver)["__final__"] is True
 
 
 def test_final_template_rejects_nonconforming_backend_results() -> None:

@@ -9,7 +9,7 @@ from numbers import Complex
 from typing import final
 
 from projectkoios.numerics.typing import FiniteComplexMatrix
-from projectkoios.numerics.validation import finite_float
+from projectkoios.numerics.validation import exact_nonnegative_float, finite_float
 
 from ..quadratic.quadratic import PositiveDefiniteQuadraticLoss
 
@@ -27,16 +27,10 @@ class ComplexAffineResidualQuadraticTolerance:
 
     def __post_init__(self) -> None:
         """Normalize finite nonnegative tolerance components."""
-        absolute = finite_float(self.absolute, "absolute")
-        relative = finite_float(self.relative, "relative")
-        if absolute < 0.0:
-            raise ValueError("absolute must be nonnegative")
-        if relative < 0.0:
-            raise ValueError("relative must be nonnegative")
-        if absolute == 0.0 and relative == 0.0:
+        exact_nonnegative_float(self.absolute, "absolute")
+        exact_nonnegative_float(self.relative, "relative")
+        if self.absolute == 0.0 and self.relative == 0.0:
             raise ValueError("at least one tolerance must be positive")
-        object.__setattr__(self, "absolute", absolute)
-        object.__setattr__(self, "relative", relative)
 
     def accepts(self, left: float, right: float, /) -> bool:
         """Return whether two finite real values satisfy this tolerance."""
@@ -161,7 +155,7 @@ class ComplexAffineResidualQuadraticConstructor(ABC):
         raise NotImplementedError
 
 
-def _finite_complex(value: object, name: str, /) -> complex:
+def _finite_complex(value: complex, name: str, /) -> complex:
     if isinstance(value, bool) or not isinstance(value, Complex):
         raise TypeError(f"{name} must contain real or complex numbers excluding bool")
     try:
@@ -173,7 +167,11 @@ def _finite_complex(value: object, name: str, /) -> complex:
     return result
 
 
-def _finite_matrix(value: object, name: str, /) -> ComplexAffineResidualMatrix:
+def _finite_matrix(
+    value: ComplexAffineResidualMatrix,
+    name: str,
+    /,
+) -> ComplexAffineResidualMatrix:
     if type(value) is not tuple or not value:
         raise TypeError(f"{name} must be a nonempty tuple of nonempty tuples")
     rows: list[tuple[complex, ...]] = []
@@ -190,13 +188,21 @@ def _finite_matrix(value: object, name: str, /) -> ComplexAffineResidualMatrix:
     return tuple(rows)
 
 
-def _finite_vector(value: object, name: str, /) -> ComplexAffineResidualVector:
+def _finite_vector(
+    value: ComplexAffineResidualVector,
+    name: str,
+    /,
+) -> ComplexAffineResidualVector:
     if type(value) is not tuple or not value:
         raise TypeError(f"{name} must be a nonempty tuple")
     return tuple(_finite_complex(entry, name) for entry in value)
 
 
-def _weights(value: object, row_count: int, /) -> tuple[float, ...] | None:
+def _weights(
+    value: tuple[float, ...] | None,
+    row_count: int,
+    /,
+) -> tuple[float, ...] | None:
     if value is None:
         return None
     if type(value) is not tuple:

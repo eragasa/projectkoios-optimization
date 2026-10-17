@@ -5,6 +5,7 @@ pytestmark = pytest.mark.unit
 from projectkoios.optimization.algorithms.coordinate import (  # noqa: E402
     CoordinateSearch,
     CoordinateSearchSettings,
+    CoordinateSearchState,
 )
 from projectkoios.optimization.engines.records import ObjectiveFeedback  # noqa: E402
 from projectkoios.optimization.exceptions import (  # noqa: E402
@@ -22,6 +23,39 @@ def settings(
     max_evaluations: int = 20, max_iterations: int = 10
 ) -> CoordinateSearchSettings:
     return CoordinateSearchSettings(max_evaluations, max_iterations, 0.25, 0.5, 0.01)
+
+
+def test_settings_require_canonical_frozen_construction() -> None:
+    settings_record = CoordinateSearchSettings(20, 10, 1.0, 0.5, 0.01)
+
+    assert settings_record.initial_step_fraction == 1.0
+    assert type(settings_record.initial_step_fraction) is float
+    with pytest.raises(TypeError, match="exact built-in float"):
+        CoordinateSearchSettings(20, 10, 1, 0.5, 0.01)
+
+
+def test_state_requires_canonical_frozen_construction() -> None:
+    space = ParameterSpace((ParameterBound("x", -1.0, 1.0),))
+    state = CoordinateSearchState(
+        space=space,
+        initial_values=(0.0,),
+        settings=settings(),
+        run_id="pattern.state",
+        feedback=(),
+        outstanding=None,
+    )
+
+    assert state.initial_values == (0.0,)
+    assert type(state.initial_values[0]) is float
+    with pytest.raises(TypeError, match="exact built-in float"):
+        CoordinateSearchState(
+            space=space,
+            initial_values=(0,),
+            settings=settings(),
+            run_id="pattern.state",
+            feedback=(),
+            outstanding=None,
+        )
 
 
 def test_repeated_ask_returns_same_candidate_and_wrong_tell_fails() -> None:

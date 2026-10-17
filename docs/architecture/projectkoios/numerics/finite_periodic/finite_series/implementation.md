@@ -29,7 +29,8 @@ it is not a general transform utility collection.
 `FiniteFourierSeriesEvaluationDefinition` and
 `FiniteFourierSeriesEvaluationResult` are frozen, slotted, immutable records. Their
 constructors validate exact built-in tuple and scalar contracts, copy no backend arrays,
-and import neither NumPy nor a consumer package.
+and import neither NumPy nor a consumer package. Both constructors validate their
+already-canonical immutable fields without replacing them after construction.
 
 The definition retains an explicit positive dimension so empty point and term collections
 remain unambiguous. The result retains dimension, point count, and term count so an

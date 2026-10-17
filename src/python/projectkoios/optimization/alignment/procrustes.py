@@ -733,7 +733,7 @@ class ComplexUnitaryProcrustesResult:
     backend_identifier: str
     backend_version: str
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> None:  # noqa: C901
         """Validate local structure and relational numerical evidence.
 
         Raises
@@ -746,11 +746,98 @@ class ComplexUnitaryProcrustesResult:
         FloatingPointError
             If reconstructing relational evidence becomes nonfinite.
         """
-        structure = _validate_scalar_result_structure(self)
-        expected_rank = _validate_scalar_result_rank_evidence(self, structure)
-        _validate_scalar_result_residual_evidence(self, structure.singular_values)
-        _validate_scalar_result_transformation(self, structure, expected_rank)
-        _validate_scalar_result_backend_evidence(self)
+        exact_positive_integer(self.row_count, "row_count")
+        column_count = exact_positive_integer(self.column_count, "column_count")
+        if type(self.tolerance) is not ComplexUnitaryProcrustesTolerance:
+            raise TypeError("tolerance must be ComplexUnitaryProcrustesTolerance")
+        if type(self.status) is not ComplexUnitaryProcrustesStatus:
+            raise TypeError("status must be ComplexUnitaryProcrustesStatus")
+        singular_values = _singular_values(
+            self.cross_singular_values,
+            column_count,
+            nonfinite_backend=False,
+        )
+
+        if type(self.numerical_rank) is not int:
+            raise TypeError("numerical_rank must be an exact built-in integer")
+        applied_rank_cutoff = exact_nonnegative_float(
+            self.applied_rank_cutoff,
+            "applied_rank_cutoff",
+        )
+        expected_cutoff = ComplexUnitaryProcrustesSolver.rank_cutoff(
+            self.tolerance,
+            singular_values[0],
+        )
+        if applied_rank_cutoff != expected_cutoff:
+            raise ValueError("applied_rank_cutoff is inconsistent")
+        expected_rank = sum(value > expected_cutoff for value in singular_values)
+        if self.numerical_rank != expected_rank:
+            raise ValueError("numerical_rank is inconsistent")
+        if not 0 <= self.numerical_rank <= column_count:
+            raise ValueError("numerical_rank lies outside the dimension bound")
+
+        source_power = exact_nonnegative_float(
+            self.source_squared_frobenius_norm,
+            "source_squared_frobenius_norm",
+        )
+        target_power = exact_nonnegative_float(
+            self.target_squared_frobenius_norm,
+            "target_squared_frobenius_norm",
+        )
+        optimal_squared = exact_nonnegative_float(
+            self.optimal_squared_residual,
+            "optimal_squared_residual",
+        )
+        expected_residual = _optimal_residual_evidence(
+            source_power,
+            target_power,
+            singular_values,
+        )
+        if optimal_squared != expected_residual.squared_residual:
+            raise ValueError("optimal_squared_residual is inconsistent")
+        optimal_norm = exact_nonnegative_float(
+            self.optimal_residual_frobenius_norm,
+            "optimal_residual_frobenius_norm",
+        )
+        if optimal_norm != math.sqrt(optimal_squared):
+            raise ValueError("optimal_residual_frobenius_norm is inconsistent")
+
+        transformation = self.transformation
+        if expected_rank == column_count:
+            if self.status is not ComplexUnitaryProcrustesStatus.UNIQUE:
+                raise ValueError("full numerical rank requires UNIQUE status")
+            if transformation is None:
+                raise ValueError("full numerical rank requires a transformation")
+            transformation = validate_finite_complex_matrix(
+                transformation,
+                "transformation",
+                row_count=column_count,
+                column_count=column_count,
+            )
+            identity = _identity(column_count)
+            unitary_defect = _maximum_absolute_difference(
+                _matrix_product(
+                    _conjugate_transpose(transformation),
+                    transformation,
+                ),
+                identity,
+            )
+            if unitary_defect > _validation_bound(
+                self.tolerance,
+                1.0,
+                column_count,
+            ):
+                raise ValueError("transformation violates the unitary bound")
+        else:
+            if self.status is not ComplexUnitaryProcrustesStatus.RANK_DEFICIENT:
+                raise ValueError("deficient numerical rank requires RANK_DEFICIENT")
+            if transformation is not None:
+                raise ValueError(
+                    "rank-deficient result must not expose a full transformation"
+                )
+
+        text(self.backend_identifier, "backend_identifier")
+        text(self.backend_version, "backend_version")
 
     @property
     def applied_residual_roundoff_cutoff(self) -> float:
@@ -768,257 +855,6 @@ class ComplexUnitaryProcrustesResult:
             self.cross_singular_values,
         )
         return evidence.roundoff_cutoff
-
-
-@dataclass(frozen=True, slots=True)
-class _ScalarResultStructure:
-    """Hold validated scalar-result dimensions and singular spectrum.
-
-    Parameters
-    ----------
-    column_count
-        Positive right-unitary dimension.
-    singular_values
-        Complete nonnegative nonincreasing cross singular spectrum.
-    """
-
-    column_count: int
-    singular_values: tuple[float, ...]
-
-
-def _validate_scalar_result_structure(
-    result: ComplexUnitaryProcrustesResult,
-    /,
-) -> _ScalarResultStructure:
-    """Validate scalar-result nominal structure in public field order.
-
-    Parameters
-    ----------
-    result
-        Candidate exact scalar result under construction.
-
-    Returns
-    -------
-    _ScalarResultStructure
-        Validated dimension and complete singular spectrum.
-
-    Raises
-    ------
-    TypeError
-        If a dimension, policy, status, spectrum container, or spectrum entry has the
-        wrong exact nominal type.
-    ValueError
-        If a dimension, spectrum value, spectrum length, or spectrum ordering is
-        invalid.
-    """
-    exact_positive_integer(result.row_count, "row_count")
-    column_count = exact_positive_integer(result.column_count, "column_count")
-    if type(result.tolerance) is not ComplexUnitaryProcrustesTolerance:
-        raise TypeError("tolerance must be ComplexUnitaryProcrustesTolerance")
-    if type(result.status) is not ComplexUnitaryProcrustesStatus:
-        raise TypeError("status must be ComplexUnitaryProcrustesStatus")
-    singular_values = _singular_values(
-        result.cross_singular_values,
-        column_count,
-        nonfinite_backend=False,
-    )
-    return _ScalarResultStructure(column_count, singular_values)
-
-
-def _validate_scalar_result_rank_evidence(
-    result: ComplexUnitaryProcrustesResult,
-    structure: _ScalarResultStructure,
-    /,
-) -> int:
-    """Validate additive-cutoff rank evidence and return expected rank.
-
-    Parameters
-    ----------
-    result
-        Structurally validated scalar result.
-    structure
-        Validated dimension and singular spectrum.
-
-    Returns
-    -------
-    int
-        Rank reconstructed using the strict additive-cutoff comparison.
-
-    Raises
-    ------
-    TypeError
-        If numerical rank or cutoff has the wrong exact nominal type.
-    ValueError
-        If rank or applied cutoff is invalid or relationally inconsistent.
-    FloatingPointError
-        If reconstructing the applied cutoff becomes nonfinite.
-    """
-    if type(result.numerical_rank) is not int:
-        raise TypeError("numerical_rank must be an exact built-in integer")
-    applied_rank_cutoff = exact_nonnegative_float(
-        result.applied_rank_cutoff,
-        "applied_rank_cutoff",
-    )
-    expected_cutoff = ComplexUnitaryProcrustesSolver.rank_cutoff(
-        result.tolerance,
-        structure.singular_values[0],
-    )
-    if applied_rank_cutoff != expected_cutoff:
-        raise ValueError("applied_rank_cutoff is inconsistent")
-    expected_rank = sum(value > expected_cutoff for value in structure.singular_values)
-    if result.numerical_rank != expected_rank:
-        raise ValueError("numerical_rank is inconsistent")
-    if not 0 <= result.numerical_rank <= structure.column_count:
-        raise ValueError("numerical_rank lies outside the dimension bound")
-    return expected_rank
-
-
-def _validate_scalar_result_residual_evidence(
-    result: ComplexUnitaryProcrustesResult,
-    singular_values: tuple[float, ...],
-    /,
-) -> None:
-    """Validate retained powers and reconstructed optimal residual evidence.
-
-    Parameters
-    ----------
-    result
-        Structurally and rank-validated scalar result.
-    singular_values
-        Complete validated cross singular spectrum.
-
-    Returns
-    -------
-    None
-        Residual evidence is finite, nonnegative, and relationally consistent.
-
-    Raises
-    ------
-    TypeError
-        If a retained scalar has the wrong exact nominal type.
-    ValueError
-        If a retained scalar is invalid or relationally inconsistent.
-    FloatingPointError
-        If residual reconstruction becomes nonfinite.
-    """
-    source_power = exact_nonnegative_float(
-        result.source_squared_frobenius_norm,
-        "source_squared_frobenius_norm",
-    )
-    target_power = exact_nonnegative_float(
-        result.target_squared_frobenius_norm,
-        "target_squared_frobenius_norm",
-    )
-    optimal_squared = exact_nonnegative_float(
-        result.optimal_squared_residual,
-        "optimal_squared_residual",
-    )
-    expected_residual = _optimal_residual_evidence(
-        source_power,
-        target_power,
-        singular_values,
-    )
-    if optimal_squared != expected_residual.squared_residual:
-        raise ValueError("optimal_squared_residual is inconsistent")
-    optimal_norm = exact_nonnegative_float(
-        result.optimal_residual_frobenius_norm,
-        "optimal_residual_frobenius_norm",
-    )
-    if optimal_norm != math.sqrt(optimal_squared):
-        raise ValueError("optimal_residual_frobenius_norm is inconsistent")
-
-
-def _validate_scalar_result_transformation(
-    result: ComplexUnitaryProcrustesResult,
-    structure: _ScalarResultStructure,
-    expected_rank: int,
-    /,
-) -> None:
-    """Validate rank-dependent status and transformation semantics.
-
-    Parameters
-    ----------
-    result
-        Structurally, rank-, and residual-validated scalar result.
-    structure
-        Validated dimension and singular spectrum.
-    expected_rank
-        Rank reconstructed from the retained spectrum and cutoff.
-
-    Returns
-    -------
-    None
-        Status and transformation agree with rank and unitary policy.
-
-    Raises
-    ------
-    TypeError
-        If a required transformation has malformed exact matrix types.
-    ValueError
-        If status, transformation presence, shape, finiteness, or unitarity is
-        inconsistent with rank evidence.
-    FloatingPointError
-        If unitary validation arithmetic becomes nonfinite.
-    """
-    transformation = result.transformation
-    column_count = structure.column_count
-    if expected_rank == column_count:
-        if result.status is not ComplexUnitaryProcrustesStatus.UNIQUE:
-            raise ValueError("full numerical rank requires UNIQUE status")
-        if transformation is None:
-            raise ValueError("full numerical rank requires a transformation")
-        transformation = validate_finite_complex_matrix(
-            transformation,
-            "transformation",
-            row_count=column_count,
-            column_count=column_count,
-        )
-        identity = _identity(column_count)
-        unitary_defect = _maximum_absolute_difference(
-            _matrix_product(
-                _conjugate_transpose(transformation),
-                transformation,
-            ),
-            identity,
-        )
-        if unitary_defect > _validation_bound(
-            result.tolerance,
-            1.0,
-            column_count,
-        ):
-            raise ValueError("transformation violates the unitary bound")
-        return
-    if result.status is not ComplexUnitaryProcrustesStatus.RANK_DEFICIENT:
-        raise ValueError("deficient numerical rank requires RANK_DEFICIENT")
-    if transformation is not None:
-        raise ValueError("rank-deficient result must not expose a full transformation")
-
-
-def _validate_scalar_result_backend_evidence(
-    result: ComplexUnitaryProcrustesResult,
-    /,
-) -> None:
-    """Validate coupled API-level backend identity fields.
-
-    Parameters
-    ----------
-    result
-        Relationally validated scalar result.
-
-    Returns
-    -------
-    None
-        Both backend strings are exact, nonempty, and trimmed.
-
-    Raises
-    ------
-    TypeError
-        If either field is not an exact built-in string.
-    ValueError
-        If either field is empty or untrimmed.
-    """
-    text(result.backend_identifier, "backend_identifier")
-    text(result.backend_version, "backend_version")
 
 
 class ComplexUnitaryProcrustesSolver:

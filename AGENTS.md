@@ -39,6 +39,8 @@ This repository owns reusable mathematical numerics and optimization for Project
 
 ## Development
 
+- Follow the Python test policy in [`docs/code/python/tests.md`](docs/code/python/tests.md).
+- Follow the Python code-smell policy in [`docs/code/python/code_smells.md`](docs/code/python/code_smells.md).
 - Mirror package/module/class ownership under `docs/architecture` using indexed current-state documentation.
 - Use strict typing, deterministic sanitized fixtures, failure and awkward cases, reproducible offline builds, and wheel import checks. Require exact provenance tests only for external or historically independent source transfers.
 - Keep one writer per worktree. Use exact-path staging, disable hooks/signing for controlled commits, and verify the staged tree before commit.

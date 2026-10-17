@@ -12,6 +12,7 @@ import scipy.linalg
 from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumTolerance,
+    HermitianSpectrumMatrices,
 )
 from projectkoios.numerics.linalg.scipy.hermitian_spectrum import (
     ScipyBatchedHermitianSpectrumSolver,
@@ -21,14 +22,16 @@ from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 pytestmark = pytest.mark.integration
 
 
-def _batch() -> Complex128Array:
-    return np.asarray(
-        [
-            [[2.0, 1.0 - 1.0j], [1.0 + 1.0j, 3.0]],
-            [[4.0, 0.0], [0.0, 5.0]],
-        ],
-        dtype=np.complex128,
-    )
+HERMITIAN_MATRIX_BATCH: HermitianSpectrumMatrices = (
+    (
+        (2.0 + 0.0j, 1.0 - 1.0j),
+        (1.0 + 1.0j, 3.0 + 0.0j),
+    ),
+    (
+        (4.0 + 0.0j, 0.0 + 0.0j),
+        (0.0 + 0.0j, 5.0 + 0.0j),
+    ),
+)
 
 
 def test_backend_uses_one_full_spectrum_batched_scipy_call(
@@ -48,7 +51,7 @@ def test_backend_uses_one_full_spectrum_batched_scipy_call(
     monkeypatch.setattr(scipy.linalg, "eigvalsh", recording_eigvalsh)
     result = ScipyBatchedHermitianSpectrumSolver().solve(
         BatchedHermitianSpectrumDefinition(
-            _batch(),
+            HERMITIAN_MATRIX_BATCH,
             BatchedHermitianSpectrumTolerance(0.0, 0.0),
         )
     )
@@ -66,7 +69,7 @@ def test_backend_uses_one_full_spectrum_batched_scipy_call(
     ]
     np.testing.assert_allclose(
         np.asarray(result.eigenvalues),
-        np.linalg.eigvalsh(_batch()),
+        np.linalg.eigvalsh(np.asarray(HERMITIAN_MATRIX_BATCH, dtype=np.complex128)),
         rtol=0.0,
         atol=1.0e-15,
     )
@@ -104,7 +107,7 @@ def test_backend_translates_scipy_nonconvergence(
     with pytest.raises(RuntimeError):
         ScipyBatchedHermitianSpectrumSolver().solve(
             BatchedHermitianSpectrumDefinition(
-                _batch(),
+                HERMITIAN_MATRIX_BATCH,
                 BatchedHermitianSpectrumTolerance(0.0, 0.0),
             )
         )
@@ -122,7 +125,7 @@ def test_backend_rejects_nonfinite_scipy_output(
     with pytest.raises(FloatingPointError):
         ScipyBatchedHermitianSpectrumSolver().solve(
             BatchedHermitianSpectrumDefinition(
-                _batch(),
+                HERMITIAN_MATRIX_BATCH,
                 BatchedHermitianSpectrumTolerance(0.0, 0.0),
             )
         )

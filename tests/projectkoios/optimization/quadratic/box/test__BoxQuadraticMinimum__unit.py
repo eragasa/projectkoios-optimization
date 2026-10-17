@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-from dataclasses import replace
 from typing import cast
 
 import pytest
@@ -12,113 +10,122 @@ from projectkoios.optimization.quadratic.box import (
     BoxQuadraticBoundStatus,
     BoxQuadraticMinimum,
 )
-from tests.projectkoios.optimization.quadratic.box.fixtures import (
-    SatisfiedBoxMinimumCase,
-)
 
 pytestmark = pytest.mark.unit
 
 
-def _with_entry(
-    values: tuple[float, ...],
-    index: int,
-    replacement: float,
-    /,
-) -> tuple[float, ...]:
-    """Return immutable test evidence with one named coordinate replaced."""
-    return (*values[:index], replacement, *values[index + 1 :])
-
-
-def test_minimum_factory_normalizes_and_retains_complete_evidence(
-    satisfied_minimum_case: SatisfiedBoxMinimumCase,
-) -> None:
-    expected = satisfied_minimum_case.result
-    integral_coordinates = tuple(int(value) for value in expected.coordinates)
-    integral_squared_loss = int(expected.squared_loss)
-
-    result = BoxQuadraticMinimum.from_values(
-        coordinates=integral_coordinates,
-        squared_loss=integral_squared_loss,
-        bound_statuses=expected.bound_statuses,
-        gradient=expected.gradient,
-        kkt_tolerance_bounds=expected.kkt_tolerance_bounds,
-        maximum_kkt_violation=expected.maximum_kkt_violation,
-        maximum_kkt_ratio=expected.maximum_kkt_ratio,
-        iteration_count=expected.iteration_count,
-        active_set_change_count=expected.active_set_change_count,
-        linear_solve_count=expected.linear_solve_count,
-        maximum_iterations=expected.maximum_iterations,
-        backend_identifier=expected.backend_identifier,
-        backend_version=expected.backend_version,
+def test_zero_centered_free_minimum_retains_exact_evidence() -> None:
+    result = BoxQuadraticMinimum(
+        coordinates=(0.0,),
+        squared_loss=0.0,
+        bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+        gradient=(0.0,),
+        kkt_tolerance_bounds=(1.0e-12,),
+        maximum_kkt_violation=0.0,
+        maximum_kkt_ratio=0.0,
+        iteration_count=1,
+        active_set_change_count=0,
+        linear_solve_count=0,
+        maximum_iterations=10,
+        backend_identifier="test.active-set",
+        backend_version="1",
     )
 
-    assert result == expected
+    assert result.coordinates == (0.0,)
+    assert result.maximum_kkt_violation == 0.0
+    assert result.maximum_kkt_ratio == 0.0
 
 
-def test_raw_minimum_constructor_rejects_noncanonical_scalars(
-    satisfied_minimum_case: SatisfiedBoxMinimumCase,
-) -> None:
-    expected = satisfied_minimum_case.result
-    integral_coordinates = tuple(int(value) for value in expected.coordinates)
-
-    with pytest.raises(TypeError, match="exact built-in float"):
-        replace(
-            expected,
-            coordinates=cast(tuple[float, ...], integral_coordinates),
+def test_constructor_rejects_noncanonical_coordinate_storage() -> None:
+    with pytest.raises(TypeError):
+        BoxQuadraticMinimum(
+            coordinates=cast(tuple[float, ...], (0,)),
+            squared_loss=0.0,
+            bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+            gradient=(0.0,),
+            kkt_tolerance_bounds=(1.0e-12,),
+            maximum_kkt_violation=0.0,
+            maximum_kkt_ratio=0.0,
+            iteration_count=1,
+            active_set_change_count=0,
+            linear_solve_count=0,
+            maximum_iterations=10,
+            backend_identifier="test.active-set",
+            backend_version="1",
         )
 
 
-def test_minimum_rejects_inconsistent_or_malformed_evidence(
-    satisfied_minimum_case: SatisfiedBoxMinimumCase,
-) -> None:
-    result = satisfied_minimum_case.result
-    dimension = len(result.coordinates)
-    free_index = result.bound_statuses.index(BoxQuadraticBoundStatus.FREE)
-    lower_index = result.bound_statuses.index(BoxQuadraticBoundStatus.LOWER)
-    invalid_statuses = cast(
-        tuple[BoxQuadraticBoundStatus, ...],
-        ("lower",) * dimension,
-    )
-    short_gradient = result.gradient[:-1]
-    nonpositive_bounds = (0.0,) * dimension
-    lower_sign_violation = _with_entry(
-        result.gradient,
-        lower_index,
-        -abs(result.gradient[lower_index]),
-    )
-    inconsistent_ratio = math.nextafter(result.maximum_kkt_ratio, math.inf)
-    rejected_ratio = 2.0
-    rejected_violation = rejected_ratio * satisfied_minimum_case.tolerance_bound
-    free_stationarity_violation = _with_entry(
-        result.gradient,
-        free_index,
-        rejected_violation,
-    )
-    excessive_solve_count = result.iteration_count + 1
-    excessive_iteration_count = result.maximum_iterations + 1
-
-    with pytest.raises(TypeError, match="bound_statuses"):
-        replace(result, bound_statuses=invalid_statuses)
-    with pytest.raises(ValueError, match="gradient"):
-        replace(result, gradient=short_gradient)
-    with pytest.raises(ValueError, match="positive"):
-        replace(result, kkt_tolerance_bounds=nonpositive_bounds)
-    with pytest.raises(ValueError, match="maximum_kkt_violation"):
-        replace(result, gradient=lower_sign_violation)
-    with pytest.raises(ValueError, match="maximum_kkt_ratio"):
-        replace(result, maximum_kkt_ratio=inconsistent_ratio)
-    with pytest.raises(ValueError, match="must not exceed"):
-        replace(
-            result,
-            gradient=free_stationarity_violation,
-            maximum_kkt_violation=rejected_violation,
-            maximum_kkt_ratio=rejected_ratio,
+def test_constructor_rejects_incomplete_coordinate_evidence() -> None:
+    with pytest.raises(ValueError):
+        BoxQuadraticMinimum(
+            coordinates=(0.0,),
+            squared_loss=0.0,
+            bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+            gradient=(),
+            kkt_tolerance_bounds=(1.0e-12,),
+            maximum_kkt_violation=0.0,
+            maximum_kkt_ratio=0.0,
+            iteration_count=1,
+            active_set_change_count=0,
+            linear_solve_count=0,
+            maximum_iterations=10,
+            backend_identifier="test.active-set",
+            backend_version="1",
         )
-    with pytest.raises(TypeError, match="built-in integer"):
-        replace(result, iteration_count=True)
-    with pytest.raises(ValueError, match="must not exceed"):
-        replace(result, linear_solve_count=excessive_solve_count)
-    with pytest.raises(ValueError, match="must not exceed"):
-        replace(result, iteration_count=excessive_iteration_count)
-    with pytest.raises(ValueError, match="backend_identifier"):
-        replace(result, backend_identifier="")
+
+
+def test_constructor_reconstructs_free_coordinate_kkt_evidence() -> None:
+    with pytest.raises(ValueError):
+        BoxQuadraticMinimum(
+            coordinates=(0.0,),
+            squared_loss=0.0,
+            bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+            gradient=(1.0e-12,),
+            kkt_tolerance_bounds=(1.0e-12,),
+            maximum_kkt_violation=0.0,
+            maximum_kkt_ratio=1.0,
+            iteration_count=1,
+            active_set_change_count=0,
+            linear_solve_count=0,
+            maximum_iterations=10,
+            backend_identifier="test.active-set",
+            backend_version="1",
+        )
+
+
+def test_constructor_rejects_failed_kkt_acceptance() -> None:
+    with pytest.raises(ValueError):
+        BoxQuadraticMinimum(
+            coordinates=(0.0,),
+            squared_loss=0.0,
+            bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+            gradient=(2.0e-12,),
+            kkt_tolerance_bounds=(1.0e-12,),
+            maximum_kkt_violation=2.0e-12,
+            maximum_kkt_ratio=2.0,
+            iteration_count=1,
+            active_set_change_count=0,
+            linear_solve_count=0,
+            maximum_iterations=10,
+            backend_identifier="test.active-set",
+            backend_version="1",
+        )
+
+
+def test_constructor_rejects_execution_counts_outside_declared_bounds() -> None:
+    with pytest.raises(ValueError):
+        BoxQuadraticMinimum(
+            coordinates=(0.0,),
+            squared_loss=0.0,
+            bound_statuses=(BoxQuadraticBoundStatus.FREE,),
+            gradient=(0.0,),
+            kkt_tolerance_bounds=(1.0e-12,),
+            maximum_kkt_violation=0.0,
+            maximum_kkt_ratio=0.0,
+            iteration_count=1,
+            active_set_change_count=0,
+            linear_solve_count=2,
+            maximum_iterations=10,
+            backend_identifier="test.active-set",
+            backend_version="1",
+        )

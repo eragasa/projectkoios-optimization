@@ -8,6 +8,10 @@ selects a capability-local implementation that converts a dependency-free
 
 ## Shared construction
 
+`WeightedAffineResidualTerm` has one strict canonical constructor. It accepts exact
+finite built-in float coefficients and targets plus an exact positive built-in float
+weight, and validates without field replacement.
+
 The public `affine/quadratic.py` module owns two independently tested operations:
 
 - `weighted_design()` returns square-root-weighted design rows and targets; and

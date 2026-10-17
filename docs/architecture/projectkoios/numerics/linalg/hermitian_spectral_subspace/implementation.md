@@ -49,7 +49,8 @@ invariants are enforced by the owning definition, result, and final solver bound
 
 A final frozen slotted record with the seven exact fields specified in
 [numerics.md](numerics.md). Constructor validation rejects booleans, NumPy scalars,
-nonfinite values, negative values, and relative tolerances outside $[0,1)$.
+nonfinite values, negative values, and relative tolerances outside $[0,1)$. It
+validates each canonical field explicitly and performs no field replacement.
 
 Its documentation states that the boundary cutoff is a ProjectKoios isolation policy,
 not a backward-error theorem or scientific external-gap criterion.
@@ -58,7 +59,8 @@ not a backward-error theorem or scientific external-gap criterion.
 
 A final frozen slotted record containing the exact tuple matrix, half-open selected
 range, and exact tolerance record. Construction validates all dependency-free structural
-invariants and exposes derived `dimension` and `selected_rank` properties.
+invariants and exposes derived `dimension` and `selected_rank` properties. It validates
+canonical storage directly and does not replace fields after construction.
 
 The constructor performs no symmetrization or eigendecomposition. Retaining the original
 matrix lets the final solver report its pre-symmetrization Hermiticity defect.
@@ -88,8 +90,10 @@ applied_projector_validation_cutoff: float
 applied_spectral_validation_cutoff: float
 ```
 
-Every field is an exact finite nonnegative built-in float. The formulas and correlation
-rules are fixed in [numerics.md](numerics.md). Consumers may retain this evidence but
+Every field is an exact finite nonnegative built-in float. Its sole constructor validates
+each named field explicitly, without reflective attribute access or postconstruction
+field replacement. The formulas and correlation rules are fixed in
+[numerics.md](numerics.md). Consumers may retain this evidence but
 must not reinterpret it as physical or scientific acceptance without an owning policy.
 
 ### `HermitianSpectralSubspaceResult`
@@ -98,8 +102,9 @@ A final frozen slotted record containing the correlated dimension, exact selecte
 tolerance, complete ascending spectrum, selected projector, optional boundary gaps,
 shared diagnostics, and trusted API-level backend metadata.
 
-The result constructor validates local field shape and finite-state invariants. The final
-solver performs the stronger correlation checks against the definition, representative,
+The result constructor validates local field shape and finite-state invariants without
+replacing canonical fields after construction. The final solver performs the stronger
+correlation checks against the definition, representative,
 complete protected eigensystem, and shared-constructed projector.
 
 ## Protected backend eigensystem

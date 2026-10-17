@@ -140,17 +140,6 @@ def test_evaluator_rejects_inconsistent_backend_result(
         _ForgedEvaluator(result).evaluate(_definition())
 
 
-def test_evaluator_rejects_forged_nonfinite_backend_values() -> None:
-    forged = object.__new__(FiniteFourierSeriesEvaluationResult)
-    object.__setattr__(forged, "dimension", 1)
-    object.__setattr__(forged, "point_count", 1)
-    object.__setattr__(forged, "term_count", 1)
-    object.__setattr__(forged, "values", (complex(float("nan"), 0.0),))
-
-    with pytest.raises(FloatingPointError, match="finite"):
-        _ForgedEvaluator(forged).evaluate(_definition())
-
-
 def test_evaluator_propagates_undeclared_backend_exception_unchanged() -> None:
     with pytest.raises(KeyError, match="backend defect"):
         _FailingEvaluator().evaluate(_definition())

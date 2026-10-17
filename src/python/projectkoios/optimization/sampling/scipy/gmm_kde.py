@@ -109,7 +109,7 @@ class ScipyGmmConditionedKdeSampler:
         "_standardize_features",
     )
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         bandwidth_method: KdeBandwidthMethod = KdeBandwidthMethod.SILVERMAN_1986,
         *,

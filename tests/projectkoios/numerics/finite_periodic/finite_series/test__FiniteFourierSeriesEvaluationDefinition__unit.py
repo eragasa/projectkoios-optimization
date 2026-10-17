@@ -15,19 +15,23 @@ pytestmark = pytest.mark.unit
 
 
 def test_definition_retains_valid_dependency_free_inputs() -> None:
+    coordinates = ((0.0, 0.25), (0.5, -0.25))
+    integer_modes = ((0, 0), (1, -2))
+    coefficients = (1.0 + 0.0j, -0.5 + 0.25j)
+
     definition = FiniteFourierSeriesEvaluationDefinition(
         2,
-        ((0.0, 0.25), (0.5, -0.25)),
-        ((0, 0), (1, -2)),
-        (1.0 + 0.0j, -0.5 + 0.25j),
+        coordinates,
+        integer_modes,
+        coefficients,
     )
 
     assert definition.dimension == 2
     assert definition.point_count == 2
     assert definition.term_count == 2
-    assert definition.coordinates == ((0.0, 0.25), (0.5, -0.25))
-    assert definition.integer_modes == ((0, 0), (1, -2))
-    assert definition.coefficients == (1.0 + 0.0j, -0.5 + 0.25j)
+    assert definition.coordinates is coordinates
+    assert definition.integer_modes is integer_modes
+    assert definition.coefficients is coefficients
     with pytest.raises(FrozenInstanceError):
         definition.dimension = 3  # type: ignore[misc]
 

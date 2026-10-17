@@ -14,7 +14,6 @@ finite-series capability whose scalar accumulation order is observable behavior.
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import final
@@ -34,7 +33,7 @@ type BatchedFiniteFourierValues = tuple[tuple[complex, ...], ...]
 
 
 def _coefficient_channels(
-    value: object,
+    value: FiniteFourierCoefficientChannels,
     term_count: int,
     /,
 ) -> FiniteFourierCoefficientChannels:
@@ -42,7 +41,7 @@ def _coefficient_channels(
 
     Parameters
     ----------
-    value : object
+    value : tuple of tuple of complex
         Candidate exact tuple of coefficient tuples.
     term_count : int
         Required number of coefficients in every channel.
@@ -66,7 +65,7 @@ def _coefficient_channels(
 
 
 def _point_values(
-    value: object,
+    value: BatchedFiniteFourierValues,
     point_count: int,
     channel_count: int,
     /,
@@ -75,7 +74,7 @@ def _point_values(
 
     Parameters
     ----------
-    value : object
+    value : tuple of tuple of complex
         Candidate exact tuple of point value tuples.
     point_count : int
         Required number of point rows.
@@ -101,17 +100,17 @@ def _point_values(
 
 
 def _backend_evidence(
-    identifier: object,
-    version: object,
+    identifier: str | None,
+    version: str | None,
     /,
 ) -> tuple[str | None, str | None]:
     """Validate paired optional backend evidence.
 
     Parameters
     ----------
-    identifier : object
+    identifier : str or None
         Backend operation identifier or ``None``.
-    version : object
+    version : str or None
         Backend version or ``None``.
 
     Returns
@@ -158,16 +157,12 @@ class BatchedFiniteFourierSeriesEvaluationDefinition:
     def __post_init__(self) -> None:
         """Validate and normalize all dependency-free public inputs."""
         dimension = _exact_positive_integer(self.dimension, "dimension")
-        coordinates = _coordinates(self.coordinates, dimension)
-        integer_modes = _integer_modes(self.integer_modes, dimension)
-        channels = _coefficient_channels(
+        _coordinates(self.coordinates, dimension)
+        _integer_modes(self.integer_modes, dimension)
+        _coefficient_channels(
             self.coefficient_channels,
-            len(integer_modes),
+            len(self.integer_modes),
         )
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "coordinates", coordinates)
-        object.__setattr__(self, "integer_modes", integer_modes)
-        object.__setattr__(self, "coefficient_channels", channels)
 
     @property
     def point_count(self) -> int:
@@ -218,164 +213,15 @@ class BatchedFiniteFourierSeriesEvaluationResult:
 
     def __post_init__(self) -> None:
         """Validate result shape, finite values, and paired backend evidence."""
-        dimension = _exact_positive_integer(self.dimension, "dimension")
+        _exact_positive_integer(self.dimension, "dimension")
         point_count = _exact_nonnegative_integer(self.point_count, "point_count")
-        term_count = _exact_nonnegative_integer(self.term_count, "term_count")
+        _exact_nonnegative_integer(self.term_count, "term_count")
         channel_count = _exact_nonnegative_integer(self.channel_count, "channel_count")
-        values = _point_values(self.values, point_count, channel_count)
-        backend_identifier, backend_version = _backend_evidence(
+        _point_values(self.values, point_count, channel_count)
+        _backend_evidence(
             self.backend_identifier,
             self.backend_version,
         )
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "point_count", point_count)
-        object.__setattr__(self, "term_count", term_count)
-        object.__setattr__(self, "channel_count", channel_count)
-        object.__setattr__(self, "values", values)
-        object.__setattr__(self, "backend_identifier", backend_identifier)
-        object.__setattr__(self, "backend_version", backend_version)
-
-
-def _trivial_values(
-    definition: BatchedFiniteFourierSeriesEvaluationDefinition,
-    /,
-) -> BatchedFiniteFourierValues | None:
-    """Return exact backend-free values when a public collection is empty.
-
-    Parameters
-    ----------
-    definition
-        Validated shared-grid definition.
-
-    Returns
-    -------
-    tuple of tuple of complex or None
-        Shape-preserving exact values for a template-resolved case, otherwise ``None``.
-
-    Notes
-    -----
-    Point, channel, and mode emptiness are inspected in public precedence order. Empty
-    modes produce one exact complex zero for each declared point and channel.
-    """
-    if definition.point_count == 0:
-        return ()
-    if definition.channel_count == 0:
-        return ((),) * definition.point_count
-    if definition.term_count == 0:
-        zeros = (0.0 + 0.0j,) * definition.channel_count
-        return (zeros,) * definition.point_count
-    return None
-
-
-def _validate_result_metadata(
-    definition: BatchedFiniteFourierSeriesEvaluationDefinition,
-    result: BatchedFiniteFourierSeriesEvaluationResult,
-    /,
-) -> None:
-    """Validate exact structural metadata against its originating definition.
-
-    Parameters
-    ----------
-    definition
-        Validated nontrivial shared-grid definition.
-    result
-        Exact nominal backend result, which may have bypassed its constructor.
-
-    Returns
-    -------
-    None
-        Metadata is structurally correlated with the definition.
-
-    Raises
-    ------
-    ValueError
-        If any exact integer count has the wrong nominal type or value.
-    """
-    if type(result.dimension) is not int or result.dimension != definition.dimension:
-        raise ValueError("backend result dimension is inconsistent")
-    if (
-        type(result.point_count) is not int
-        or result.point_count != definition.point_count
-    ):
-        raise ValueError("backend result point_count is inconsistent")
-    if type(result.term_count) is not int or result.term_count != definition.term_count:
-        raise ValueError("backend result term_count is inconsistent")
-    if (
-        type(result.channel_count) is not int
-        or result.channel_count != definition.channel_count
-    ):
-        raise ValueError("backend result channel_count is inconsistent")
-
-
-def _validate_result_values(
-    definition: BatchedFiniteFourierSeriesEvaluationDefinition,
-    result: BatchedFiniteFourierSeriesEvaluationResult,
-    /,
-) -> None:
-    """Validate a possibly forged backend value surface completely.
-
-    Parameters
-    ----------
-    definition
-        Validated nontrivial shared-grid definition.
-    result
-        Structurally correlated exact nominal backend result.
-
-    Returns
-    -------
-    None
-        Values have exact point-major shape, exact complex type, and finite components.
-
-    Raises
-    ------
-    TypeError
-        If an entry is not an exact built-in complex value.
-    ValueError
-        If the point-major tuple structure has an inconsistent shape.
-    FloatingPointError
-        If a real or imaginary component is nonfinite.
-    """
-    if type(result.values) is not tuple or len(result.values) != definition.point_count:
-        raise ValueError("backend result values point shape is inconsistent")
-    for point in result.values:
-        if type(point) is not tuple or len(point) != definition.channel_count:
-            raise ValueError("backend result values channel shape is inconsistent")
-        for value in point:
-            if type(value) is not complex:
-                raise TypeError("backend result values must be built-in complex values")
-            if not math.isfinite(value.real) or not math.isfinite(value.imag):
-                raise FloatingPointError("backend result values must be finite")
-
-
-def _require_backend_evidence(
-    result: BatchedFiniteFourierSeriesEvaluationResult,
-    /,
-) -> None:
-    """Require paired nonempty backend evidence for nontrivial execution.
-
-    Parameters
-    ----------
-    result
-        Validated nontrivial backend result.
-
-    Returns
-    -------
-    None
-        Identifier and version are present and valid.
-
-    Raises
-    ------
-    TypeError
-        If present evidence has the wrong exact type or is empty.
-    ValueError
-        If both evidence fields are absent for nontrivial execution.
-    """
-    backend_identifier, backend_version = _backend_evidence(
-        result.backend_identifier,
-        result.backend_version,
-    )
-    if backend_identifier is None or backend_version is None:
-        raise ValueError("nontrivial backend result must include backend evidence")
 
 
 class BatchedFiniteFourierSeriesEvaluator(ABC):
@@ -389,7 +235,7 @@ class BatchedFiniteFourierSeriesEvaluator(ABC):
     __slots__ = ()
 
     @final
-    def evaluate(
+    def evaluate(  # noqa: C901
         self,
         definition: BatchedFiniteFourierSeriesEvaluationDefinition,
         /,
@@ -424,51 +270,57 @@ class BatchedFiniteFourierSeriesEvaluator(ABC):
             raise TypeError(
                 "definition must be BatchedFiniteFourierSeriesEvaluationDefinition"
             )
-        trivial_values = _trivial_values(definition)
-        if trivial_values is not None:
-            return self._trivial_result(definition, trivial_values)
+        values: BatchedFiniteFourierValues | None = None
+        if definition.point_count == 0:
+            values = ()
+        elif definition.channel_count == 0:
+            values = ((),) * definition.point_count
+        elif definition.term_count == 0:
+            zeros = (0.0 + 0.0j,) * definition.channel_count
+            values = (zeros,) * definition.point_count
+        if values is not None:
+            return BatchedFiniteFourierSeriesEvaluationResult(
+                definition.dimension,
+                definition.point_count,
+                definition.term_count,
+                definition.channel_count,
+                values,
+                None,
+                None,
+            )
 
         result = self._evaluate_validated(definition)
         if type(result) is not BatchedFiniteFourierSeriesEvaluationResult:
             raise TypeError(
                 "backend must return BatchedFiniteFourierSeriesEvaluationResult"
             )
-        # Exact result instances can still be forged around their dataclass constructor.
-        # Revalidate the complete public surface at the nominal backend boundary rather
-        # than trusting nominal type alone.
-        _validate_result_metadata(definition, result)
-        _validate_result_values(definition, result)
-        _require_backend_evidence(result)
-        return result
-
-    @staticmethod
-    def _trivial_result(
-        definition: BatchedFiniteFourierSeriesEvaluationDefinition,
-        values: BatchedFiniteFourierValues,
-    ) -> BatchedFiniteFourierSeriesEvaluationResult:
-        """Construct a backend-free result for a mathematically exact case.
-
-        Parameters
-        ----------
-        definition : BatchedFiniteFourierSeriesEvaluationDefinition
-            Correlated public definition.
-        values : tuple of tuple of complex
-            Exact point-major result values.
-
-        Returns
-        -------
-        BatchedFiniteFourierSeriesEvaluationResult
-            Structurally correlated result with absent backend evidence.
-        """
-        return BatchedFiniteFourierSeriesEvaluationResult(
-            definition.dimension,
-            definition.point_count,
-            definition.term_count,
-            definition.channel_count,
-            values,
-            None,
-            None,
+        if (
+            type(result.dimension) is not int
+            or result.dimension != definition.dimension
+        ):
+            raise ValueError("backend result dimension is inconsistent")
+        if (
+            type(result.point_count) is not int
+            or result.point_count != definition.point_count
+        ):
+            raise ValueError("backend result point_count is inconsistent")
+        if (
+            type(result.term_count) is not int
+            or result.term_count != definition.term_count
+        ):
+            raise ValueError("backend result term_count is inconsistent")
+        if (
+            type(result.channel_count) is not int
+            or result.channel_count != definition.channel_count
+        ):
+            raise ValueError("backend result channel_count is inconsistent")
+        backend_identifier, backend_version = _backend_evidence(
+            result.backend_identifier,
+            result.backend_version,
         )
+        if backend_identifier is None or backend_version is None:
+            raise ValueError("nontrivial backend result must include backend evidence")
+        return result
 
     @abstractmethod
     def _evaluate_validated(

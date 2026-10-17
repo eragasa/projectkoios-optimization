@@ -34,6 +34,10 @@ implementations.
 
 ## Linear least-squares contract
 
+`LinearLeastSquaresTolerance` has one strict canonical constructor. It accepts exact
+finite nonnegative built-in floats and validates without postconstruction field
+replacement.
+
 The final public template signature is:
 
 ```python
@@ -71,6 +75,10 @@ greater than the cutoff times the largest singular value contribute to rank.
 - numerical rank of the weighted design;
 - nonincreasing singular values of the weighted design; and
 - its spectral condition number only when numerical rank equals `n`.
+
+The result has one strict canonical constructor. It requires exact immutable built-in
+storage and validates without coercion or postconstruction field replacement. Input
+normalization remains owned by the solver boundary before backend execution.
 
 `LinearLeastSquaresTolerance` defaults to absolute `1.0e-12` and relative `1.0e-10`.
 It governs final backend-result consistency only; it does not change the caller's rank

@@ -4,6 +4,8 @@ The implementation separates dependency-free records and template behavior from 
 capability-local NumPy backend.
 
 - Core contracts import no array backend.
+- Frozen records validate canonical immutable fields without replacing them after
+  construction.
 - NumPy is imported only from the concrete backend module.
 - Package initializers remain import-empty.
 - No method enum or one-option factory is introduced.
@@ -12,7 +14,8 @@ capability-local NumPy backend.
 
 The two source modules mirror the contract/backend ownership split.
 
-- `finite_periodic/batched_finite_series.py` owns records, validation, empty cases, and the nominal evaluator. Named template operations separately own exact trivial-value construction, structural metadata correlation, complete value-surface validation, and required backend evidence.
+- `finite_periodic/batched_finite_series.py` owns canonical records, exact empty cases,
+  definition/result correlation, required backend evidence, and the nominal evaluator.
 - `finite_periodic/numpy/batched_finite_series.py` owns binary64/complex128 dense evaluation.
 - `finite_periodic/finite_series.py` remains the unchanged scalar ordered capability.
 - `finite_periodic/numpy/finite_series.py` remains the unchanged scalar NumPy backend.
@@ -44,8 +47,9 @@ reduction.
 Tests mirror source ownership and distinguish contract, integration, and bounded
 numerical claims.
 
-- Core unit tests cover shapes, scalar types, mode bounds, empty cases, and evidence, including direct checks of each named template operation.
-- Contract tests reject forged backend records and preserve undeclared exceptions.
+- Core unit tests cover canonical shapes, scalar types, mode bounds, empty cases, and
+  evidence through public records.
+- Contract tests exercise public template behavior and preserve undeclared exceptions.
 - NumPy integration tests verify one phase construction and one dense multiplication.
 - Numerical tests compare representative columns with the scalar backend under an explicit scale-aware bound.
 - The isolated-wheel test verifies dependency-free import before NumPy backend import.

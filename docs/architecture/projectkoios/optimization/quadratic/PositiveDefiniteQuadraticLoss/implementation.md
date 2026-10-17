@@ -21,9 +21,11 @@ that cannot become finite binary64 fail by value.
 ## Dense implementation
 
 `quadratic/numpy/quadratic.py` defines
-`NumpyPositiveDefiniteQuadraticLoss`. It normalizes tuple state, requires exact symmetry,
-and calls `numpy.linalg.cholesky` for dense positive-definiteness acceptance. Private
-NumPy arrays are marked read-only. Public retained state remains immutable tuples.
+`NumpyPositiveDefiniteQuadraticLoss`. The public facade owns dense input normalization;
+the backend accepts and retains exact canonical tuple storage, requires exact symmetry,
+and calls `numpy.linalg.cholesky` for dense positive-definiteness acceptance. Evaluation
+materializes transient NumPy arrays without installing private caches or replacing frozen
+fields.
 
 ## Sparse implementation
 

@@ -2,7 +2,9 @@
 
 `projectkoios.optimization.multiobjective.pareto.shells.ParetoShell` is an immutable
 zero-based nondominated shell record. It retains original observation indices and the
-corresponding ordered decision and objective vectors.
+corresponding ordered decision and objective vectors. Its sole constructor requires
+canonical exact finite built-in floats and validates without postconstruction field
+replacement.
 
 `pareto_shells(...)` recursively removes each selected objective shell before selecting
 the next. Its exact index pullback avoids fitting an inverse objective-to-decision model.

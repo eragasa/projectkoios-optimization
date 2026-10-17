@@ -15,17 +15,14 @@ pytestmark = pytest.mark.unit
 
 
 def test_result_retains_finite_structural_metadata_and_values() -> None:
-    result = FiniteFourierSeriesEvaluationResult(
-        2,
-        2,
-        3,
-        (1.0 + 2.0j, -3.0 + 0.5j),
-    )
+    values = (1.0 + 2.0j, -3.0 + 0.5j)
+
+    result = FiniteFourierSeriesEvaluationResult(2, 2, 3, values)
 
     assert result.dimension == 2
     assert result.point_count == 2
     assert result.term_count == 3
-    assert result.values == (1.0 + 2.0j, -3.0 + 0.5j)
+    assert result.values is values
     with pytest.raises(FrozenInstanceError):
         result.point_count = 1  # type: ignore[misc]
 

@@ -15,8 +15,10 @@ numerical object. The zero displacement and zero covector are valid.
 
 ## Binary64 behavior
 
-Public inputs are exact tuples of finite non-Boolean real values with the metric's exact
-dimension. Squared operations use square-root rescaling when direct squaring would
+The sole metric constructor accepts an exact tuple of exact finite positive built-in
+floats and validates without field replacement. Evaluation inputs are exact tuples of
+finite non-Boolean real values with the metric's exact dimension. Squared operations use
+square-root rescaling when direct squaring would
 prematurely overflow or underflow. Norm operations use `math.hypot` on scaled
 components to avoid premature squaring. Nonfinite differences, components, sums, and
 results fail closed.

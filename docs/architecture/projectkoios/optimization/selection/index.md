@@ -62,6 +62,11 @@ def absolute_ambiguity_set(
 - `FiniteMinimum.index` is an exact nonnegative built-in integer and its value is finite.
 - `FiniteAmbiguitySet.indices` is nonempty, strictly increasing, contains the minimum
   index, and preserves declaration order.
+- Both result records use canonical frozen construction. Dataclass constructors require
+  exact stored types and validate without field replacement. No alternate normalization
+  constructors are exposed.
+- Result validation names fields explicitly and uses neither reflective attribute access
+  nor `object.__setattr__`.
 
 Consumers own candidate labels, threshold meaning, model-class meaning, and scientific
 dispositions.

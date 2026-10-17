@@ -18,10 +18,10 @@ one nonempty batched eigensolver operation.
 
 ```mermaid
 flowchart TD
-    D[Definition] --> E{Batch empty?}
+    D[Definition] --> V[Validate canonical matrices and retain shape]
+    V --> E{Batch empty?}
     E -->|yes| Z[Empty spectra and diagnostics absent]
-    E -->|no| V[Infer dimension and normalize matrices]
-    V --> M[Measure scale and Hermiticity defect per matrix]
+    E -->|no| M[Measure scale and Hermiticity defect per matrix]
     M --> C{Any defect above its cutoff?}
     C -->|yes| F[Reject complete batch before backend]
     C -->|no| H[Construct represented-Hermitian matrices]

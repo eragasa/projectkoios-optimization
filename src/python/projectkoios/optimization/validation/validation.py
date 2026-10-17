@@ -17,7 +17,7 @@ _CANDIDATE_INFIX = ".candidate."
 _MIN_SEQUENCE_DIGITS = 8
 
 
-def text(value: object, name: str, *, maximum: int = MAX_IDENTIFIER_LENGTH) -> str:
+def text(value: str, name: str, *, maximum: int = MAX_IDENTIFIER_LENGTH) -> str:
     """Validate nonempty trimmed built-in text within an explicit maximum length.
 
     Parameters
@@ -51,7 +51,7 @@ def text(value: object, name: str, *, maximum: int = MAX_IDENTIFIER_LENGTH) -> s
     return value
 
 
-def measurement_name(value: object, name: str = "measurement name") -> str:
+def measurement_name(value: str, name: str = "measurement name") -> str:
     """Validate a measurement or weighted-loss term name.
 
     Parameters
@@ -108,7 +108,7 @@ def candidate_identifier(run_id: str, sequence: int) -> str:
     return text(identifier, "candidate_id")
 
 
-def run_identifier(value: object, maximum_sequence: int) -> str:
+def run_identifier(value: str, maximum_sequence: int) -> str:
     """Validate a run identifier while reserving its largest candidate suffix.
 
     Parameters

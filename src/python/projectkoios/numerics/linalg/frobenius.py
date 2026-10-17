@@ -85,16 +85,12 @@ class ComplexMatrixFrobenius:
             If dimensions are nonpositive, values are nonfinite or negative, or
             ``norm`` does not equal the binary64 square root of ``power``.
         """
-        row_count = exact_positive_integer(self.row_count, "row_count")
-        column_count = exact_positive_integer(self.column_count, "column_count")
-        power = exact_nonnegative_float(self.power, "power")
-        norm = exact_nonnegative_float(self.norm, "norm")
-        if norm != math.sqrt(power):
+        exact_positive_integer(self.row_count, "row_count")
+        exact_positive_integer(self.column_count, "column_count")
+        exact_nonnegative_float(self.power, "power")
+        exact_nonnegative_float(self.norm, "norm")
+        if self.norm != math.sqrt(self.power):
             raise ValueError("norm must equal sqrt(power)")
-        object.__setattr__(self, "row_count", row_count)
-        object.__setattr__(self, "column_count", column_count)
-        object.__setattr__(self, "power", power)
-        object.__setattr__(self, "norm", norm)
 
 
 def complex_matrix_frobenius(

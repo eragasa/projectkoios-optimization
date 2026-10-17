@@ -25,6 +25,10 @@ def test_nonzero_tolerance_retains_complete_ordered_set() -> None:
 
 def test_ambiguity_record_requires_ordered_indices_containing_minimum() -> None:
     minimum = FiniteMinimum(1, 0.0)
+    canonical = FiniteAmbiguitySet(minimum, 0.0, (1,))
+    assert type(canonical.tolerance) is float
+    with pytest.raises(TypeError, match="exact built-in float"):
+        FiniteAmbiguitySet(minimum, 0, (1,))
 
     with pytest.raises(ValueError, match="strictly increasing"):
         FiniteAmbiguitySet(minimum, 0.0, (1, 0))

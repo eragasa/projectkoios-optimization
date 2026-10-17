@@ -62,7 +62,7 @@ def test_seeded_scipy_batches_agree_with_high_precision_complete_spectra() -> No
             matrices.append(_matrix(hermitian))
         result = solver.solve(
             BatchedHermitianSpectrumDefinition(
-                matrices,
+                tuple(matrices),
                 BatchedHermitianSpectrumTolerance(1.0e-14, 1.0e-14),
             )
         )

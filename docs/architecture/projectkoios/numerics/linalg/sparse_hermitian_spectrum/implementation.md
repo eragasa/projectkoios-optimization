@@ -24,7 +24,8 @@ Two source files implement the nominal capability and its first concrete backend
 Mirrored tests distinguish dependency-free record behavior from SciPy integration and
 bounded numerical verification.
 
-- Core unit tests cover canonical CSR invariants and explicit iterative controls.
+- Core unit tests cover canonical CSR invariants, explicit iterative controls, and
+  strict canonical partial-spectrum result construction.
 - Core contract tests cover sparse Hermiticity cutoff equality, whole-problem rejection,
   explicit representative construction, and residual correlation.
 - SciPy integration tests cover adapter canonicalization, four selection rules, complex
@@ -33,6 +34,12 @@ bounded numerical verification.
   a fixed seed.
 - Namespace tests verify that importing the SciPy package does not eagerly import NumPy
   or SciPy.
+
+`SparseComplexCsrMatrix`, `SparseHermitianPartialSpectrumDefinition`, and
+`SparseHermitianPartialSpectrumResult` accept only exact canonical built-in storage.
+Their constructors validate each field without coercion or postconstruction replacement.
+The capability-local SciPy adapter owns conversion from backend sparse representations;
+internal representative construction supplies canonical tuples directly.
 
 ## Documentation conventions
 

@@ -63,7 +63,12 @@ empty = BatchedHermitianSpectrumDefinition.empty(
     BatchedHermitianSpectrumTolerance(0.0, 0.0),
 )
 assert empty.dimension == 2 and empty.batch_size == 0
-sparse = SparseComplexCsrMatrix(2, (0, 1, 2), (0, 1), (1.0, 2.0))
+sparse = SparseComplexCsrMatrix(
+    2,
+    (0, 1, 2),
+    (0, 1),
+    (1.0 + 0.0j, 2.0 + 0.0j),
+)
 assert sparse.nonzero_count == 2
 assert 'numpy' not in sys.modules
 """
@@ -98,7 +103,7 @@ tolerance = BatchedHermitianSpectrumTolerance(0.0, 0.0)
 empty = solver.solve(BatchedHermitianSpectrumDefinition.empty(2, tolerance))
 assert empty.eigenvalues == () and empty.diagnostics is None
 definition = BatchedHermitianSpectrumDefinition(
-    [[[1, 0+1j], [0-1j, 1]]],
+    (((1.0 + 0.0j, 0.0 + 1.0j), (0.0 - 1.0j, 1.0 + 0.0j)),),
     tolerance,
 )
 result = solver.solve(definition)

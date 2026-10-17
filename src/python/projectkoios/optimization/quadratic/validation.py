@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from typing import SupportsFloat
+
 from projectkoios.numerics import validation as numerical_validation
 
 
-def finite_vector(value: object, name: str) -> tuple[float, ...]:
+def finite_vector(
+    value: tuple[SupportsFloat, ...],
+    name: str,
+) -> tuple[float, ...]:
     """Normalize a nonempty tuple of finite real values.
 
     Parameters
@@ -38,7 +43,7 @@ def finite_vector(value: object, name: str) -> tuple[float, ...]:
 
 
 def finite_square_matrix(
-    value: object,
+    value: tuple[tuple[SupportsFloat, ...], ...],
     dimension: int,
 ) -> tuple[tuple[float, ...], ...]:
     """Normalize a square tuple matrix matching a nonzero dimension.

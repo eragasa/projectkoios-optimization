@@ -9,6 +9,7 @@ import numpy as np
 import scipy
 import scipy.sparse
 import scipy.sparse.linalg
+from numpy.typing import ArrayLike
 
 from ..sparse_hermitian_spectrum import (
     SparseComplexCsrMatrix,
@@ -25,7 +26,10 @@ _SELECTION_TO_SCIPY = {
 }
 
 
-def scipy_sparse_hermitian_csr_matrix(matrix: object, /) -> SparseComplexCsrMatrix:
+def scipy_sparse_hermitian_csr_matrix(
+    matrix: ArrayLike | scipy.sparse.sparray | scipy.sparse.spmatrix,
+    /,
+) -> SparseComplexCsrMatrix:
     """Normalizes one SciPy-compatible sparse input to the owner CSR record.
 
     Parameters

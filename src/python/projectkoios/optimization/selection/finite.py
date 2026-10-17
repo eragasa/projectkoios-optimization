@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
-from projectkoios.numerics.validation import finite_float, integer
+from projectkoios.numerics.validation import (
+    exact_finite_float,
+    exact_nonnegative_float,
+    finite_float,
+    integer,
+)
 
 
 @final
@@ -20,7 +25,7 @@ class FiniteMinimum:
         index = integer(self.index, "index")
         if index < 0:
             raise ValueError("index must be nonnegative")
-        object.__setattr__(self, "value", finite_float(self.value, "value"))
+        exact_finite_float(self.value, "value")
 
 
 @final
@@ -35,9 +40,7 @@ class FiniteAmbiguitySet:
     def __post_init__(self) -> None:
         if type(self.minimum) is not FiniteMinimum:
             raise TypeError("minimum must be FiniteMinimum")
-        tolerance = finite_float(self.tolerance, "tolerance")
-        if tolerance < 0.0:
-            raise ValueError("tolerance must be nonnegative")
+        exact_nonnegative_float(self.tolerance, "tolerance")
         if type(self.indices) is not tuple or not self.indices:
             raise TypeError("indices must be a nonempty tuple")
         indices = tuple(integer(value, "indices value") for value in self.indices)
@@ -49,8 +52,6 @@ class FiniteAmbiguitySet:
             raise ValueError("indices must be strictly increasing")
         if self.minimum.index not in indices:
             raise ValueError("indices must contain the minimum index")
-        object.__setattr__(self, "tolerance", tolerance)
-        object.__setattr__(self, "indices", indices)
 
 
 def first_minimum(values: tuple[float, ...], /) -> FiniteMinimum:
@@ -91,7 +92,7 @@ def absolute_ambiguity_set(
     return FiniteAmbiguitySet(minimum, normalized_tolerance, indices)
 
 
-def _finite_values(values: object) -> tuple[float, ...]:
+def _finite_values(values: tuple[float, ...]) -> tuple[float, ...]:
     if type(values) is not tuple:
         raise TypeError("values must be a tuple")
     if not values:

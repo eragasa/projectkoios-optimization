@@ -6,6 +6,9 @@ import math
 import sys
 from dataclasses import dataclass
 from numbers import Real
+from typing import SupportsFloat
+
+from projectkoios.numerics.validation import exact_finite_float
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,7 +27,7 @@ class WeightedAffineResidualTerm:
 
     Notes
     -----
-    Numeric inputs are normalized to built-in binary64 floats. Booleans, numeric
+    Numeric inputs must be canonical built-in binary64 floats. Booleans, numeric
     strings, non-real values, and nonfinite or unrepresentable values are rejected.
     The object is frozen and slotted; it assigns no units or scientific meaning.
     """
@@ -34,7 +37,7 @@ class WeightedAffineResidualTerm:
     weight: float
 
     def __post_init__(self) -> None:
-        """Normalize and validate the immutable residual term.
+        """Validate the canonical immutable residual term.
 
         Raises
         ------
@@ -49,12 +52,12 @@ class WeightedAffineResidualTerm:
             raise TypeError("coefficients must be a tuple")
         if not self.coefficients:
             raise ValueError("coefficients must be nonempty")
-        coefficients = tuple(_coefficient(value) for value in self.coefficients)
-        target = _target(self.target)
-        weight = _positive_weight(self.weight)
-        object.__setattr__(self, "coefficients", coefficients)
-        object.__setattr__(self, "target", target)
-        object.__setattr__(self, "weight", weight)
+        for index, value in enumerate(self.coefficients):
+            exact_finite_float(value, f"coefficients[{index}]")
+        exact_finite_float(self.target, "target")
+        exact_finite_float(self.weight, "weight")
+        if self.weight <= 0.0:
+            raise ValueError("weight must be strictly positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,50 +162,7 @@ class WeightedAffineResidualDefinition:
         return _finite_sum(contributions)
 
 
-def _coefficient(value: object) -> float:
-    """Return one finite built-in binary64 affine coefficient."""
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError("coefficient must be a real number excluding bool")
-    try:
-        result = float(value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(
-            "coefficient must be representable as a finite float"
-        ) from error
-    if not math.isfinite(result):
-        raise ValueError("coefficient must be representable as a finite float")
-    return result
-
-
-def _target(value: object) -> float:
-    """Return one finite built-in binary64 affine target."""
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError("target must be a real number excluding bool")
-    try:
-        result = float(value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError("target must be representable as a finite float") from error
-    if not math.isfinite(result):
-        raise ValueError("target must be representable as a finite float")
-    return result
-
-
-def _positive_weight(value: object) -> float:
-    """Return one finite strictly positive binary64 residual weight."""
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError("weight must be a real number excluding bool")
-    try:
-        result = float(value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError("weight must be representable as a finite float") from error
-    if not math.isfinite(result):
-        raise ValueError("weight must be representable as a finite float")
-    if result <= 0.0:
-        raise ValueError("weight must be positive")
-    return result
-
-
-def _coordinate(value: object) -> float:
+def _coordinate(value: SupportsFloat) -> float:
     """Return one finite built-in binary64 affine coordinate."""
     if isinstance(value, bool) or not isinstance(value, Real):
         raise TypeError("coordinate must be a real number excluding bool")

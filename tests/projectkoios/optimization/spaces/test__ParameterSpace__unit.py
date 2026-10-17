@@ -5,6 +5,17 @@ from projectkoios.optimization.spaces.parameters import ParameterBound, Paramete
 pytestmark = pytest.mark.unit
 
 
+def test_parameter_bound_requires_canonical_frozen_construction() -> None:
+    bound = ParameterBound("x", -1.0, 2.0)
+
+    assert bound.lower == -1.0
+    assert bound.upper == 2.0
+    assert type(bound.lower) is float
+    assert type(bound.upper) is float
+    with pytest.raises(TypeError, match="exact built-in float"):
+        ParameterBound("x", -1, 2.0)
+
+
 def test_parameter_space_supports_empty_fixed_and_bounded_coordinates() -> None:
     empty = ParameterSpace(())
     space = ParameterSpace(

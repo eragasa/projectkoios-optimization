@@ -32,7 +32,11 @@ class ScipyProbabilityDistributionFunction(ProbabilityDistributionFunction):
     source: ScipyProbabilityDistributionSource
 
     def __post_init__(self) -> None:
-        if not callable(getattr(self.source, "cdf", None)):
+        try:
+            cumulative = self.source.cdf
+        except AttributeError as error:
+            raise TypeError("source must provide a callable cdf") from error
+        if not callable(cumulative):
             raise TypeError("source must provide a callable cdf")
 
     def _evaluate(self, value: float, /) -> float:
@@ -50,7 +54,11 @@ class ScipyInverseProbabilityDistributionFunction(
     source: ScipyProbabilityDistributionSource
 
     def __post_init__(self) -> None:
-        if not callable(getattr(self.source, "ppf", None)):
+        try:
+            quantile = self.source.ppf
+        except AttributeError as error:
+            raise TypeError("source must provide a callable ppf") from error
+        if not callable(quantile):
             raise TypeError("source must provide a callable ppf")
 
     def _evaluate(self, probability: float, /) -> float:

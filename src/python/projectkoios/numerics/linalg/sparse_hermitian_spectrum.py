@@ -11,11 +11,11 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
-from numbers import Complex, Integral, Real
-from typing import cast, final
+from typing import final
+
+from projectkoios.numerics import validation as numerical_validation
 
 from .hermitian_spectrum import (
     BatchedHermitianSpectrumTolerance,
@@ -23,99 +23,8 @@ from .hermitian_spectrum import (
 )
 
 
-def _items(value: object, name: str, /) -> tuple[object, ...]:
-    """Materializes a non-string iterable exactly once.
-
-    Parameters
-    ----------
-    value
-        Candidate iterable.
-    name
-        Field name used in failure messages.
-
-    Returns
-    -------
-    tuple[object, ...]
-        Materialized values in iteration order.
-    """
-    if isinstance(value, (str, bytes, bytearray)):
-        raise TypeError(f"{name} must be a non-string iterable")
-    try:
-        return tuple(cast(Iterable[object], value))
-    except TypeError as error:
-        raise TypeError(f"{name} must be iterable") from error
-
-
-def _integer(value: object, name: str, /, *, positive: bool = False) -> int:
-    """Normalizes one integral scalar.
-
-    Parameters
-    ----------
-    value
-        Candidate scalar.
-    name
-        Field name used in failure messages.
-    positive
-        Whether zero and negative values are invalid.
-
-    Returns
-    -------
-    int
-        Built-in integral value.
-    """
-    if isinstance(value, bool) or not isinstance(value, Integral):
-        raise TypeError(f"{name} must be an integral scalar")
-    normalized = int(value)
-    if positive and normalized <= 0:
-        raise ValueError(f"{name} must be positive")
-    return normalized
-
-
-def _optional_positive_integer(value: object, name: str, /) -> int | None:
-    """Normalizes an optional positive integral scalar.
-
-    Parameters
-    ----------
-    value
-        Candidate scalar or ``None``.
-    name
-        Field name used in failure messages.
-
-    Returns
-    -------
-    int | None
-        Normalized value.
-    """
-    if value is None:
-        return None
-    return _integer(value, name, positive=True)
-
-
-def _nonnegative_real(value: object, name: str, /) -> float:
-    """Normalizes one finite nonnegative real scalar.
-
-    Parameters
-    ----------
-    value
-        Candidate scalar.
-    name
-        Field name used in failure messages.
-
-    Returns
-    -------
-    float
-        Finite built-in value.
-    """
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError(f"{name} must be a real scalar")
-    normalized = float(value)
-    if not math.isfinite(normalized) or normalized < 0.0:
-        raise ValueError(f"{name} must be finite and nonnegative")
-    return normalized
-
-
 @final
-@dataclass(frozen=True, slots=True, init=False)
+@dataclass(frozen=True, slots=True)
 class SparseComplexCsrMatrix:
     """Stores one finite canonical complex matrix in CSR form.
 
@@ -130,66 +39,47 @@ class SparseComplexCsrMatrix:
     indices: tuple[int, ...]
     data: tuple[complex, ...]
 
-    def __init__(
-        self,
-        dimension: object,
-        indptr: object,
-        indices: object,
-        data: object,
-    ) -> None:
-        """Normalizes and validates one CSR matrix.
-
-        Parameters
-        ----------
-        dimension
-            Positive square matrix dimension.
-        indptr
-            Row pointer sequence of length ``dimension + 1``.
-        indices
-            Column index sequence.
-        data
-            Finite nonzero numeric values corresponding to ``indices``.
-
-        Raises
-        ------
-        TypeError
-            If containers, indices, or values use unsupported representations.
-        ValueError
-            If dimension, CSR structure, canonical ordering, or finiteness fails.
-        """
-        normalized_dimension = _integer(dimension, "dimension", positive=True)
-        raw_indptr = _items(indptr, "indptr")
-        raw_indices = _items(indices, "indices")
-        raw_data = _items(data, "data")
-        pointers = tuple(_integer(value, "indptr entry") for value in raw_indptr)
-        columns = tuple(_integer(value, "indices entry") for value in raw_indices)
-        values: list[complex] = []
-        for value in raw_data:
-            if isinstance(value, bool) or not isinstance(value, Complex):
-                raise TypeError("data entries must be real or complex numeric scalars")
-            number = complex(value)
-            if not math.isfinite(number.real) or not math.isfinite(number.imag):
+    def __post_init__(self) -> None:  # noqa: C901
+        """Validate exact canonical CSR storage without replacing fields."""
+        dimension = numerical_validation.exact_positive_integer(
+            self.dimension,
+            "dimension",
+        )
+        if type(self.indptr) is not tuple:
+            raise TypeError("indptr must be an exact tuple")
+        if type(self.indices) is not tuple:
+            raise TypeError("indices must be an exact tuple")
+        if type(self.data) is not tuple:
+            raise TypeError("data must be an exact tuple")
+        for pointer in self.indptr:
+            if type(pointer) is not int:
+                raise TypeError("indptr entries must be exact built-in integers")
+        for column in self.indices:
+            if type(column) is not int:
+                raise TypeError("indices entries must be exact built-in integers")
+        for data_value in self.data:
+            if type(data_value) is not complex:
+                raise TypeError("data entries must be exact built-in complex values")
+            if not math.isfinite(data_value.real) or not math.isfinite(data_value.imag):
                 raise ValueError("data entries must be finite")
-            if number == 0.0:
+            if data_value == 0.0:
                 raise ValueError("canonical CSR data must omit explicit zeros")
-            values.append(number)
         # Canonical CSR invariants make coordinate lookup deterministic and prevent
         # backend-dependent duplicate summation or index reordering.
-        if len(pointers) != normalized_dimension + 1:
+        if len(self.indptr) != dimension + 1:
             raise ValueError("indptr length must equal dimension + 1")
-        if not pointers or pointers[0] != 0:
+        if not self.indptr or self.indptr[0] != 0:
             raise ValueError("indptr must start at zero")
         if any(
-            left > right for left, right in zip(pointers, pointers[1:], strict=False)
+            left > right
+            for left, right in zip(self.indptr, self.indptr[1:], strict=False)
         ):
             raise ValueError("indptr must be nondecreasing")
-        if len(columns) != len(values) or pointers[-1] != len(values):
+        if len(self.indices) != len(self.data) or self.indptr[-1] != len(self.data):
             raise ValueError("indices, data, and indptr terminal count must agree")
-        for row in range(normalized_dimension):
-            row_columns = columns[pointers[row] : pointers[row + 1]]
-            if any(
-                column < 0 or column >= normalized_dimension for column in row_columns
-            ):
+        for row in range(dimension):
+            row_columns = self.indices[self.indptr[row] : self.indptr[row + 1]]
+            if any(column < 0 or column >= dimension for column in row_columns):
                 raise ValueError("column index is outside matrix dimension")
             if any(
                 left >= right
@@ -198,10 +88,6 @@ class SparseComplexCsrMatrix:
                 raise ValueError(
                     "column indices must increase strictly within each row"
                 )
-        object.__setattr__(self, "dimension", normalized_dimension)
-        object.__setattr__(self, "indptr", pointers)
-        object.__setattr__(self, "indices", columns)
-        object.__setattr__(self, "data", tuple(values))
 
     @property
     def nonzero_count(self) -> int:
@@ -268,7 +154,12 @@ def _csr_from_entries(
             columns.append(column)
             values.append(value)
         pointers.append(len(values))
-    return SparseComplexCsrMatrix(dimension, pointers, columns, values)
+    return SparseComplexCsrMatrix(
+        dimension,
+        tuple(pointers),
+        tuple(columns),
+        tuple(values),
+    )
 
 
 def _representative_and_diagnostics(
@@ -418,7 +309,10 @@ class SparseHermitianPartialSpectrumDefinition:
         """
         if type(self.matrix) is not SparseComplexCsrMatrix:
             raise TypeError("matrix must be SparseComplexCsrMatrix")
-        count = _integer(self.eigenvalue_count, "eigenvalue_count", positive=True)
+        count = numerical_validation.exact_positive_integer(
+            self.eigenvalue_count,
+            "eigenvalue_count",
+        )
         if count >= self.matrix.dimension:
             raise ValueError("eigenvalue_count must be smaller than matrix dimension")
         if type(self.selection) is not SparseHermitianSpectrumSelection:
@@ -427,33 +321,34 @@ class SparseHermitianPartialSpectrumDefinition:
             raise TypeError(
                 "hermiticity_tolerance must be BatchedHermitianSpectrumTolerance"
             )
-        tolerance = _nonnegative_real(
+        numerical_validation.exact_nonnegative_float(
             self.eigensolver_tolerance,
             "eigensolver_tolerance",
         )
-        iterations = _optional_positive_integer(
-            self.maximum_iterations,
-            "maximum_iterations",
-        )
-        krylov = _optional_positive_integer(
-            self.krylov_subspace_dimension,
-            "krylov_subspace_dimension",
-        )
+        if self.maximum_iterations is not None:
+            numerical_validation.exact_positive_integer(
+                self.maximum_iterations,
+                "maximum_iterations",
+            )
+        if self.krylov_subspace_dimension is not None:
+            numerical_validation.exact_positive_integer(
+                self.krylov_subspace_dimension,
+                "krylov_subspace_dimension",
+            )
         # ARPACK requires a Krylov space larger than the requested invariant subspace,
         # while a value above the matrix dimension has no mathematical meaning.
-        if krylov is not None and (krylov <= count or krylov > self.matrix.dimension):
+        if self.krylov_subspace_dimension is not None and (
+            self.krylov_subspace_dimension <= count
+            or self.krylov_subspace_dimension > self.matrix.dimension
+        ):
             raise ValueError(
                 "krylov_subspace_dimension must exceed eigenvalue_count and not exceed "
                 "matrix dimension"
             )
-        seed = _integer(self.random_seed, "random_seed")
-        if seed < 0:
+        if type(self.random_seed) is not int:
+            raise TypeError("random_seed must be an exact built-in integer")
+        if self.random_seed < 0:
             raise ValueError("random_seed must be nonnegative")
-        object.__setattr__(self, "eigenvalue_count", count)
-        object.__setattr__(self, "eigensolver_tolerance", tolerance)
-        object.__setattr__(self, "maximum_iterations", iterations)
-        object.__setattr__(self, "krylov_subspace_dimension", krylov)
-        object.__setattr__(self, "random_seed", seed)
 
 
 @final
@@ -498,29 +393,36 @@ class SparseHermitianPartialSpectrumResult:
         ValueError
             If dimensions, counts, ordering, finiteness, or metadata are inconsistent.
         """
-        dimension = _integer(self.dimension, "dimension", positive=True)
-        count = _integer(self.eigenvalue_count, "eigenvalue_count", positive=True)
+        dimension = numerical_validation.exact_positive_integer(
+            self.dimension,
+            "dimension",
+        )
+        count = numerical_validation.exact_positive_integer(
+            self.eigenvalue_count,
+            "eigenvalue_count",
+        )
         if count >= dimension:
             raise ValueError("eigenvalue_count must be smaller than dimension")
         if type(self.selection) is not SparseHermitianSpectrumSelection:
             raise TypeError("selection must be SparseHermitianSpectrumSelection")
-        raw_values = _items(self.eigenvalues, "eigenvalues")
-        normalized_values: list[float] = []
-        for value in raw_values:
-            if isinstance(value, bool) or not isinstance(value, Real):
-                raise TypeError("eigenvalues must contain real scalars")
-            number = float(value)
-            if not math.isfinite(number):
-                raise ValueError("eigenvalues must be finite")
-            normalized_values.append(number)
-        values = tuple(normalized_values)
-        if len(values) != count:
+        if type(self.eigenvalues) is not tuple:
+            raise TypeError("eigenvalues must be an exact tuple")
+        for value in self.eigenvalues:
+            numerical_validation.exact_finite_float(value, "eigenvalue")
+        if len(self.eigenvalues) != count:
             raise ValueError("eigenvalues length must equal eigenvalue_count")
         # Algebraic ordering gives every selection rule one stable public convention,
         # including selections originally made by magnitude.
-        if any(left > right for left, right in zip(values, values[1:], strict=False)):
+        if any(
+            left > right
+            for left, right in zip(
+                self.eigenvalues,
+                self.eigenvalues[1:],
+                strict=False,
+            )
+        ):
             raise ValueError("eigenvalues must be in ascending algebraic order")
-        residual = _nonnegative_real(
+        numerical_validation.exact_nonnegative_float(
             self.residual_maximum_absolute_norm,
             "residual_maximum_absolute_norm",
         )
@@ -528,14 +430,10 @@ class SparseHermitianPartialSpectrumResult:
             raise TypeError(
                 "matrix_diagnostics must be HermitianSpectrumMatrixDiagnostics"
             )
-        if not isinstance(self.backend_identifier, str) or not self.backend_identifier:
-            raise ValueError("backend_identifier must be a nonempty string")
-        if not isinstance(self.backend_version, str) or not self.backend_version:
-            raise ValueError("backend_version must be a nonempty string")
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "eigenvalue_count", count)
-        object.__setattr__(self, "eigenvalues", values)
-        object.__setattr__(self, "residual_maximum_absolute_norm", residual)
+        if type(self.backend_identifier) is not str or not self.backend_identifier:
+            raise ValueError("backend_identifier must be a nonempty exact string")
+        if type(self.backend_version) is not str or not self.backend_version:
+            raise ValueError("backend_version must be a nonempty exact string")
 
 
 class SparseHermitianPartialSpectrumSolver(ABC):

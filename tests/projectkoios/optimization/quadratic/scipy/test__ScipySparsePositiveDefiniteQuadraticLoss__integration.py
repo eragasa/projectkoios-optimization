@@ -8,17 +8,12 @@ pytest.importorskip("scipy.sparse.linalg")
 
 from projectkoios.optimization.quadratic.quadratic import (  # noqa: E402
     PositiveDefiniteQuadraticLoss,
-    _QuadraticLossBackend,
 )
 from projectkoios.optimization.quadratic.scipy.quadratic import (  # noqa: E402
     ScipySparsePositiveDefiniteQuadraticLoss,
 )
 
 pytestmark = pytest.mark.integration
-
-
-def test_scipy_quadratic_backend_is_an_explicit_nominal_subclass() -> None:
-    assert issubclass(ScipySparsePositiveDefiniteQuadraticLoss, _QuadraticLossBackend)
 
 
 def test_sparse_flag_selects_scipy_backend() -> None:

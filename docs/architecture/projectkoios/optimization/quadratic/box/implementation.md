@@ -7,13 +7,7 @@ src/python/projectkoios/optimization/quadratic/
 ├── box.py
 │   ├── BoxQuadraticBoundStatus
 │   ├── BoxQuadraticMinimum
-│   ├── _BoxMinimumVectors
-│   ├── _BoxMinimumKktEvidence
-│   ├── _BoxMinimumExecutionEvidence
-│   ├── _validate_box_minimum_vectors
-│   ├── _validate_box_minimum_kkt
-│   ├── _validate_box_minimum_execution
-│   ├── _BoxQuadraticBackendResult
+│   ├── BoxQuadraticBackendResult
 │   └── BoxQuadraticMinimizer
 ├── factory.py
 │   ├── BoxQuadraticMinimizerMethod
@@ -45,8 +39,8 @@ not introduce an alternative objective or tolerance policy.
 built-in unsigned-32-bit `maximum_iterations` at construction and exposes both through
 read-only properties. The default limit is 10,000. Concrete subclasses implement
 read-only `backend_identifier` and `backend_version` properties plus
-`_solve_validated()`. The protected method returns the private immutable
-`_BoxQuadraticBackendResult`, containing only finite candidate coordinates, positive
+`_solve_validated()`. The protected method returns the public immutable backend-extension contract
+`BoxQuadraticBackendResult`, containing only finite candidate coordinates, positive
 iteration count, nonnegative active-set-change count, and nonnegative linear-solve count.
 The final template validates backend metadata as nonempty trimmed built-in strings and
 treats it as trusted API-level declaration, not authenticated identity.
@@ -75,17 +69,18 @@ through the nominal constructor and returns `NumpyBoxQuadraticMinimizer` lazily.
 - `backend_version`.
 
 The record does not retain coordinate names, units, consumer thresholds, or scientific
-dispositions. `BoxQuadraticMinimum.from_values(...)` normalizes accepted finite-real
-inputs before frozen construction. The raw constructor accepts canonical exact tuples and
-built-in floats and validates them without `object.__setattr__` or any other
-postconstruction replacement. Named vector, KKT, and execution-evidence validators keep
-those responsibilities independently reviewable.
+dispositions. Its sole constructor accepts canonical exact tuples and built-in floats and
+validates them without `object.__setattr__` or any other postconstruction replacement.
+Its local structural, KKT, execution-count, and backend-identity invariants remain in the
+constructor rather than being spread across one-call private validators and private
+transfer records. The constructor has a narrow C901 exemption so the complexity metric
+does not force artificial validation abstractions.
 
 ## Final-template validation
 
 `BoxQuadraticMinimizer.solve()` is final. It validates exact nominal input types,
 positive matching dimensions, dense nonsparse loss state with an exact tuple matrix,
-concrete private backend return type, iteration/count relations, coordinate feasibility,
+concrete public backend-handoff type, iteration/count relations, coordinate feasibility,
 and backend metadata. It then independently:
 
 1. evaluates the quadratic;

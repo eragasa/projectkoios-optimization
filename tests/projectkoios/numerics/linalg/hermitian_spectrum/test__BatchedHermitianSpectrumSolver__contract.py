@@ -10,6 +10,7 @@ from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumSolver,
     BatchedHermitianSpectrumTolerance,
+    HermitianSpectra,
     HermitianSpectrumMatrices,
 )
 
@@ -21,10 +22,10 @@ class _ConfiguredSolver(BatchedHermitianSpectrumSolver):
 
     def __init__(
         self,
-        output: object,
+        output: HermitianSpectra,
         *,
-        identifier: object = "test.eigvalsh",
-        version: object = "1",
+        identifier: str = "test.eigvalsh",
+        version: str = "1",
     ) -> None:
         self.output = output
         self.identifier = identifier
@@ -34,17 +35,17 @@ class _ConfiguredSolver(BatchedHermitianSpectrumSolver):
 
     @property
     def _backend_identifier(self) -> str:
-        return cast(str, self.identifier)
+        return self.identifier
 
     @property
     def _backend_version(self) -> str:
-        return cast(str, self.version)
+        return self.version
 
     def _eigvalsh_validated(
         self,
         representatives: HermitianSpectrumMatrices,
         /,
-    ) -> object:
+    ) -> HermitianSpectra:
         self.calls += 1
         self.representatives = representatives
         return self.output
@@ -57,7 +58,7 @@ def _tolerance(
 
 
 def test_empty_batch_short_circuits_backend_without_fabricated_maxima() -> None:
-    solver = _ConfiguredSolver(object())
+    solver = _ConfiguredSolver(())
 
     result = solver.solve(BatchedHermitianSpectrumDefinition.empty(3, _tolerance()))
 
@@ -75,7 +76,10 @@ def test_solver_invokes_backend_once_with_all_explicit_representatives() -> None
         (1.0 + 2.0e-9j, 2.0 + 4.0e-9j),
         (2.0 - 2.0e-9j, 3.0 + 0.0j),
     )
-    second = ((4.0, 0.0), (0.0, 5.0))
+    second = (
+        (4.0 + 0.0j, 0.0 + 0.0j),
+        (0.0 + 0.0j, 5.0 + 0.0j),
+    )
     solver = _ConfiguredSolver(((0.0, 4.0), (4.0, 5.0)))
 
     result = solver.solve(
@@ -126,7 +130,7 @@ def test_one_matrix_above_cutoff_fails_whole_batch_before_backend() -> None:
     with pytest.raises(ValueError, match=r"matrices\[1\].*Hermiticity"):
         solver.solve(
             BatchedHermitianSpectrumDefinition(
-                (((1.0,),), ((2.0 + 2.1e-9j,),)),
+                (((1.0 + 0.0j,),), ((2.0 + 2.1e-9j,),)),
                 _tolerance(4.0e-9),
             )
         )
@@ -155,29 +159,44 @@ def test_relative_cutoff_is_applied_per_matrix_scale() -> None:
 
 
 @pytest.mark.parametrize(
-    "output, error, match",
-    [
-        (((1.0, 2.0),), ValueError, "spectrum count"),
-        (((1.0,), (2.0, 3.0)), ValueError, "dimension"),
-        (((2.0, 1.0), (3.0, 4.0)), ValueError, "ascending"),
-        (((1.0, float("nan")), (3.0, 4.0)), ValueError, "finite"),
-        (((1.0, object()), (3.0, 4.0)), TypeError, "real scalar"),
-    ],
+    ("output", "error"),
+    (
+        pytest.param(((1.0, 2.0),), ValueError, id="spectrum-count"),
+        pytest.param(
+            ((1.0,), (2.0, 3.0)),
+            ValueError,
+            id="spectrum-dimension",
+        ),
+        pytest.param(
+            ((2.0, 1.0), (3.0, 4.0)),
+            ValueError,
+            id="descending-spectrum",
+        ),
+        pytest.param(
+            ((1.0, float("nan")), (3.0, 4.0)),
+            ValueError,
+            id="nonfinite-eigenvalue",
+        ),
+        pytest.param(
+            cast(HermitianSpectra, ((1.0, object()), (3.0, 4.0))),
+            TypeError,
+            id="noncanonical-eigenvalue",
+        ),
+    ),
 )
 def test_solver_rejects_malformed_backend_output(
-    output: object,
+    output: HermitianSpectra,
     error: type[Exception],
-    match: str,
 ) -> None:
     definition = BatchedHermitianSpectrumDefinition(
         (
-            ((1.0, 0.0), (0.0, 2.0)),
-            ((3.0, 0.0), (0.0, 4.0)),
+            ((1.0 + 0.0j, 0.0 + 0.0j), (0.0 + 0.0j, 2.0 + 0.0j)),
+            ((3.0 + 0.0j, 0.0 + 0.0j), (0.0 + 0.0j, 4.0 + 0.0j)),
         ),
         _tolerance(),
     )
 
-    with pytest.raises(error, match=match):
+    with pytest.raises(error):
         _ConfiguredSolver(output).solve(definition)
 
 

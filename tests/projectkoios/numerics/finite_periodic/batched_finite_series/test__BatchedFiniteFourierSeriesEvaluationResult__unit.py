@@ -14,18 +14,19 @@ pytestmark = pytest.mark.unit
 
 
 def test_result_records_point_major_values_and_backend_evidence() -> None:
+    values = ((1.0 + 0.0j, 2.0 + 1.0j), (3.0 - 1.0j, 4.0 + 0.0j))
+
     result = BatchedFiniteFourierSeriesEvaluationResult(
         2,
         2,
         3,
         2,
-        ((1.0 + 0.0j, 2.0 + 1.0j), (3.0 - 1.0j, 4.0 + 0.0j)),
+        values,
         "numpy.matmul",
         "2.5.4",
     )
 
-    assert result.values[0] == (1.0 + 0.0j, 2.0 + 1.0j)
-    assert result.values[1] == (3.0 - 1.0j, 4.0 + 0.0j)
+    assert result.values is values
     assert result.backend_identifier == "numpy.matmul"
     assert result.backend_version == "2.5.4"
 

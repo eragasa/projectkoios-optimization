@@ -1,7 +1,7 @@
 """Complete spectra of finite dense complex Hermitian matrix batches.
 
-The dependency-free contract accepts Python or array-like nested iterables and
-normalizes them to immutable built-in values. For each finite square matrix ``A``, the
+The dependency-free contract accepts canonical immutable matrices made from exact
+built-in tuple and complex storage. For each finite square matrix ``A``, the
 solver measures represented-input Hermiticity, constructs
 ``H = (A + A.conjugate().T) / 2``, and returns every eigenvalue of ``H`` in ascending
 order with algebraic multiplicity. The capability returns no eigenvectors, projectors,
@@ -12,221 +12,21 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
-from dataclasses import dataclass, fields
-from numbers import Complex, Integral, Real
-from typing import cast, final
+from dataclasses import dataclass, field
+from typing import final
 
 from projectkoios.numerics.typing import FiniteComplexMatrix
+from projectkoios.numerics.validation import (
+    exact_nonnegative_float,
+    exact_positive_integer,
+    exact_relative_float,
+    validate_finite_complex_matrix,
+    validate_finite_float_tuple,
+)
 
 type HermitianSpectrumMatrix = FiniteComplexMatrix
 type HermitianSpectrumMatrices = tuple[HermitianSpectrumMatrix, ...]
 type HermitianSpectra = tuple[tuple[float, ...], ...]
-
-
-def _items(value: object, name: str, /) -> tuple[object, ...]:
-    """Materializes a non-string iterable exactly once.
-
-    Parameters
-    ----------
-    value
-        Candidate iterable.
-    name
-        Field name used in failure messages.
-
-    Returns
-    -------
-    tuple[object, ...]
-        Materialized values in iteration order.
-
-    Raises
-    ------
-    TypeError
-        If the value is string-like or not iterable.
-    """
-    if isinstance(value, (str, bytes, bytearray)):
-        raise TypeError(f"{name} must be a non-string iterable")
-    try:
-        return tuple(cast(Iterable[object], value))
-    except TypeError as error:
-        raise TypeError(f"{name} must be iterable") from error
-
-
-def _real(
-    value: object,
-    name: str,
-    /,
-    *,
-    nonnegative: bool = False,
-    relative: bool = False,
-) -> float:
-    """Normalizes one finite real scalar.
-
-    Parameters
-    ----------
-    value
-        Candidate scalar.
-    name
-        Field name used in failure messages.
-    nonnegative
-        Whether negative values are invalid.
-    relative
-        Whether the normalized value must also be less than one.
-
-    Returns
-    -------
-    float
-        Finite built-in value.
-
-    Raises
-    ------
-    TypeError
-        If the value is Boolean or not real.
-    ValueError
-        If finiteness or requested bounds fail.
-    """
-    # ``bool`` implements Python's integral protocols, but treating truth values as
-    # numerical tolerances would conceal a likely caller error.
-    if isinstance(value, bool) or not isinstance(value, Real):
-        raise TypeError(f"{name} must be a real scalar")
-    normalized = float(value)
-    if not math.isfinite(normalized):
-        raise ValueError(f"{name} must be finite")
-    if nonnegative and normalized < 0.0:
-        raise ValueError(f"{name} must be nonnegative")
-    if relative and normalized >= 1.0:
-        raise ValueError(f"{name} must be less than 1.0")
-    return normalized
-
-
-def _dimension(value: object, /) -> int:
-    """Normalizes a positive integral matrix dimension.
-
-    Parameters
-    ----------
-    value
-        Candidate dimension.
-
-    Returns
-    -------
-    int
-        Positive built-in dimension.
-
-    Raises
-    ------
-    TypeError
-        If the value is Boolean or not integral.
-    ValueError
-        If the value is not positive.
-    """
-    if isinstance(value, bool) or not isinstance(value, Integral):
-        raise TypeError("dimension must be an integral scalar")
-    normalized = int(value)
-    if normalized <= 0:
-        raise ValueError("dimension must be positive")
-    return normalized
-
-
-def _matrix(
-    value: object,
-    name: str,
-    /,
-    *,
-    dimension: int | None = None,
-) -> HermitianSpectrumMatrix:
-    """Normalizes a nonempty finite square numeric matrix.
-
-    Parameters
-    ----------
-    value
-        Candidate nested iterable.
-    name
-        Field name used in failure messages.
-    dimension
-        Required dimension, or ``None`` to infer it.
-
-    Returns
-    -------
-    HermitianSpectrumMatrix
-        Immutable built-in complex matrix.
-
-    Raises
-    ------
-    TypeError
-        If containers or numeric entries are unsupported.
-    ValueError
-        If shape or finiteness invariants fail.
-    """
-    rows = _items(value, name)
-    inferred = len(rows)
-    if inferred == 0:
-        raise ValueError(f"{name} must be nonempty")
-    if dimension is not None and inferred != dimension:
-        raise ValueError(f"{name} dimension is inconsistent")
-    normalized: list[tuple[complex, ...]] = []
-    for row_index, row in enumerate(rows):
-        entries = _items(row, f"{name}[{row_index}]")
-        if len(entries) != inferred:
-            raise ValueError(f"{name} must be square")
-        normalized_row: list[complex] = []
-        for entry in entries:
-            # Normalization provides one immutable complex representation without
-            # importing an optional array library into the contract module.
-            if isinstance(entry, bool) or not isinstance(entry, Complex):
-                raise TypeError(
-                    f"{name} entries must be real or complex numeric scalars"
-                )
-            number = complex(entry)
-            if not math.isfinite(number.real) or not math.isfinite(number.imag):
-                raise ValueError(f"{name} entries must be finite")
-            normalized_row.append(number)
-        normalized.append(tuple(normalized_row))
-    return tuple(normalized)
-
-
-def _batch(
-    value: object,
-    declared_dimension: object | None,
-    /,
-) -> tuple[int, HermitianSpectrumMatrices]:
-    """Normalizes a matrix batch without redundant shape metadata.
-
-    Parameters
-    ----------
-    value
-        Candidate matrix batch.
-    declared_dimension
-        Required for an empty batch and forbidden otherwise.
-
-    Returns
-    -------
-    tuple[int, HermitianSpectrumMatrices]
-        Matrix dimension and immutable normalized batch.
-
-    Raises
-    ------
-    TypeError
-        If containers or entries are unsupported.
-    ValueError
-        If shape invariants fail or dimension use is missing or redundant.
-    """
-    raw = _items(value, "matrices")
-    if not raw:
-        # An empty iterable carries no trailing matrix shape, so this is the only case
-        # in which callers provide dimension metadata.
-        if declared_dimension is None:
-            raise ValueError("empty matrices require an explicit dimension")
-        return _dimension(declared_dimension), ()
-    if declared_dimension is not None:
-        raise ValueError("dimension must be omitted for a nonempty batch")
-    # The first matrix owns the inferred dimension; every later matrix is checked
-    # against that value before any numerical backend can run.
-    first = _matrix(raw[0], "matrices[0]")
-    inferred = len(first)
-    return inferred, (first,) + tuple(
-        _matrix(matrix, f"matrices[{index}]", dimension=inferred)
-        for index, matrix in enumerate(raw[1:], start=1)
-    )
 
 
 def _maximum_difference(
@@ -327,8 +127,8 @@ def _representative(matrix: HermitianSpectrumMatrix, /) -> HermitianSpectrumMatr
     return result
 
 
-def _spectra(value: object, dimension: int, /) -> HermitianSpectra:
-    """Normalizes complete finite ascending spectra.
+def _spectra(value: HermitianSpectra, dimension: int, /) -> HermitianSpectra:
+    """Validate canonical complete finite ascending spectra.
 
     Parameters
     ----------
@@ -349,20 +149,19 @@ def _spectra(value: object, dimension: int, /) -> HermitianSpectra:
     ValueError
         If width, finiteness, or ordering is invalid.
     """
-    normalized: list[tuple[float, ...]] = []
-    for index, spectrum in enumerate(_items(value, "eigenvalues")):
-        entries = _items(spectrum, f"eigenvalues[{index}]")
-        if len(entries) != dimension:
+    if type(value) is not tuple:
+        raise TypeError("eigenvalues must be an exact tuple")
+    for index, spectrum in enumerate(value):
+        validate_finite_float_tuple(spectrum, f"eigenvalues[{index}]")
+        if len(spectrum) != dimension:
             raise ValueError(f"eigenvalues[{index}] length must equal dimension")
-        numbers = tuple(
-            _real(entry, f"eigenvalues[{index}] entries") for entry in entries
-        )
         # Nondecreasing order retains repeated eigenvalues and therefore preserves
         # algebraic multiplicity without introducing a degeneracy policy.
-        if any(left > right for left, right in zip(numbers, numbers[1:], strict=False)):
+        if any(
+            left > right for left, right in zip(spectrum, spectrum[1:], strict=False)
+        ):
             raise ValueError(f"eigenvalues[{index}] must be in ascending order")
-        normalized.append(numbers)
-    return tuple(normalized)
+    return value
 
 
 @final
@@ -388,83 +187,61 @@ class BatchedHermitianSpectrumTolerance:
     hermiticity_relative: float
 
     def __post_init__(self) -> None:
-        """Normalizes the finite nonnegative tolerance components.
-
-        Raises
-        ------
-        TypeError
-            If either component is not real.
-        ValueError
-            If bounds or finiteness fail.
-        """
-        object.__setattr__(
-            self,
-            "hermiticity_absolute",
-            _real(self.hermiticity_absolute, "hermiticity_absolute", nonnegative=True),
-        )
-        object.__setattr__(
-            self,
-            "hermiticity_relative",
-            _real(
-                self.hermiticity_relative,
-                "hermiticity_relative",
-                nonnegative=True,
-                relative=True,
-            ),
-        )
+        """Validate canonical finite tolerance components."""
+        exact_nonnegative_float(self.hermiticity_absolute, "hermiticity_absolute")
+        exact_relative_float(self.hermiticity_relative, "hermiticity_relative")
 
 
 @final
-@dataclass(frozen=True, slots=True, init=False)
+@dataclass(frozen=True, slots=True)
 class BatchedHermitianSpectrumDefinition:
-    """Defines an immutable matrix batch and Hermiticity policy.
+    """Defines a canonical immutable matrix batch and Hermiticity policy.
 
     Notes
     -----
-    A nonempty batch infers its common square dimension. The :meth:`empty` constructor
-    supplies dimension only when no matrix exists from which to infer it.
+    The sole constructor accepts exact canonical matrix storage. The :meth:`empty`
+    constructor supplies dimension when no matrix carries shape.
     """
 
-    dimension: int
     matrices: HermitianSpectrumMatrices
     tolerance: BatchedHermitianSpectrumTolerance
+    _empty_dimension: int | None = field(default=None, repr=False)
 
-    def __init__(
-        self,
-        matrices: object,
-        tolerance: BatchedHermitianSpectrumTolerance,
-        *,
-        dimension: object | None = None,
-    ) -> None:
-        """Normalizes an inferred nonempty or explicitly shaped empty batch.
-
-        Parameters
-        ----------
-        matrices
-            Matrix batch. A nonempty batch infers its common square dimension.
-        tolerance
-            Nominal Hermiticity policy.
-        dimension
-            Positive empty-batch dimension, forbidden for nonempty batches.
-
-        Raises
-        ------
-        TypeError
-            If representation or tolerance types are unsupported.
-        ValueError
-            If shapes fail or dimension use is missing or redundant.
-        """
-        if type(tolerance) is not BatchedHermitianSpectrumTolerance:
+    def __post_init__(self) -> None:
+        """Validate canonical matrix storage and its inferred or empty dimension."""
+        if type(self.matrices) is not tuple:
+            raise TypeError("matrices must be an exact tuple")
+        if type(self.tolerance) is not BatchedHermitianSpectrumTolerance:
             raise TypeError("tolerance must be BatchedHermitianSpectrumTolerance")
-        normalized_dimension, normalized_matrices = _batch(matrices, dimension)
-        object.__setattr__(self, "dimension", normalized_dimension)
-        object.__setattr__(self, "matrices", normalized_matrices)
-        object.__setattr__(self, "tolerance", tolerance)
+        if not self.matrices:
+            if self._empty_dimension is None:
+                raise ValueError("empty matrices require an explicit dimension")
+            exact_positive_integer(self._empty_dimension, "dimension")
+            return
+        if self._empty_dimension is not None:
+            raise ValueError("empty dimension must be absent for a nonempty batch")
+        validate_finite_complex_matrix(self.matrices[0], "matrices[0]")
+        dimension = len(self.matrices[0])
+        for index, matrix in enumerate(self.matrices):
+            validate_finite_complex_matrix(
+                matrix,
+                f"matrices[{index}]",
+                row_count=dimension,
+                column_count=dimension,
+            )
+
+    @property
+    def dimension(self) -> int:
+        """Return the inferred nonempty or explicitly retained empty dimension."""
+        if self.matrices:
+            return len(self.matrices[0])
+        assert self._empty_dimension is not None
+        return self._empty_dimension
 
     @classmethod
     def empty(
         cls,
-        dimension: object,
+        dimension: int,
         tolerance: BatchedHermitianSpectrumTolerance,
         /,
     ) -> BatchedHermitianSpectrumDefinition:
@@ -482,7 +259,7 @@ class BatchedHermitianSpectrumDefinition:
         BatchedHermitianSpectrumDefinition
             Empty immutable definition.
         """
-        return cls((), tolerance, dimension=dimension)
+        return cls((), tolerance, dimension)
 
     @property
     def batch_size(self) -> int:
@@ -519,21 +296,23 @@ class HermitianSpectrumMatrixDiagnostics:
     applied_hermiticity_cutoff: float
 
     def __post_init__(self) -> None:
-        """Normalizes all fields to finite nonnegative floats.
-
-        Raises
-        ------
-        TypeError
-            If a field is not real.
-        ValueError
-            If a field is nonfinite or negative.
-        """
-        for field in fields(self):
-            object.__setattr__(
-                self,
-                field.name,
-                _real(getattr(self, field.name), field.name, nonnegative=True),
-            )
+        """Validate canonical finite nonnegative diagnostic values."""
+        exact_nonnegative_float(
+            self.input_hermiticity_maximum_absolute_defect,
+            "input_hermiticity_maximum_absolute_defect",
+        )
+        exact_nonnegative_float(
+            self.representative_adjustment_maximum_absolute_defect,
+            "representative_adjustment_maximum_absolute_defect",
+        )
+        exact_nonnegative_float(
+            self.input_matrix_maximum_absolute_entry,
+            "input_matrix_maximum_absolute_entry",
+        )
+        exact_nonnegative_float(
+            self.applied_hermiticity_cutoff,
+            "applied_hermiticity_cutoff",
+        )
 
 
 @final
@@ -559,21 +338,23 @@ class BatchedHermitianSpectrumDiagnostics:
     maximum_applied_hermiticity_cutoff: float
 
     def __post_init__(self) -> None:
-        """Normalizes all fields to finite nonnegative floats.
-
-        Raises
-        ------
-        TypeError
-            If a field is not real.
-        ValueError
-            If a field is nonfinite or negative.
-        """
-        for field in fields(self):
-            object.__setattr__(
-                self,
-                field.name,
-                _real(getattr(self, field.name), field.name, nonnegative=True),
-            )
+        """Validate canonical finite nonnegative aggregate values."""
+        exact_nonnegative_float(
+            self.maximum_input_hermiticity_absolute_defect,
+            "maximum_input_hermiticity_absolute_defect",
+        )
+        exact_nonnegative_float(
+            self.maximum_representative_adjustment_absolute_defect,
+            "maximum_representative_adjustment_absolute_defect",
+        )
+        exact_nonnegative_float(
+            self.maximum_input_matrix_absolute_entry,
+            "maximum_input_matrix_absolute_entry",
+        )
+        exact_nonnegative_float(
+            self.maximum_applied_hermiticity_cutoff,
+            "maximum_applied_hermiticity_cutoff",
+        )
 
 
 def _aggregate(
@@ -636,8 +417,8 @@ class BatchedHermitianSpectrumResult:
     backend_identifier: str
     backend_version: str
 
-    def __post_init__(self) -> None:
-        """Normalizes structure and validates reconstructable relations.
+    def __post_init__(self) -> None:  # noqa: C901
+        """Validate canonical structure and reconstructable relations.
 
         Raises
         ------
@@ -648,22 +429,33 @@ class BatchedHermitianSpectrumResult:
         FloatingPointError
             If reconstructed cutoff arithmetic becomes nonfinite.
         """
-        dimension = _dimension(self.dimension)
+        exact_positive_integer(self.dimension, "dimension")
         if type(self.tolerance) is not BatchedHermitianSpectrumTolerance:
             raise TypeError("tolerance must be BatchedHermitianSpectrumTolerance")
-        eigenvalues = _spectra(self.eigenvalues, dimension)
-        raw_records = _items(self.matrix_diagnostics, "matrix_diagnostics")
-        if len(raw_records) != len(eigenvalues):
+        if type(self.eigenvalues) is not tuple:
+            raise TypeError("eigenvalues must be an exact tuple")
+        for index, spectrum in enumerate(self.eigenvalues):
+            validate_finite_float_tuple(spectrum, f"eigenvalues[{index}]")
+            if len(spectrum) != self.dimension:
+                raise ValueError(f"eigenvalues[{index}] length must equal dimension")
+            if any(
+                left > right
+                for left, right in zip(spectrum, spectrum[1:], strict=False)
+            ):
+                raise ValueError(f"eigenvalues[{index}] must be in ascending order")
+
+        if type(self.matrix_diagnostics) is not tuple:
+            raise TypeError("matrix_diagnostics must be an exact tuple")
+        if len(self.matrix_diagnostics) != len(self.eigenvalues):
             raise ValueError("matrix_diagnostics length must equal batch_size")
         if any(
             type(record) is not HermitianSpectrumMatrixDiagnostics
-            for record in raw_records
+            for record in self.matrix_diagnostics
         ):
             raise TypeError(
                 "matrix_diagnostics entries must be HermitianSpectrumMatrixDiagnostics"
             )
-        records = cast(tuple[HermitianSpectrumMatrixDiagnostics, ...], raw_records)
-        for record in records:
+        for record in self.matrix_diagnostics:
             # Reconstructing the cutoff prevents independently created result records
             # from pairing diagnostics with a different tolerance policy.
             cutoff = (
@@ -679,24 +471,20 @@ class BatchedHermitianSpectrumResult:
                 raise ValueError(
                     "matrix diagnostic Hermiticity defect exceeds its cutoff"
                 )
-        if self.diagnostics != _aggregate(records):
+        if self.diagnostics != _aggregate(self.matrix_diagnostics):
             raise ValueError(
                 "diagnostics must be absent for an empty batch and equal aggregate "
                 "maxima otherwise"
             )
-        if not isinstance(self.backend_identifier, str):
-            raise TypeError("backend_identifier must be a string")
+
+        if type(self.backend_identifier) is not str:
+            raise TypeError("backend_identifier must be an exact string")
         if not self.backend_identifier:
             raise ValueError("backend_identifier must be nonempty")
-        if not isinstance(self.backend_version, str):
-            raise TypeError("backend_version must be a string")
+        if type(self.backend_version) is not str:
+            raise TypeError("backend_version must be an exact string")
         if not self.backend_version:
             raise ValueError("backend_version must be nonempty")
-        object.__setattr__(self, "dimension", dimension)
-        object.__setattr__(self, "eigenvalues", eigenvalues)
-        object.__setattr__(self, "matrix_diagnostics", records)
-        object.__setattr__(self, "backend_identifier", str(self.backend_identifier))
-        object.__setattr__(self, "backend_version", str(self.backend_version))
 
     @property
     def batch_size(self) -> int:
@@ -845,7 +633,7 @@ class BatchedHermitianSpectrumSolver(ABC):
         self,
         representatives: HermitianSpectrumMatrices,
         /,
-    ) -> object:
+    ) -> HermitianSpectra:
         """Returns spectra from one nonempty batched backend operation.
 
         Parameters
@@ -855,8 +643,8 @@ class BatchedHermitianSpectrumSolver(ABC):
 
         Returns
         -------
-        object
-            Array-like or iterable batch of complete spectra.
+        HermitianSpectra
+            Immutable batch of complete built-in spectra.
         """
         raise NotImplementedError
 

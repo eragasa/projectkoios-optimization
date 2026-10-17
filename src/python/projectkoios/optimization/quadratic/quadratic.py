@@ -3,6 +3,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, SupportsFloat
+
+from projectkoios.numerics import validation as numerical_validation
+
+from . import validation as quadratic_validation
+
+if TYPE_CHECKING:
+    from projectkoios.numerics.scipy.typing import Float64SparseMatrix
+
+
+type DenseQuadraticInput = tuple[tuple[SupportsFloat, ...], ...]
+type DenseQuadraticMatrix = tuple[tuple[float, ...], ...]
 
 
 class _QuadraticLossBackend(ABC):
@@ -16,7 +28,7 @@ class _QuadraticLossBackend(ABC):
 
     @property
     @abstractmethod
-    def matrix(self) -> object:
+    def matrix(self) -> DenseQuadraticMatrix | Float64SparseMatrix:
         """Return the backend matrix representation."""
         raise NotImplementedError
 
@@ -69,7 +81,7 @@ class PositiveDefiniteQuadraticLoss:
     def __init__(
         self,
         center: tuple[float, ...],
-        matrix: object,
+        matrix: DenseQuadraticInput | Float64SparseMatrix,
         minimum_squared_loss: float,
         *,
         sparse: bool = False,
@@ -92,10 +104,21 @@ class PositiveDefiniteQuadraticLoss:
 
             if type(matrix) is not tuple:
                 raise TypeError("dense matrix must be a tuple of tuples")
-            implementation = NumpyPositiveDefiniteQuadraticLoss(
-                center,
+            normalized_center = quadratic_validation.finite_vector(center, "center")
+            normalized_matrix = quadratic_validation.finite_square_matrix(
                 matrix,
+                len(normalized_center),
+            )
+            normalized_minimum = numerical_validation.finite_float(
                 minimum_squared_loss,
+                "minimum_squared_loss",
+            )
+            if normalized_minimum < 0.0:
+                raise ValueError("minimum_squared_loss must be nonnegative")
+            implementation = NumpyPositiveDefiniteQuadraticLoss(
+                normalized_center,
+                normalized_matrix,
+                normalized_minimum,
             )
         self._implementation = implementation
         self._sparse = sparse
@@ -112,12 +135,12 @@ class PositiveDefiniteQuadraticLoss:
         return self._implementation.center
 
     @property
-    def matrix(self) -> object:
+    def matrix(self) -> DenseQuadraticMatrix | Float64SparseMatrix:
         """Return the backend matrix representation.
 
         Returns
         -------
-        object
+        tuple of tuple of real or Float64SparseMatrix
             Immutable dense tuples or a defensive SciPy CSR copy.
         """
         return self._implementation.matrix

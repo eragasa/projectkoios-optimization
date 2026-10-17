@@ -1,8 +1,19 @@
-# Technical-debt issues
+# Technical debt
 
-This tree records concrete maintainability debt that does not presently invalidate verified numerical behavior.
+This page tracks only unresolved repository-wide maintenance work. Durable rules live in
+[Python tests](../../code/python/tests.md) and
+[Python code smells](../../code/python/code_smells.md).
 
-## Open issues
+## Open
 
-- [Reduce concentrated cyclomatic complexity](complexity-hotspots/index.md)
-- [Remove broad typing, generic returns, postconstruction mutation, and magic tests](type-and-construction-smells/index.md)
+- Obtain an independent review of the bounded cleanup.
+
+## Protected or deferred
+
+- Provenance-protected GMM and engine code remains unchanged without explicit
+  authorization. The protected GMM result constructor retains its complexity finding.
+- The protected Pareto algorithm retains its complexity finding and historical operation
+  structure.
+- Numerical algorithms retain deterministic operation order and exception
+  classification during maintenance.
+- Scientific validation and consumer policy remain outside this repository.

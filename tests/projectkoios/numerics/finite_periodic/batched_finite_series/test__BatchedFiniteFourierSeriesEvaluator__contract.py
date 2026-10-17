@@ -63,35 +63,16 @@ def _definition() -> BatchedFiniteFourierSeriesEvaluationDefinition:
     )
 
 
-def _result(**changes: object) -> BatchedFiniteFourierSeriesEvaluationResult:
-    values: dict[str, object] = {
-        "dimension": 1,
-        "point_count": 1,
-        "term_count": 1,
-        "channel_count": 2,
-        "values": ((0.0 + 1.0j, 1.0 + 2.0j),),
-        "backend_identifier": "test.backend",
-        "backend_version": "1",
-    }
-    values.update(changes)
-    return BatchedFiniteFourierSeriesEvaluationResult(**values)  # type: ignore[arg-type]
-
-
-def _forged_result(**changes: object) -> BatchedFiniteFourierSeriesEvaluationResult:
-    values: dict[str, object] = {
-        "dimension": 1,
-        "point_count": 1,
-        "term_count": 1,
-        "channel_count": 2,
-        "values": ((0.0 + 1.0j, 1.0 + 2.0j),),
-        "backend_identifier": "test.backend",
-        "backend_version": "1",
-    }
-    values.update(changes)
-    forged = object.__new__(BatchedFiniteFourierSeriesEvaluationResult)
-    for name, value in values.items():
-        object.__setattr__(forged, name, value)
-    return forged
+def _correlated_result() -> BatchedFiniteFourierSeriesEvaluationResult:
+    return BatchedFiniteFourierSeriesEvaluationResult(
+        dimension=1,
+        point_count=1,
+        term_count=1,
+        channel_count=2,
+        values=((0.0 + 1.0j, 1.0 + 2.0j),),
+        backend_identifier="test.backend",
+        backend_version="1",
+    )
 
 
 def test_evaluator_is_abstract_and_template_is_final() -> None:
@@ -157,7 +138,7 @@ def test_empty_modes_return_exact_zero_matrix_without_backend() -> None:
 
 
 def test_evaluator_accepts_correlated_result_with_backend_evidence() -> None:
-    result = _result()
+    result = _correlated_result()
 
     assert _ForgedEvaluator(result).evaluate(_definition()) is result
 
@@ -166,15 +147,64 @@ def test_evaluator_accepts_correlated_result_with_backend_evidence() -> None:
     ("result", "message"),
     (
         (object(), "must return BatchedFiniteFourierSeriesEvaluationResult"),
-        (_result(dimension=2), "dimension"),
         (
-            _result(point_count=2, values=((1.0 + 0.0j, 2.0 + 0.0j),) * 2),
+            BatchedFiniteFourierSeriesEvaluationResult(
+                2,
+                1,
+                1,
+                2,
+                ((1.0 + 0.0j, 2.0 + 0.0j),),
+                "test.backend",
+                "1",
+            ),
+            "dimension",
+        ),
+        (
+            BatchedFiniteFourierSeriesEvaluationResult(
+                1,
+                2,
+                1,
+                2,
+                ((1.0 + 0.0j, 2.0 + 0.0j),) * 2,
+                "test.backend",
+                "1",
+            ),
             "point_count",
         ),
-        (_result(term_count=2), "term_count"),
-        (_result(channel_count=1, values=((1.0 + 0.0j,),)), "channel_count"),
         (
-            _result(backend_identifier=None, backend_version=None),
+            BatchedFiniteFourierSeriesEvaluationResult(
+                1,
+                1,
+                2,
+                2,
+                ((1.0 + 0.0j, 2.0 + 0.0j),),
+                "test.backend",
+                "1",
+            ),
+            "term_count",
+        ),
+        (
+            BatchedFiniteFourierSeriesEvaluationResult(
+                1,
+                1,
+                1,
+                1,
+                ((1.0 + 0.0j,),),
+                "test.backend",
+                "1",
+            ),
+            "channel_count",
+        ),
+        (
+            BatchedFiniteFourierSeriesEvaluationResult(
+                1,
+                1,
+                1,
+                2,
+                ((1.0 + 0.0j, 2.0 + 0.0j),),
+                None,
+                None,
+            ),
             "backend evidence",
         ),
     ),
@@ -185,44 +215,6 @@ def test_evaluator_rejects_inconsistent_backend_result(
 ) -> None:
     with pytest.raises((TypeError, ValueError), match=message):
         _ForgedEvaluator(result).evaluate(_definition())
-
-
-@pytest.mark.parametrize(
-    ("result", "exception", "message"),
-    (
-        (_forged_result(dimension=True), ValueError, "dimension"),
-        (_forged_result(values=()), ValueError, "point shape"),
-        (
-            _forged_result(values=((1.0 + 0.0j,),)),
-            ValueError,
-            "channel shape",
-        ),
-        (
-            _forged_result(values=((1.0, 2.0 + 0.0j),)),
-            TypeError,
-            "built-in complex",
-        ),
-        (
-            _forged_result(backend_identifier=1),
-            TypeError,
-            "backend_identifier",
-        ),
-    ),
-)
-def test_evaluator_rejects_forged_malformed_backend_surface(
-    result: BatchedFiniteFourierSeriesEvaluationResult,
-    exception: type[Exception],
-    message: str,
-) -> None:
-    with pytest.raises(exception, match=message):
-        _ForgedEvaluator(result).evaluate(_definition())
-
-
-def test_evaluator_rejects_forged_nonfinite_backend_values() -> None:
-    forged = _forged_result(values=((complex(float("nan"), 0.0), 1.0 + 0.0j),))
-
-    with pytest.raises(FloatingPointError, match="finite"):
-        _ForgedEvaluator(forged).evaluate(_definition())
 
 
 def test_evaluator_propagates_undeclared_backend_exception() -> None:

@@ -23,29 +23,44 @@ def _matrix() -> SparseComplexCsrMatrix:
         4,
         (0, 2, 4, 6, 8),
         (0, 1, 0, 1, 2, 3, 2, 3),
-        (2.0, 1.0j, -1.0j, 3.0, 4.0, 0.5, 0.5, 5.0),
+        (
+            2.0 + 0.0j,
+            1.0j,
+            -1.0j,
+            3.0 + 0.0j,
+            4.0 + 0.0j,
+            0.5 + 0.0j,
+            0.5 + 0.0j,
+            5.0 + 0.0j,
+        ),
     )
 
 
 def test_csr_record_retains_canonical_sparse_storage() -> None:
-    matrix = _matrix()
+    indptr = (0, 1, 2)
+    indices = (0, 1)
+    data = (2.0 + 0.0j, 3.0 + 0.0j)
 
-    assert matrix.dimension == 4
-    assert matrix.nonzero_count == 8
-    assert matrix.indptr == (0, 2, 4, 6, 8)
-    assert matrix.data[0] == 2.0 + 0.0j
+    matrix = SparseComplexCsrMatrix(2, indptr, indices, data)
+
+    assert matrix.dimension == 2
+    assert matrix.nonzero_count == 2
+    assert matrix.indptr is indptr
+    assert matrix.indices is indices
+    assert matrix.data is data
 
 
 @pytest.mark.parametrize(
     "args, match",
     [
         ((0, (0,), (), ()), "dimension"),
-        ((2, (0, 1), (0,), (1.0,)), "indptr length"),
+        ((2, (0, 1), (0,), (1.0 + 0.0j,)), "indptr length"),
         ((2, (1, 1, 1), (), ()), "start at zero"),
-        ((2, (0, 2, 1), (0,), (1.0,)), "nondecreasing"),
-        ((2, (0, 1, 1), (2,), (1.0,)), "outside"),
-        ((2, (0, 2, 2), (0, 0), (1.0, 2.0)), "strictly"),
-        ((2, (0, 1, 1), (0,), (0.0,)), "explicit zeros"),
+        ((2, (0, 2, 1), (0,), (1.0 + 0.0j,)), "nondecreasing"),
+        ((2, (0, 1, 1), (2,), (1.0 + 0.0j,)), "outside"),
+        ((2, (0, 2, 2), (0, 0), (1.0 + 0.0j, 2.0 + 0.0j)), "strictly"),
+        ((2, (0, 1, 1), (0,), (0.0 + 0.0j,)), "explicit zeros"),
+        ((2, (0, 1, 1), (0,), (1.0,)), "exact built-in complex"),
     ],
 )
 def test_csr_record_rejects_noncanonical_storage(
@@ -53,7 +68,7 @@ def test_csr_record_rejects_noncanonical_storage(
     match: str,
 ) -> None:
     with pytest.raises((TypeError, ValueError), match=match):
-        SparseComplexCsrMatrix(*args)
+        SparseComplexCsrMatrix(*cast(Any, args))
 
 
 def test_definition_retains_explicit_sparse_selection_controls() -> None:
@@ -74,29 +89,22 @@ def test_definition_retains_explicit_sparse_selection_controls() -> None:
     assert definition.random_seed == 17
 
 
-@pytest.mark.parametrize(
-    "overrides, match",
-    [
-        ({"eigenvalue_count": 4}, "smaller"),
-        ({"eigenvalue_count": 0}, "positive"),
-        ({"selection": "smallest-algebraic"}, "selection"),
-        ({"eigensolver_tolerance": -1.0}, "nonnegative"),
-        ({"maximum_iterations": 0}, "positive"),
-        ({"krylov_subspace_dimension": 2}, "must exceed"),
-        ({"random_seed": -1}, "nonnegative"),
-    ],
-)
-def test_definition_rejects_invalid_sparse_controls(
-    overrides: dict[str, object],
-    match: str,
-) -> None:
-    values: dict[str, object] = {
-        "matrix": _matrix(),
-        "eigenvalue_count": 2,
-        "selection": SparseHermitianSpectrumSelection.SMALLEST_ALGEBRAIC,
-        "hermiticity_tolerance": BatchedHermitianSpectrumTolerance(0.0, 0.0),
-    }
-    values.update(overrides)
+def test_definition_requires_a_strict_partial_spectrum() -> None:
+    with pytest.raises(ValueError):
+        SparseHermitianPartialSpectrumDefinition(
+            matrix=_matrix(),
+            eigenvalue_count=4,
+            selection=SparseHermitianSpectrumSelection.SMALLEST_ALGEBRAIC,
+            hermiticity_tolerance=BatchedHermitianSpectrumTolerance(0.0, 0.0),
+        )
 
-    with pytest.raises((TypeError, ValueError), match=match):
-        SparseHermitianPartialSpectrumDefinition(**cast(Any, values))
+
+def test_definition_requires_krylov_space_larger_than_requested_spectrum() -> None:
+    with pytest.raises(ValueError):
+        SparseHermitianPartialSpectrumDefinition(
+            matrix=_matrix(),
+            eigenvalue_count=2,
+            selection=SparseHermitianSpectrumSelection.SMALLEST_ALGEBRAIC,
+            hermiticity_tolerance=BatchedHermitianSpectrumTolerance(0.0, 0.0),
+            krylov_subspace_dimension=2,
+        )

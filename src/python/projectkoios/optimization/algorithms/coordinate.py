@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from projectkoios.numerics.validation import finite_float, u32
+from projectkoios.numerics.validation import exact_finite_float, u32
 
 from ..engines.records import Candidate, ObjectiveFeedback, OptimizerUpdate
 from ..exceptions import (
@@ -30,12 +30,9 @@ class CoordinateSearchSettings:
     def __post_init__(self) -> None:
         u32(self.max_evaluations, "max_evaluations", allow_zero=False)
         u32(self.max_iterations, "max_iterations", allow_zero=True)
-        for name in (
-            "initial_step_fraction",
-            "step_reduction",
-            "step_tolerance",
-        ):
-            object.__setattr__(self, name, finite_float(getattr(self, name), name))
+        exact_finite_float(self.initial_step_fraction, "initial_step_fraction")
+        exact_finite_float(self.step_reduction, "step_reduction")
+        exact_finite_float(self.step_tolerance, "step_tolerance")
         if not 0.0 < self.initial_step_fraction <= 1.0:
             raise ValueError("initial_step_fraction must be in (0, 1]")
         if not 0.0 < self.step_reduction < 1.0:
@@ -67,9 +64,9 @@ class CoordinateSearchState:
             raise TypeError("space must be ParameterSpace")
         if type(self.initial_values) is not tuple:
             raise TypeError("initial_values must be a tuple")
-        normalized = Candidate("initial", "initial", 0, self.initial_values).values
-        object.__setattr__(self, "initial_values", normalized)
-        if not self.space.admits(normalized):
+        for index, value in enumerate(self.initial_values):
+            exact_finite_float(value, f"initial_values[{index}]")
+        if not self.space.admits(self.initial_values):
             raise ValueError("initial_values must match dimensions and bounds")
         if type(self.settings) is not CoordinateSearchSettings:
             raise TypeError("settings must be CoordinateSearchSettings")
@@ -276,7 +273,7 @@ class CoordinateSearch:
         self._iteration_best = None
         self._iteration_best_loss = None
 
-    def _prepare_iteration(self) -> None:
+    def _prepare_iteration(self) -> None:  # noqa: C901
         if self._termination is not None or self._neighbor_values:
             return
         if self._incumbent is None or self._incumbent_loss is None:

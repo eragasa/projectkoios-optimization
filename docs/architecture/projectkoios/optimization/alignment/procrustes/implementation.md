@@ -36,7 +36,6 @@ tests/projectkoios/optimization/alignment/
 │   └── scalar_procrustes.py
 ├── test__ComplexUnitaryProcrustesDefinition__unit.py
 ├── test__ComplexUnitaryProcrustesResult__unit.py
-├── test__ComplexUnitaryProcrustesResultValidation__unit.py
 ├── test__ComplexUnitaryProcrustesSolver__contract.py
 ├── test__ComplexUnitaryProcrustesSolver__unit.py
 ├── test__ComplexUnitaryProcrustesSolverFactory__unit.py
@@ -57,9 +56,9 @@ tests/projectkoios/optimization/alignment/
         └── test__ResultArrays__unit.py
 ```
 
-The result-validation tests use a named analytically derived one-dimensional alignment
-case to exercise each named validation owner as well as the complete result constructor.
-The complete mapped tree is included in strict mypy. Wheel tests separately verify the
+The public result-constructor tests use analytically derived scalar cases to exercise
+canonical structure and reconstructable evidence without importing private validation
+operations. The complete mapped tree is included in strict mypy. Wheel tests separately verify the
 lazy scalar factory and the direct NumPy batched module from isolated built artifacts.
 
 ## Exclusions
