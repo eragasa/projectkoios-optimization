@@ -36,11 +36,14 @@ src/python/projectkoios/optimization/alignment/
   numerical evidence without exporting them through the façade.
 - `solver.py` owns NumPy SVD execution, backend validation, failure isolation, and result
   assembly.
-- The definition validates and owns source and target array copies.
-- Array copies use immutable byte backing, so callers cannot re-enable NumPy writes.
+- Definition and result `from_arrays(...)` factories own immutable byte-backed copies,
+  while explicit `from_immutable_arrays(...)` factories retain canonical storage by
+  identity without copying.
+- Raw frozen constructors accept only C-contiguous, read-only arrays whose base chain
+  terminates in immutable bytes; callers cannot re-enable NumPy writes.
 - The solver owns vectorized cross products, one batched SVD, and evidence construction.
-- The keyword-only result owns its normalization, relational validation, and
-  construction-time installation of shape-preserving read-only evidence arrays.
+- The keyword-only result validates shape-preserving evidence relationally without
+  postconstruction mutation or mutable-then-sealed state.
 - Result-level rank summaries and the fail-closed unique-transformation accessor derive
   solely from the immutable `full_rank` array and allocate no matrix copies.
 

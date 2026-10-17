@@ -11,7 +11,9 @@ shape-preserving batch of right-unitary Procrustes problems.
   and positive `m` and `n`.
 - Values are finite.
 - The tolerance has the exact owner record type.
-- Construction makes immutable byte-backed defensive copies.
+- `from_arrays(...)` makes immutable byte-backed defensive copies.
+- `from_immutable_arrays(...)` retains only canonical immutable arrays by identity.
+- The raw frozen constructor rejects noncanonical storage.
 
 The record derives `batch_shape`, `batch_size`, `row_count`, and `column_count` without
 materializing per-item Python records. Zero-sized leading dimensions are admitted.

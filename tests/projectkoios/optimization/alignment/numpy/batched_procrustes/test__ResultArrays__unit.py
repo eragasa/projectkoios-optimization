@@ -88,7 +88,7 @@ def test_result_arrays_groups_exact_evidence_references(
 def test_shared_evidence_satisfies_public_result_relations(
     procrustes_evidence: BatchedProcrustesEvidenceFixture,
 ) -> None:
-    result = NumpyBatchedComplexUnitaryProcrustesResult(
+    result = NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
         row_count=2,
         tolerance=DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
         right_unitary_completions=procrustes_evidence.completions,

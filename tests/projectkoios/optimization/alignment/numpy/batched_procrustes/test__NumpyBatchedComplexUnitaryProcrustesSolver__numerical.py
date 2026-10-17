@@ -42,7 +42,9 @@ def test_full_rank_batch_matches_every_scalar_owner_result() -> None:
         1.0e-10,
     )
     batch = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target, tolerance)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source, target, tolerance
+        )
     )
     scalar = NumpyComplexUnitaryProcrustesSolver()
     unique_transformations = batch.require_unique_right_unitary_transformations()
@@ -100,7 +102,7 @@ def test_deficient_batch_matches_scalar_evidence_without_transform_parity_claim(
         dtype=np.complex128,
     )
     batch = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
     )
     scalar = NumpyComplexUnitaryProcrustesSolver()
 
@@ -151,7 +153,7 @@ def test_rank_two_frame_fixture_matches_consumer_residual_formula() -> None:
     target[..., 1, 1] = 1.0
 
     result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
     )
     consumer_squared = np.maximum(
         0.0,

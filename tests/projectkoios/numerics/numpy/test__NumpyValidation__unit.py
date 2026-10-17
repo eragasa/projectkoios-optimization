@@ -10,6 +10,7 @@ from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.numerics.numpy.validation import (
     finite_nonnegative_float64_array,
     immutable_array,
+    validate_immutable_array,
 )
 
 
@@ -44,8 +45,40 @@ def test_immutable_array_returns_independent_byte_backed_copy(
 
     np.testing.assert_array_equal(result, expected)
     assert not result.flags.writeable
+    assert validate_immutable_array(result, "result", np.dtype(np.complex128)) is result
     with pytest.raises(ValueError):
         result.setflags(write=True)
+
+
+def test_validate_immutable_array_rejects_non_canonical_order() -> None:
+    dimension = 2
+    backing = np.arange(dimension * dimension, dtype=np.float64).tobytes()
+    fortran_order = np.frombuffer(backing, dtype=np.float64).reshape(
+        (dimension, dimension),
+        order="F",
+    )
+
+    assert fortran_order.flags.f_contiguous
+    assert not fortran_order.flags.c_contiguous
+    with pytest.raises(ValueError, match="C-contiguous"):
+        validate_immutable_array(
+            fortran_order,
+            "values",
+            np.dtype(np.float64),
+        )
+
+
+def test_validate_immutable_array_rejects_read_only_mutable_backing() -> None:
+    owner = np.ones((2, 2), dtype=np.float64)
+    read_only_view = owner.view()
+    read_only_view.setflags(write=False)
+
+    with pytest.raises(ValueError, match="immutable bytes backing"):
+        validate_immutable_array(
+            read_only_view,
+            "values",
+            np.dtype(np.float64),
+        )
 
 
 @pytest.fixture(

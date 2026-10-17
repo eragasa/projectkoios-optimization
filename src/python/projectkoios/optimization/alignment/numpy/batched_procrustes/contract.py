@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import final
+from typing import Self, final
 
 import numpy as np
 
@@ -24,6 +24,7 @@ from projectkoios.numerics.numpy.typing import (
 from projectkoios.numerics.numpy.validation import (
     finite_nonnegative_float64_array,
     immutable_array,
+    validate_immutable_array,
 )
 from projectkoios.numerics.validation import exact_positive_integer
 from projectkoios.optimization.alignment.procrustes import (
@@ -58,8 +59,9 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
 
     Notes
     -----
-    Inputs are defensively copied into C-order read-only arrays. Real, complex64,
-    object, Boolean, array-like, and implicit-coercion inputs are rejected.
+    The raw frozen constructor accepts only canonical immutable byte-backed arrays.
+    Use :meth:`from_arrays` to validate and defensively copy ordinary exact arrays, or
+    :meth:`from_immutable_arrays` for explicit zero-copy construction.
     """
 
     source_matrices: Complex128Array = field(repr=False)
@@ -68,8 +70,70 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
         DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE
     )
 
+    @classmethod
+    def from_arrays(
+        cls,
+        source_matrices: Complex128Array,
+        target_matrices: Complex128Array,
+        tolerance: ComplexUnitaryProcrustesTolerance = (
+            DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE
+        ),
+    ) -> Self:
+        """Construct from exact arrays using immutable defensive copies.
+
+        Parameters
+        ----------
+        source_matrices, target_matrices
+            Exact finite complex128 arrays to copy.
+        tolerance
+            Existing owner numerical-rank and validation policy.
+
+        Returns
+        -------
+        NumpyBatchedComplexUnitaryProcrustesDefinition
+            Frozen definition owning independent immutable arrays.
+        """
+        return cls(
+            immutable_array(
+                source_matrices,
+                "source_matrices",
+                np.dtype(np.complex128),
+            ),
+            immutable_array(
+                target_matrices,
+                "target_matrices",
+                np.dtype(np.complex128),
+            ),
+            tolerance,
+        )
+
+    @classmethod
+    def from_immutable_arrays(
+        cls,
+        source_matrices: Complex128Array,
+        target_matrices: Complex128Array,
+        tolerance: ComplexUnitaryProcrustesTolerance = (
+            DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE
+        ),
+    ) -> Self:
+        """Construct without copying canonical immutable arrays.
+
+        Parameters
+        ----------
+        source_matrices, target_matrices
+            Canonical finite complex128 arrays with immutable bytes backing.
+        tolerance
+            Existing owner numerical-rank and validation policy.
+
+        Returns
+        -------
+        NumpyBatchedComplexUnitaryProcrustesDefinition
+            Frozen definition retaining the supplied canonical arrays by identity.
+        """
+        return cls(source_matrices, target_matrices, tolerance)
+
     def __post_init__(self) -> None:
-        """Validate exact arrays, shape, finiteness, and nominal tolerance.
+        """Validate canonical arrays, shape, finiteness, and nominal tolerance.
 
         Raises
         ------
@@ -78,12 +142,12 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
         ValueError
             If shapes are invalid or an array contains a nonfinite value.
         """
-        source = immutable_array(
+        source = validate_immutable_array(
             self.source_matrices,
             "source_matrices",
             np.dtype(np.complex128),
         )
-        target = immutable_array(
+        target = validate_immutable_array(
             self.target_matrices,
             "target_matrices",
             np.dtype(np.complex128),
@@ -97,8 +161,6 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
         if source.shape[-2] <= 0 or source.shape[-1] <= 0:
             raise ValueError("matrix row and column dimensions must be positive")
         ComplexUnitaryProcrustesSolver.validate_tolerance(self.tolerance)
-        object.__setattr__(self, "source_matrices", source)
-        object.__setattr__(self, "target_matrices", target)
 
     @property
     def batch_shape(self) -> tuple[int, ...]:
@@ -164,8 +226,8 @@ class ResultArrays:
 
     Notes
     -----
-    This encapsulated construction record groups exact references. The public result,
-    rather than this record, owns defensive copying and immutable array backing.
+    This encapsulated construction record groups exact references during canonical
+    validation. The public result's ``from_arrays`` factory owns defensive copying.
     """
 
     completions: Complex128Array
@@ -209,8 +271,10 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
 
     Notes
     -----
-    Every public array is defensively copied and read-only. Rank-deficient completions
-    are diagnostic SVD choices, not admitted unique solutions.
+    The raw frozen constructor accepts only canonical immutable byte-backed arrays.
+    Use :meth:`from_arrays` to make defensive copies or
+    :meth:`from_immutable_arrays` for explicit zero-copy construction. Rank-deficient
+    completions are diagnostic SVD choices, not admitted unique solutions.
     """
 
     row_count: int
@@ -228,6 +292,170 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
     backend_identifier: str | None
     backend_version: str | None
 
+    @classmethod
+    def from_arrays(
+        cls,
+        *,
+        row_count: int,
+        tolerance: ComplexUnitaryProcrustesTolerance,
+        right_unitary_completions: Complex128Array,
+        cross_singular_values: Float64Array,
+        numerical_ranks: IntpArray,
+        full_rank: BoolArray,
+        applied_rank_cutoffs: Float64Array,
+        source_squared_frobenius_norms: Float64Array,
+        target_squared_frobenius_norms: Float64Array,
+        optimal_squared_residuals: Float64Array,
+        optimal_residual_frobenius_norms: Float64Array,
+        applied_residual_roundoff_cutoffs: Float64Array,
+        backend_identifier: str | None,
+        backend_version: str | None,
+    ) -> Self:
+        """Construct from exact arrays using immutable defensive copies.
+
+        Parameters
+        ----------
+        row_count
+            Shared source and target row count.
+        tolerance
+            Applied owner numerical software controls.
+        right_unitary_completions, cross_singular_values
+            Candidate completion matrices and complete singular spectra.
+        numerical_ranks, full_rank, applied_rank_cutoffs
+            Candidate numerical-rank evidence.
+        source_squared_frobenius_norms, target_squared_frobenius_norms
+            Candidate input powers.
+        optimal_squared_residuals, optimal_residual_frobenius_norms
+            Candidate optimal residual evidence.
+        applied_residual_roundoff_cutoffs
+            Candidate squared-unit cancellation cutoffs.
+        backend_identifier, backend_version
+            Executed-backend evidence, or absence for an empty batch.
+
+        Returns
+        -------
+        NumpyBatchedComplexUnitaryProcrustesResult
+            Frozen result owning independent immutable arrays.
+        """
+        return cls(
+            row_count=row_count,
+            tolerance=tolerance,
+            right_unitary_completions=immutable_array(
+                right_unitary_completions,
+                "right_unitary_completions",
+                np.dtype(np.complex128),
+            ),
+            cross_singular_values=immutable_array(
+                cross_singular_values,
+                "cross_singular_values",
+                np.dtype(np.float64),
+            ),
+            numerical_ranks=immutable_array(
+                numerical_ranks,
+                "numerical_ranks",
+                np.dtype(np.intp),
+            ),
+            full_rank=immutable_array(
+                full_rank,
+                "full_rank",
+                np.dtype(np.bool_),
+            ),
+            applied_rank_cutoffs=immutable_array(
+                applied_rank_cutoffs,
+                "applied_rank_cutoffs",
+                np.dtype(np.float64),
+            ),
+            source_squared_frobenius_norms=immutable_array(
+                source_squared_frobenius_norms,
+                "source_squared_frobenius_norms",
+                np.dtype(np.float64),
+            ),
+            target_squared_frobenius_norms=immutable_array(
+                target_squared_frobenius_norms,
+                "target_squared_frobenius_norms",
+                np.dtype(np.float64),
+            ),
+            optimal_squared_residuals=immutable_array(
+                optimal_squared_residuals,
+                "optimal_squared_residuals",
+                np.dtype(np.float64),
+            ),
+            optimal_residual_frobenius_norms=immutable_array(
+                optimal_residual_frobenius_norms,
+                "optimal_residual_frobenius_norms",
+                np.dtype(np.float64),
+            ),
+            applied_residual_roundoff_cutoffs=immutable_array(
+                applied_residual_roundoff_cutoffs,
+                "applied_residual_roundoff_cutoffs",
+                np.dtype(np.float64),
+            ),
+            backend_identifier=backend_identifier,
+            backend_version=backend_version,
+        )
+
+    @classmethod
+    def from_immutable_arrays(
+        cls,
+        *,
+        row_count: int,
+        tolerance: ComplexUnitaryProcrustesTolerance,
+        right_unitary_completions: Complex128Array,
+        cross_singular_values: Float64Array,
+        numerical_ranks: IntpArray,
+        full_rank: BoolArray,
+        applied_rank_cutoffs: Float64Array,
+        source_squared_frobenius_norms: Float64Array,
+        target_squared_frobenius_norms: Float64Array,
+        optimal_squared_residuals: Float64Array,
+        optimal_residual_frobenius_norms: Float64Array,
+        applied_residual_roundoff_cutoffs: Float64Array,
+        backend_identifier: str | None,
+        backend_version: str | None,
+    ) -> Self:
+        """Construct without copying canonical immutable arrays.
+
+        Parameters
+        ----------
+        row_count
+            Shared source and target row count.
+        tolerance
+            Applied owner numerical software controls.
+        right_unitary_completions, cross_singular_values
+            Canonical immutable completion matrices and singular spectra.
+        numerical_ranks, full_rank, applied_rank_cutoffs
+            Canonical immutable numerical-rank evidence.
+        source_squared_frobenius_norms, target_squared_frobenius_norms
+            Canonical immutable input powers.
+        optimal_squared_residuals, optimal_residual_frobenius_norms
+            Canonical immutable residual evidence.
+        applied_residual_roundoff_cutoffs
+            Canonical immutable squared-unit cancellation cutoffs.
+        backend_identifier, backend_version
+            Executed-backend evidence, or absence for an empty batch.
+
+        Returns
+        -------
+        NumpyBatchedComplexUnitaryProcrustesResult
+            Frozen result retaining every supplied canonical array by identity.
+        """
+        return cls(
+            row_count=row_count,
+            tolerance=tolerance,
+            right_unitary_completions=right_unitary_completions,
+            cross_singular_values=cross_singular_values,
+            numerical_ranks=numerical_ranks,
+            full_rank=full_rank,
+            applied_rank_cutoffs=applied_rank_cutoffs,
+            source_squared_frobenius_norms=source_squared_frobenius_norms,
+            target_squared_frobenius_norms=target_squared_frobenius_norms,
+            optimal_squared_residuals=optimal_squared_residuals,
+            optimal_residual_frobenius_norms=optimal_residual_frobenius_norms,
+            applied_residual_roundoff_cutoffs=applied_residual_roundoff_cutoffs,
+            backend_identifier=backend_identifier,
+            backend_version=backend_version,
+        )
+
     def __post_init__(self) -> None:
         """Validate result shapes, dtypes, relations, evidence, and immutability.
 
@@ -242,101 +470,73 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
         """
         row_count = exact_positive_integer(self.row_count, "row_count")
         ComplexUnitaryProcrustesSolver.validate_tolerance(self.tolerance)
-        arrays = self._normalized_arrays()
+        arrays = self._validated_arrays()
         batch_shape, dimension = self._validate_array_shapes(arrays)
         self._validate_rank_evidence(arrays, row_count, dimension)
         self._validate_residual_evidence(arrays)
         self._validate_completions(arrays.completions, batch_shape, dimension)
         self._validated_backend_evidence(batch_shape)
-        object.__setattr__(self, "right_unitary_completions", arrays.completions)
-        object.__setattr__(self, "cross_singular_values", arrays.spectra)
-        object.__setattr__(self, "numerical_ranks", arrays.ranks)
-        object.__setattr__(self, "full_rank", arrays.full_rank)
-        object.__setattr__(self, "applied_rank_cutoffs", arrays.rank_cutoffs)
-        object.__setattr__(
-            self,
-            "source_squared_frobenius_norms",
-            arrays.source_powers,
-        )
-        object.__setattr__(
-            self,
-            "target_squared_frobenius_norms",
-            arrays.target_powers,
-        )
-        object.__setattr__(
-            self,
-            "optimal_squared_residuals",
-            arrays.squared_residuals,
-        )
-        object.__setattr__(
-            self,
-            "optimal_residual_frobenius_norms",
-            arrays.residual_norms,
-        )
-        object.__setattr__(
-            self,
-            "applied_residual_roundoff_cutoffs",
-            arrays.residual_cutoffs,
-        )
 
-    def _normalized_arrays(self) -> ResultArrays:
-        """Return defensive exact-dtype copies of every result array.
+    def _validated_arrays(self) -> ResultArrays:
+        """Return validated canonical result arrays without copying.
 
         Returns
         -------
         ResultArrays
-            Named normalized arrays with immutable byte backing.
+            Named canonical arrays with immutable byte backing.
 
         Raises
         ------
         TypeError
             If an input is not an exact ndarray or has the wrong dtype.
         ValueError
-            If an input contains a nonfinite entry.
+            If an input is nonfinite or lacks canonical immutable storage.
         """
         return ResultArrays(
-            completions=immutable_array(
+            completions=validate_immutable_array(
                 self.right_unitary_completions,
                 "right_unitary_completions",
                 np.dtype(np.complex128),
             ),
-            spectra=immutable_array(
+            spectra=validate_immutable_array(
                 self.cross_singular_values,
                 "cross_singular_values",
                 np.dtype(np.float64),
             ),
-            ranks=immutable_array(
+            ranks=validate_immutable_array(
                 self.numerical_ranks,
                 "numerical_ranks",
                 np.dtype(np.intp),
             ),
-            full_rank=immutable_array(self.full_rank, "full_rank", np.dtype(np.bool_)),
-            rank_cutoffs=immutable_array(
+            full_rank=validate_immutable_array(
+                self.full_rank, "full_rank", np.dtype(np.bool_)
+            ),
+            rank_cutoffs=validate_immutable_array(
                 self.applied_rank_cutoffs,
                 "applied_rank_cutoffs",
                 np.dtype(np.float64),
             ),
-            source_powers=immutable_array(
+            source_powers=validate_immutable_array(
                 self.source_squared_frobenius_norms,
                 "source_squared_frobenius_norms",
                 np.dtype(np.float64),
             ),
-            target_powers=immutable_array(
+            target_powers=validate_immutable_array(
                 self.target_squared_frobenius_norms,
                 "target_squared_frobenius_norms",
                 np.dtype(np.float64),
             ),
-            squared_residuals=immutable_array(
+            squared_residuals=validate_immutable_array(
                 self.optimal_squared_residuals,
                 "optimal_squared_residuals",
                 np.dtype(np.float64),
             ),
-            residual_norms=immutable_array(
+            residual_norms=validate_immutable_array(
                 self.optimal_residual_frobenius_norms,
                 "optimal_residual_frobenius_norms",
                 np.dtype(np.float64),
             ),
-            residual_cutoffs=immutable_array(
+            residual_cutoffs=validate_immutable_array(
                 self.applied_residual_roundoff_cutoffs,
                 "applied_residual_roundoff_cutoffs",
                 np.dtype(np.float64),

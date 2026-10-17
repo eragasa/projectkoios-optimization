@@ -54,7 +54,7 @@ source = np.broadcast_to(np.eye(2, dtype=np.complex128), (2, 3, 2, 2)).copy()
 rotation = np.asarray(((0.0, 1.0), (-1.0, 0.0)), dtype=np.complex128)
 target = source @ rotation
 result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-    NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+    NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
 )
 assert result.batch_shape == (2, 3)
 assert np.all(result.full_rank)

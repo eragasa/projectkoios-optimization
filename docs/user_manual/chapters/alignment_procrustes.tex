@@ -1,36 +1,245 @@
-\chapter{alignment/procrustes}
+\chapter{Scalar complex-unitary Procrustes}
 
-For finite equally shaped matrices $A,B\in\mathbb{C}^{m\times n}$, scalar Procrustes
-solves
+\section{Problem and orientation}
+Let $A,B\in\mathbb{C}^{m\times n}$ be finite, nonempty matrices with identical shape.
+The scalar capability solves the complex-unitary form of the orthogonal Procrustes
+problem \cite{Schonemann1966,GowerDijksterhuis2004}:
 \[
- \min_{Q^\dagger Q=I}\lVert AQ-B\rVert_F.
+  \min_{Q\in\mathbb{C}^{n\times n}}\lVert AQ-B\rVert_F
+  \quad\text{subject to}\quad Q^\dagger Q=I_n.
 \]
-The cross matrix is $A^\dagger B$ and the selected full-rank transformation is
-$Q=UV^\dagger$ for $A^\dagger B=U\Sigma V^\dagger$.
+The transformation is square even when $m\ne n$, because it acts on the $n$ columns of
+$A$. Define the cross matrix
+\[
+  C=A^\dagger B\in\mathbb{C}^{n\times n}
+\]
+and a complete singular-value decomposition
+\[
+  C=U\Sigma V^\dagger,
+  \qquad
+  \Sigma=\operatorname{diag}(\sigma_1,\ldots,\sigma_n),
+  \qquad
+  \sigma_1\ge\cdots\ge\sigma_n\ge0.
+\]
+When $C$ has full numerical rank, the selected right-unitary polar factor is
+\[
+  Q=UV^\dagger,
+\]
+and the consumer applies it as $A_{\mathrm{aligned}}=AQ$.
 
-\section{Solver hierarchy}
-\texttt{ComplexUnitaryProcrustesSolver[DefinitionT, ResultT]} owns shared tolerance,
-rank-cutoff, residual-roundoff, and backend-evidence policy.
-\texttt{ScalarComplexUnitaryProcrustesSolver} owns the final one-pair solve template.
-\texttt{NumpyComplexUnitaryProcrustesSolver} supplies the reviewed dense SVD.
+\section{Why the SVD solves the problem}
+For any unitary $Q$, expand the squared objective:
+\begin{align*}
+  \lVert AQ-B\rVert_F^2
+  &=\operatorname{tr}\!\left((AQ-B)^\dagger(AQ-B)\right)\\
+  &=\lVert A\rVert_F^2+\lVert B\rVert_F^2
+    -2\operatorname{Re}\operatorname{tr}\!\left(Q^\dagger A^\dagger B\right).
+\end{align*}
+The two norm terms do not depend on $Q$. Minimization is therefore equivalent to
+maximizing $\operatorname{Re}\operatorname{tr}(Q^\dagger C)$. Substituting
+$C=U\Sigma V^\dagger$ and $Q=UV^\dagger$ gives
+\[
+  \operatorname{Re}\operatorname{tr}(Q^\dagger C)
+  =\operatorname{tr}(\Sigma)=\sum_{j=1}^{n}\sigma_j.
+\]
+The von Neumann trace inequality bounds every unitary choice by this nuclear norm
+\cite{Bhatia1997}, so the selected $Q$ attains the global minimum. This SVD construction
+is also the unitary polar factor of $C$ \cite{Higham1986Polar}. If $C$ is nonsingular,
+that factor is unique. If $C$ is singular, directions in its null spaces are unconstrained
+by the objective and multiple unitary completions attain the same minimum. The software
+rank policy decides whether binary64 evidence is treated as nonsingular for the public
+contract; it does not claim exact algebraic rank. Standard SVD and numerical-rank
+background is given by Golub and Van Loan \cite{GolubVanLoan2013}.
 
-\section{Rank behavior}
-The cutoff is $\tau_a+\tau_r\sigma_{\max}$. Singular values must be strictly greater
-than it to count. A deficient scalar result withholds the backend's arbitrary null-space
-completion.
+\section{Exact procedure}
+For one definition, the scalar solver performs the following procedure.
+\begin{enumerate}
+  \item Validate exact immutable tuple containers, exact built-in complex entries,
+        finiteness, equal shape, and the exact tolerance-record type.
+  \item Form $C=A^\dagger B$ with checked complex binary64 products and deterministic
+        componentwise summation.
+  \item Request a complete square SVD $C=U\Sigma V^\dagger$ from the selected backend.
+  \item Validate the complete spectrum, factor unitarity, and reconstruction of $C$.
+  \item Calculate the additive numerical-rank cutoff and numerical rank.
+  \item Calculate source power, target power, the optimal residual, and its roundoff
+        cutoff.
+  \item At full numerical rank, form $Q=UV^\dagger$, validate right unitarity, and
+        compare its direct residual with the singular-value optimum.
+  \item Return a relationally validated immutable result with backend identity.
+\end{enumerate}
+No full transformation is formed or returned on the deficient scalar branch.
 
-\section{Factory use}
+\section{Numerical controls}
+The tolerance record contains four exact built-in floats:
+\begin{align*}
+  \tau_{\mathrm{rank}}^{\mathrm{abs}} &\ge 0,
+  &0\le\tau_{\mathrm{rank}}^{\mathrm{rel}}&<1,\\
+  \tau_{\mathrm{validation}}^{\mathrm{abs}} &\ge 0,
+  &0\le\tau_{\mathrm{validation}}^{\mathrm{rel}}&<1.
+\end{align*}
+Neither the rank pair nor the validation pair may be identically zero. The defaults are
+\begin{align*}
+  \tau_{\mathrm{rank}}^{\mathrm{abs}} &=0,
+  &\tau_{\mathrm{rank}}^{\mathrm{rel}}&=10^{-12},\\
+  \tau_{\mathrm{validation}}^{\mathrm{abs}}&=10^{-12},
+  &\tau_{\mathrm{validation}}^{\mathrm{rel}}&=10^{-10}.
+\end{align*}
+Construct an explicit policy when the defaults are not appropriate:
+\begin{lstlisting}[language=Python]
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesTolerance,
+)
+
+tolerance = ComplexUnitaryProcrustesTolerance(
+    rank_absolute=0.0,
+    rank_relative=1.0e-12,
+    validation_absolute=1.0e-12,
+    validation_relative=1.0e-10,
+)
+\end{lstlisting}
+These are software controls. They are not scientific overlap thresholds.
+
+\section{Numerical rank}
+For largest singular value $\sigma_1$, the applied cutoff is
+\[
+  \tau_{\mathrm{rank}}
+  =\tau_{\mathrm{rank}}^{\mathrm{abs}}
+   +\tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_1.
+\]
+The reported numerical rank is
+\[
+  r=\sum_{j=1}^{n}\mathbf{1}[\sigma_j>\tau_{\mathrm{rank}}].
+\]
+The comparison is deliberately strict: $\sigma_j=\tau_{\mathrm{rank}}$ is deficient.
+If $r=n$, status is \path{UNIQUE} and $Q$ is present. If $r<n$, status is
+\path{RANK_DEFICIENT} and \path{transformation} is \path{None}.
+
+Rank-deficient SVDs contain arbitrary bases for null spaces. Consequently, a complete
+backend SVD can produce a unitary completion, but the scalar API does not expose that
+completion as an identified transformation.
+
+\section{Optimal residual and roundoff evidence}
+Let
+\[
+  p_A=\lVert A\rVert_F^2,
+  \qquad p_B=\lVert B\rVert_F^2.
+\]
+The mathematical optimum is
+\[
+  r_*^2=p_A+p_B-2\sum_{j=1}^{n}\sigma_j(C).
+\]
+The implementation evaluates this cancellation-prone identity after scaling, following
+the general principle that numerical error must be bounded relative to the magnitudes of
+the accumulated terms \cite{Higham2002Accuracy}. Define
+\[
+  s=\max\!\left(p_A,p_B,2\sigma_1,\ldots,2\sigma_n\right).
+\]
+If $s=0$, both the residual and its cutoff are zero. Otherwise, define
+\begin{align*}
+  \widehat r &=
+    \frac{p_A}{s}+\frac{p_B}{s}
+    -\sum_{j=1}^{n}\frac{2\sigma_j}{s},\\
+  \gamma_n &= \max\!\left(64,8(n+2)\right)\epsilon_{64},\\
+  \widehat\delta &= \gamma_n\left(
+    \frac{p_A}{s}+\frac{p_B}{s}
+    +\sum_{j=1}^{n}\frac{2\sigma_j}{s}\right),\\
+  \delta &= s\widehat\delta.
+\end{align*}
+Here $\epsilon_{64}$ is binary64 machine epsilon. If
+$|\widehat r|\le\widehat\delta$, the represented squared residual is exactly zero. If
+$\widehat r<-\widehat\delta$, reconstruction fails with \path{FloatingPointError}.
+Otherwise the reported value is $r_*^2=s\widehat r$.
+
+The result retains $p_A$, $p_B$, every $\sigma_j$, and $\delta$ through
+\path{applied_residual_roundoff_cutoff}. A reported zero therefore means ``not resolved
+above the retained binary64 cancellation cutoff,'' not a proof of exact mathematical or
+scientific equivalence.
+
+\section{Backend validation bounds}
+For a nonnegative scale $x$ and positive operation-count bound $k$, define
+\[
+  \beta(k,x)=k\left(
+    \tau_{\mathrm{validation}}^{\mathrm{abs}}
+    +\tau_{\mathrm{validation}}^{\mathrm{rel}}x
+  \right).
+\]
+The solver checks, in maximum-entry norm,
+\begin{align*}
+  \lVert U^\dagger U-I_n\rVert_{\max} &\le \beta(n,1),\\
+  \lVert V^\dagger V-I_n\rVert_{\max} &\le \beta(n,1),\\
+  \lVert U\Sigma V^\dagger-C\rVert_{\max}
+    &\le \beta\!\left(n,\lVert C\rVert_{\max}\right).
+\end{align*}
+For a returned full-rank $Q$, it also checks right unitarity and agreement between
+$\lVert AQ-B\rVert_F^2$ and the reconstructed optimum. Validation tolerances verify the
+software/backend correlation; they do not alter the rank cutoff.
+
+\section{Using the scalar API}
+The dependency-free matrix representation is an exact tuple of exact tuples containing
+exact built-in complex values. Lists, NumPy arrays, real entries, ragged rows, empty
+matrices, and nonfinite values are rejected rather than coerced.
+
 \begin{lstlisting}[language=Python]
 from projectkoios.optimization.alignment.procrustes import (
     ComplexUnitaryProcrustesDefinition,
     ComplexUnitaryProcrustesMethod,
     ComplexUnitaryProcrustesSolverFactory,
+    ComplexUnitaryProcrustesStatus,
 )
 
-definition = ComplexUnitaryProcrustesDefinition(source, target)
+source = (
+    (1.0 + 0.0j, 0.0 + 0.0j),
+    (0.0 + 0.0j, 1.0 + 0.0j),
+)
+target = (
+    (0.0 + 1.0j, 0.0 + 0.0j),
+    (0.0 + 0.0j, 1.0 + 0.0j),
+)
+
+definition = ComplexUnitaryProcrustesDefinition(
+    source_matrix=source,
+    target_matrix=target,
+)
 solver = ComplexUnitaryProcrustesSolverFactory.create(
     ComplexUnitaryProcrustesMethod.NUMPY_DENSE
 )
 result = solver.solve(definition)
+
+if result.status is ComplexUnitaryProcrustesStatus.UNIQUE:
+    transformation = result.transformation
+else:
+    transformation = None
+    # Inspect rank and residual evidence under consumer-owned policy.
 \end{lstlisting}
-Tuple matrices are the dependency-free scalar representation.
+
+At full rank, apply the returned tuple matrix on the right using the consumer's chosen
+matrix implementation. At deficient rank, do not manufacture a transformation from
+unexposed backend null-space vectors.
+
+\section{Result interpretation}
+The scalar result provides:
+\begin{description}
+  \item[\path{cross_singular_values}] the complete nonincreasing spectrum of $C$;
+  \item[\path{numerical_rank}] the strict-cutoff count $r$;
+  \item[\path{applied_rank_cutoff}] the actual $\tau_{\mathrm{rank}}$;
+  \item[\path{status}] \path{UNIQUE} or \path{RANK_DEFICIENT};
+  \item[\path{transformation}] $Q$ only when status is \path{UNIQUE};
+  \item[\path{source_squared_frobenius_norm}] $p_A$;
+  \item[\path{target_squared_frobenius_norm}] $p_B$;
+  \item[\path{optimal_squared_residual}] the roundoff-aware $r_*^2$;
+  \item[\path{optimal_residual_frobenius_norm}] $\sqrt{r_*^2}$;
+  \item[\path{applied_residual_roundoff_cutoff}] the squared-unit cutoff $\delta$;
+  \item[\path{backend_identifier}] the executed API-level operation; and
+  \item[\path{backend_version}] the backend package version.
+\end{description}
+Backend metadata records the invoked API and package version, not linked-library
+provenance.
+
+\section{Failure handling}
+\begin{itemize}
+  \item \path{TypeError} reports malformed exact-type inputs.
+  \item \path{ValueError} reports invalid values or inconsistent shapes.
+  \item \path{FloatingPointError} reports nonfinite or overflowing arithmetic.
+  \item \path{RuntimeError} reports NumPy SVD nonconvergence.
+\end{itemize}
+Numerical rank deficiency is not an exception: it is a successful status-bearing result.

@@ -8,9 +8,70 @@ finite arithmetic only; they assign no optimization or scientific meaning.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
 from .typing import Float64Array
+
+
+def _validate_exact_finite_array(
+    value: np.ndarray,
+    name: str,
+    dtype: np.dtype[np.generic],
+    /,
+) -> np.ndarray:
+    """Validate one exact finite NumPy array and dtype.
+
+    Parameters
+    ----------
+    value
+        Candidate exact NumPy array.
+    name
+        Field name included in failure messages.
+    dtype
+        Required exact NumPy dtype.
+
+    Returns
+    -------
+    numpy.ndarray
+        Original validated array.
+
+    Raises
+    ------
+    TypeError
+        If the value is not an exact ndarray or has the wrong exact dtype.
+    ValueError
+        If any entry is nonfinite.
+    """
+    if type(value) is not np.ndarray:
+        raise TypeError(f"{name} must be an exact numpy.ndarray")
+    if value.dtype != dtype:
+        raise TypeError(f"{name} must have exact dtype {dtype.name}")
+    finite = np.isfinite(value)
+    if not bool(finite.all()):
+        first = tuple(int(component) for component in np.argwhere(~finite)[0])
+        raise ValueError(f"{name} contains a nonfinite entry at index {first}")
+    return value
+
+
+def _has_immutable_bytes_backing(value: np.ndarray, /) -> bool:
+    """Return whether an array's ultimate backing owner is immutable bytes.
+
+    Parameters
+    ----------
+    value
+        Exact NumPy array whose base chain is inspected.
+
+    Returns
+    -------
+    bool
+        Whether the base chain terminates in exact built-in ``bytes``.
+    """
+    backing = cast(np.ndarray | bytes | None, value.base)
+    while type(backing) is np.ndarray:
+        backing = cast(np.ndarray | bytes | None, backing.base)
+    return type(backing) is bytes
 
 
 def immutable_array(
@@ -42,16 +103,48 @@ def immutable_array(
     ValueError
         If any entry is nonfinite.
     """
-    if type(value) is not np.ndarray:
-        raise TypeError(f"{name} must be an exact numpy.ndarray")
-    if value.dtype != dtype:
-        raise TypeError(f"{name} must have exact dtype {dtype.name}")
-    finite = np.isfinite(value)
-    if not bool(finite.all()):
-        first = tuple(int(component) for component in np.argwhere(~finite)[0])
-        raise ValueError(f"{name} contains a nonfinite entry at index {first}")
-    backing = value.tobytes(order="C")
-    return np.frombuffer(backing, dtype=dtype).reshape(value.shape)
+    validated = _validate_exact_finite_array(value, name, dtype)
+    backing = validated.tobytes(order="C")
+    return np.frombuffer(backing, dtype=dtype).reshape(validated.shape)
+
+
+def validate_immutable_array(
+    value: np.ndarray,
+    name: str,
+    dtype: np.dtype[np.generic],
+    /,
+) -> np.ndarray:
+    """Validate one canonical immutable byte-backed NumPy array.
+
+    Parameters
+    ----------
+    value
+        Candidate exact NumPy array.
+    name
+        Field name included in failure messages.
+    dtype
+        Required exact NumPy dtype.
+
+    Returns
+    -------
+    numpy.ndarray
+        Original validated array without copying.
+
+    Raises
+    ------
+    TypeError
+        If the value is not an exact ndarray or has the wrong exact dtype.
+    ValueError
+        If entries are nonfinite or storage is not canonical immutable C order.
+    """
+    validated = _validate_exact_finite_array(value, name, dtype)
+    if not validated.flags.c_contiguous:
+        raise ValueError(f"{name} must be C-contiguous")
+    if validated.flags.writeable:
+        raise ValueError(f"{name} must be read-only")
+    if not _has_immutable_bytes_backing(validated):
+        raise ValueError(f"{name} must have immutable bytes backing")
+    return validated
 
 
 def finite_nonnegative_float64_array(
@@ -89,4 +182,8 @@ def finite_nonnegative_float64_array(
     return value
 
 
-__all__ = ["finite_nonnegative_float64_array", "immutable_array"]
+__all__ = [
+    "finite_nonnegative_float64_array",
+    "immutable_array",
+    "validate_immutable_array",
+]

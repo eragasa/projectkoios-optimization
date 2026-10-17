@@ -1,31 +1,246 @@
 \chapter{NumPy batched Procrustes}
 
-\noindent\textbf{API chapter:} \path{alignment/batched_procrustes/numpy}
+\noindent\textbf{Supported façade:}
+\path{projectkoios.optimization.alignment.numpy.batched_procrustes}
 
-The NumPy backend accepts exact \texttt{numpy.ndarray} inputs with exact
-\texttt{numpy.complex128} dtype and shape \texttt{(..., m, n)}. It performs one public
-batched \texttt{numpy.linalg.svd} call for a nonempty batch.
+\section{Input contract}
+This backend realizes the itemwise method with NumPy's dense array and linear-algebra
+operations \cite{Harris2020NumPy}. The source and target must be exact
+\path{numpy.ndarray} objects with exact
+\path{numpy.complex128} dtype and common shape \path{(..., m, n)}. There must be at
+least one leading batch dimension; $m$ and $n$ must be positive. Zero-sized leading
+dimensions are allowed. Every real and imaginary component must be finite.
 
-\section{Public façade}
+The API deliberately rejects ndarray subclasses, complex64, real, object, Boolean, and
+implicitly coercible inputs. If consumer data starts in another representation, convert
+it explicitly before creating the definition:
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+source = np.asarray(source_data, dtype=np.complex128)
+target = np.asarray(target_data, dtype=np.complex128)
+\end{lstlisting}
+This conversion is consumer-visible and separate from contract validation.
+
+\section{Normal construction: defensive copies}
+Use \path{from_arrays(...)} for ordinary inputs. It validates exact array type, exact
+dtype, and finiteness, then stores independent C-order arrays backed by immutable bytes.
+Later changes to the caller's inputs cannot change the definition, and NumPy writeability
+cannot be re-enabled on the stored arrays.
+
 \begin{lstlisting}[language=Python]
 from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
     NumpyBatchedComplexUnitaryProcrustesSolver,
 )
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesTolerance,
+)
 
-definition = NumpyBatchedComplexUnitaryProcrustesDefinition(
+tolerance = ComplexUnitaryProcrustesTolerance(
+    rank_absolute=0.0,
+    rank_relative=1.0e-12,
+    validation_absolute=1.0e-12,
+    validation_relative=1.0e-10,
+)
+
+definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+    source_matrices=source,
+    target_matrices=target,
+    tolerance=tolerance,
+)
+result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(definition)
+\end{lstlisting}
+The definition exposes \path{batch_shape}, \path{batch_size}, \path{row_count}, and
+\path{column_count} derived from its immutable arrays.
+
+\section{Solving and applying the transformation}
+For a nonempty batch, the solver forms all $A_b^\dagger B_b$ cross matrices and makes one
+public batched \path{numpy.linalg.svd} call. It selects
+\path{left @ right_adjoint}, validates every item, and constructs an immutable result.
+
+A consumer requiring unique transformations should first use the fail-closed accessor
+and then apply the returned array on the right:
+\begin{lstlisting}[language=Python]
+transformations = result.require_unique_right_unitary_transformations()
+aligned_source = definition.source_matrices @ transformations
+
+# Per-item objective values and resolution limits:
+residual_norm = result.optimal_residual_frobenius_norms
+residual_squared = result.optimal_squared_residuals
+residual_resolution = result.applied_residual_roundoff_cutoffs
+\end{lstlisting}
+For multidimensional leading shapes, NumPy matrix multiplication preserves those leading
+dimensions. The aligned result has the same shape as the source.
+
+If diagnostic deficient completions are needed, access them explicitly and preserve the
+rank mask alongside them:
+\begin{lstlisting}[language=Python]
+diagnostic_completions = result.right_unitary_completions
+unique_mask = result.full_rank
+first_deficient = result.first_rank_deficient_index
+\end{lstlisting}
+Do not treat entries where \path{unique_mask} is false as uniquely identified
+transformations.
+
+\section{Complete worked example}
+The following example constructs a two-item batch, solves it, checks uniqueness, applies
+the transformations, and verifies the public residual evidence.
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+    NumpyBatchedComplexUnitaryProcrustesDefinition,
+    NumpyBatchedComplexUnitaryProcrustesSolver,
+)
+
+source = np.asarray(
+    [
+        [[1.0 + 0.0j, 0.0 + 0.0j],
+         [0.0 + 0.0j, 1.0 + 0.0j]],
+        [[1.0 + 0.0j, 0.0 + 0.0j],
+         [0.0 + 0.0j, 2.0 + 0.0j]],
+    ],
+    dtype=np.complex128,
+)
+known = np.asarray(
+    [
+        [[0.0 + 1.0j, 0.0 + 0.0j],
+         [0.0 + 0.0j, 1.0 + 0.0j]],
+        [[0.0 + 0.0j, 1.0 + 0.0j],
+         [1.0 + 0.0j, 0.0 + 0.0j]],
+    ],
+    dtype=np.complex128,
+)
+target = source @ known
+
+definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
     source_matrices=source,
     target_matrices=target,
 )
 result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(definition)
 transformations = result.require_unique_right_unitary_transformations()
+aligned = definition.source_matrices @ transformations
+
+np.testing.assert_allclose(aligned, definition.target_matrices)
+np.testing.assert_allclose(
+    np.sum(np.abs(aligned - definition.target_matrices) ** 2, axis=(-2, -1)),
+    result.optimal_squared_residuals,
+    atol=1.0e-12,
+    rtol=1.0e-10,
+)
 \end{lstlisting}
+The assertion tolerances in an application remain consumer choices. The result itself
+has already been checked using its declared validation policy.
 
-\section{Validation}
-The solver validates SVD factor unitarity, cross reconstruction, completion unitarity,
-and direct residual agreement. Nonfinite arithmetic fails closed. A failed batch returns
-no partial result.
+\section{Zero-copy immutable construction}
+Advanced callers may use \path{from_immutable_arrays(...)} to retain arrays by identity.
+It performs validation but no copying. Each supplied array must already satisfy all of
+the following conditions:
+\begin{itemize}
+  \item exact \path{numpy.ndarray} type;
+  \item exact required dtype;
+  \item finite entries;
+  \item C-contiguous layout;
+  \item read-only status; and
+  \item a NumPy base chain terminating in an exact built-in \path{bytes} object.
+\end{itemize}
+A read-only view over mutable storage is not sufficient, and merely calling
+\path{setflags(write=False)} does not establish immutable ownership. Non-C-contiguous
+immutable views are also rejected.
 
-\section{Consumer use}
-Consumers preserve leading-index topology and interpret rank and residual evidence after
-the solve. KSD topology policy and PhysKit physical semantics remain outside this API.
+The public numerical helper can create the canonical representation, although that
+conversion itself necessarily copies ordinary storage:
+\begin{lstlisting}[language=Python]
+import numpy as np
+from projectkoios.numerics.numpy.validation import immutable_array
+from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+    NumpyBatchedComplexUnitaryProcrustesDefinition,
+)
+
+immutable_source = immutable_array(
+    source, "source_matrices", np.dtype(np.complex128)
+)
+immutable_target = immutable_array(
+    target, "target_matrices", np.dtype(np.complex128)
+)
+definition = (
+    NumpyBatchedComplexUnitaryProcrustesDefinition.from_immutable_arrays(
+        source_matrices=immutable_source,
+        target_matrices=immutable_target,
+    )
+)
+assert definition.source_matrices is immutable_source
+assert definition.target_matrices is immutable_target
+\end{lstlisting}
+Zero-copy construction is useful when a caller already owns canonical arrays or passes
+arrays between immutable owner records. It does not provide a shortcut for adopting
+mutable caller storage.
+
+The raw frozen dataclass constructor has the same canonical immutable-array requirement.
+Use one of the named factories so copying intent is explicit.
+
+\section{Result construction and persistence}
+Ordinary users receive results from the solver. Code that reconstructs a result from
+trusted persisted evidence may use
+\path{NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(...)}. That factory makes
+independent immutable copies and then validates all shapes and mathematical relations.
+Its required exact array dtypes are:
+\begin{itemize}
+  \item complex128 for \path{right_unitary_completions};
+  \item float64 for singular values, cutoffs, powers, and residual evidence;
+  \item \path{numpy.intp} for \path{numerical_ranks}; and
+  \item \path{numpy.bool_} for \path{full_rank}.
+\end{itemize}
+The keyword-only scalar fields are positive exact built-in \path{row_count}, the exact
+owner tolerance record, and coupled backend identifier/version strings. Both backend
+strings must be present and nonempty for a nonempty batch; both must be \path{None} for
+an empty batch.
+
+Use \path{from_immutable_arrays(...)} only when every result array already satisfies the
+canonical immutable-storage conditions above. It retains all arrays by identity and
+still performs complete relational validation. Construction is not a way to assert
+unverified evidence: inconsistent spectra, ranks, cutoffs, residuals, completion
+unitarity, shapes, or backend metadata are rejected.
+
+When persisting a result, retain at least the complete result fields and tolerance
+record. Persisting only residual norms loses the declared rank decision and the
+roundoff resolution needed to interpret a zero residual.
+
+\section{Backend validation performed before return}
+For every nonempty item, the NumPy solver checks:
+\begin{itemize}
+  \item finite, nonnegative, nonincreasing complete singular values;
+  \item left and right singular-vector unitarity;
+  \item reconstruction of $A_b^\dagger B_b$;
+  \item right unitarity of the selected completion;
+  \item finite source and target powers; and
+  \item agreement of the direct squared residual
+        $\lVert A_b\widetilde Q_b-B_b\rVert_F^2$ with the reconstructed optimum.
+\end{itemize}
+The dimension-scaled bound $\beta(k,x)$ defined in the scalar chapter uses $k=n$ for
+unitary and cross-reconstruction checks. Direct residual agreement uses $k=mn$ and the
+scale
+\[
+  \max\!\left(\lVert A_b\rVert_F^2,
+  \lVert B_b\rVert_F^2,\rho_b^2\right).
+\]
+
+\section{Errors and recovery}
+\begin{description}
+  \item[\path{TypeError}] The definition/result type, ndarray type, dtype, tolerance
+        type, or another nominal type is wrong.
+  \item[\path{ValueError}] Shapes, finiteness at construction, immutable-storage
+        requirements, relational evidence, or a validation bound is invalid. The
+        unique accessor also uses this error for rank deficiency.
+  \item[\path{FloatingPointError}] Cross products, powers, residual reconstruction,
+        cutoffs, or backend output become nonfinite, or a reconstructed residual is
+        materially negative.
+  \item[\path{RuntimeError}] NumPy SVD does not converge.
+\end{description}
+A rare failed batched SVD may trigger scalar diagnostic retries solely to identify the
+first reproducibly failing C-order batch index. No partial successful batch is returned.
+The appropriate recovery is to correct the representation, revise an explicitly owned
+software tolerance when justified, split or rescale consumer data if appropriate, or
+record the failure under consumer policy. Suppressing rank evidence or treating a
+failed batch as partially valid is not supported.

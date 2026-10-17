@@ -6,8 +6,10 @@ assembly.
 
 ## Contract
 
-- Construction normalizes all public arrays to exact dtypes and immutable byte-backed
-  copies.
+- `from_arrays(...)` normalizes all public arrays to exact dtypes and immutable
+  byte-backed copies.
+- `from_immutable_arrays(...)` retains only canonical immutable arrays by identity.
+- The raw frozen constructor performs relational validation without replacing fields.
 - Shapes, nonnegative ordered spectra, additive rank cutoffs, numerical ranks,
   `full_rank`, powers, reconstructed residuals, roundoff cutoffs, and right-unitarity
   must agree.
@@ -28,7 +30,8 @@ them unique transformations.
 shape, rank, residual, completion, or backend evidence. Numerical reconstruction may
 raise `FloatingPointError`. Dedicated tests exercise immutable backing, every relational
 invariant family, multidimensional rank summaries, empty semantics, fail-closed unique
-access, and absence of any postconstruction array installer.
+access, copying and zero-copy construction, canonical-storage rejection, and absence of
+construction-time field replacement.
 
 ## Pages
 

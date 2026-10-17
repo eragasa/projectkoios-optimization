@@ -4,6 +4,10 @@ This tree records repository work that has not yet become accepted current-state
 implementation. Architecture pages describe owner boundaries; task pages track migration
 status, sequencing, evidence, reviews, and unresolved work.
 
+## Technical debt
+
+- [Open technical-debt issues](tech_debt/index.md)
+
 ## Migration tasks
 
 - [KSD completed-work numerical inventory](active/ksdft2effmass-migration/index.md)

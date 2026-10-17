@@ -2,10 +2,15 @@
 
 ```mermaid
 flowchart TD
-    E[Candidate evidence] --> V[Independent relational validation]
-    V --> I[Immutable result]
-    I --> R{All full rank?}
-    R -- Yes --> U[Return unique transformations]
-    R -- No --> F[Fail-closed accessor]
-    I --> D[Diagnostic completions remain available]
+    Ordinary[Ordinary exact evidence arrays] --> Copy[from_arrays]
+    Copy --> Defensive[Immutable defensive copies]
+    Canonical[Canonical immutable evidence arrays] --> Zero[from_immutable_arrays]
+    Defensive --> Raw[Canonical frozen constructor]
+    Zero --> Raw
+    Raw --> Validate[Independent relational validation]
+    Validate --> Result[Immutable result]
+    Result --> Rank{All full rank?}
+    Rank -- Yes --> Unique[Return unique transformations]
+    Rank -- No --> Fail[Fail-closed accessor]
+    Result --> Diagnostic[Diagnostic completions remain available]
 ```

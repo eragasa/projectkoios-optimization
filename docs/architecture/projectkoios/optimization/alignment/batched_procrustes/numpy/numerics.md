@@ -5,7 +5,8 @@ evidence under the existing tolerance record.
 
 - All inputs must be exact `numpy.ndarray` instances with exact `complex128` dtype.
 - Real, complex64, object, Boolean, and implicit-coercion inputs are rejected.
-- Public definition and result arrays are defensive read-only copies.
+- `from_arrays(...)` gives public definitions and results independent immutable copies;
+  `from_immutable_arrays(...)` retains only already-canonical immutable storage.
 - Nonfinite arithmetic fails closed.
 
 ## Rank cutoff

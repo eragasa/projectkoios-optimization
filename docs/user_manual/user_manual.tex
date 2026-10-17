@@ -7,16 +7,19 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \geometry{margin=1in}
-\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,pdftitle={Project Koios Optimization User Manual},pdfauthor={Project Koios}}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,pdftitle={Project Koios Optimization User Manual},pdfauthor={Project Koios}}
 \lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,columns=fullflexible,showstringspaces=false}
+\renewcommand{\bibname}{References}
 \pdfinfoomitdate=1
 \pdftrailerid{}
 \begin{document}
 \frontmatter
+\hypersetup{pageanchor=false}
 \title{Project Koios Optimization\\User Manual}
 \author{Project Koios}
 \date{}
 \maketitle
+\hypersetup{pageanchor=true}
 \tableofcontents
 \mainmatter
 \include{chapters/alignment}
@@ -25,6 +28,7 @@
 \include{chapters/alignment_batched_procrustes_numpy}
 \include{chapters/alignment_batched_procrustes_scipy}
 \backmatter
+\include{chapters/references}
 \chapter*{Verification scope}
 Software verification and bounded numerical verification establish implementation
 properties only. They do not establish scientific validity, material-model adequacy, or

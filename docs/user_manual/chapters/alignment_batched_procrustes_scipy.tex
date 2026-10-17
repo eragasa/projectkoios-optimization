@@ -1,11 +1,19 @@
-\chapter{alignment/batched\_procrustes/scipy}
+\chapter{SciPy batched Procrustes status}
 
-No SciPy batched Procrustes solver is currently implemented or exported.
+No SciPy batched Procrustes definition, solver, result, or façade is currently
+implemented or exported. Installing the \path{scipy} optional dependency does not add a
+batched Procrustes API.
 
-Dense exact complex128 batches use the supported NumPy façade. A future SciPy backend
-requires a distinct representation or execution need, an explicit contract, independent
-numerical qualification, and isolated-wheel verification. It must not be introduced as
-a name-only wrapper around NumPy.
+For dense exact complex128 batches, use the NumPy procedure in the preceding chapter:
+\begin{lstlisting}[language=Python]
+from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+    NumpyBatchedComplexUnitaryProcrustesDefinition,
+    NumpyBatchedComplexUnitaryProcrustesSolver,
+)
+\end{lstlisting}
+Do not infer SciPy Procrustes availability from unrelated SciPy capabilities in the
+distribution, and do not import an internal or guessed SciPy alignment path.
 
-Consumers must not infer SciPy availability from unrelated SciPy capabilities in the
-distribution.
+A future SciPy backend would require a distinct representation or execution need, an
+explicit public contract, independent numerical qualification, and isolated-wheel
+verification. It will not be introduced as a name-only wrapper around NumPy.

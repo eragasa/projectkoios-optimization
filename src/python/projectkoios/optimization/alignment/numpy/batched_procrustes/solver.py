@@ -415,7 +415,7 @@ class NumpyBatchedComplexUnitaryProcrustesSolver(BatchedComplexUnitaryProcrustes
         NumpyBatchedComplexUnitaryProcrustesResult
             Independently validated immutable result.
         """
-        return NumpyBatchedComplexUnitaryProcrustesResult(
+        return NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
             row_count=definition.row_count,
             tolerance=definition.tolerance,
             right_unitary_completions=completion.completions,
@@ -451,7 +451,7 @@ class NumpyBatchedComplexUnitaryProcrustesSolver(BatchedComplexUnitaryProcrustes
         """
         batch_shape = definition.batch_shape
         dimension = definition.column_count
-        return NumpyBatchedComplexUnitaryProcrustesResult(
+        return NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
             row_count=definition.row_count,
             tolerance=definition.tolerance,
             right_unitary_completions=np.empty(

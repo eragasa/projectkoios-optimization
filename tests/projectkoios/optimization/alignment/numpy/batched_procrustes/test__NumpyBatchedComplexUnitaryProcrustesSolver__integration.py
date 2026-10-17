@@ -167,7 +167,7 @@ def test_solver_preserves_tensor_shape_and_right_action_orientation(
     target = np.asarray(source @ expected, dtype=np.complex128)
 
     result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
     )
 
     assert result.batch_shape == case.batch_shape
@@ -217,7 +217,9 @@ def test_solver_uses_one_public_batched_svd_call(
     ).copy()
 
     module.NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        module.NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+        module.NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source, source
+        )
     )
 
     assert shapes == [expected_svd_shape]
@@ -242,7 +244,9 @@ def test_rank_cutoff_uses_owner_absolute_plus_relative_rule(
     )
 
     result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target, tolerance)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source, target, tolerance
+        )
     )
 
     assert result.applied_rank_cutoffs[0] == pytest.approx(
@@ -280,7 +284,9 @@ def test_empty_batch_short_circuits_without_svd(
     source = np.empty(source_shape, dtype=np.complex128)
 
     result = module.NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        module.NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+        module.NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source, source
+        )
     )
 
     assert result.batch_shape == case.batch_shape
@@ -346,7 +352,9 @@ def test_batched_svd_failure_reports_first_reproducible_c_order_index(
         match=re.escape(repr(case.expected_first_index)),
     ):
         module.NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-            module.NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+            module.NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+                source, target
+            )
         )
 
 
@@ -364,7 +372,7 @@ def test_cross_overflow_reports_first_failing_batch_index() -> None:
         match=re.escape(repr(expected_failure_index)),
     ):
         NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-            NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+            NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, source)
         )
 
 

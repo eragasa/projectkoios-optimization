@@ -7,6 +7,7 @@ from dataclasses import FrozenInstanceError
 import numpy as np
 import pytest
 
+from projectkoios.numerics.numpy.validation import immutable_array
 from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
 )
@@ -50,7 +51,9 @@ def test_package_facade_preserves_explicit_implementation_ownership() -> None:
 def test_definition_preserves_shape_and_owns_read_only_copies() -> None:
     source = np.arange(48, dtype=np.float64).reshape(2, 3, 4, 2).astype(np.complex128)
     target = source + (1.0 + 2.0j)
-    definition = NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+    definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+        source, target
+    )
     source[0, 0, 0, 0] = 999.0 + 0.0j
     target[0, 0, 0, 0] = 999.0 + 0.0j
 
@@ -69,11 +72,51 @@ def test_definition_preserves_shape_and_owns_read_only_copies() -> None:
         definition.target_matrices.flags.writeable = True
 
 
+def test_definition_zero_copy_factory_retains_canonical_arrays_by_identity() -> None:
+    source = immutable_array(
+        np.ones((2, 1, 1), dtype=np.complex128),
+        "source_matrices",
+        np.dtype(np.complex128),
+    )
+    target = immutable_array(
+        np.ones((2, 1, 1), dtype=np.complex128),
+        "target_matrices",
+        np.dtype(np.complex128),
+    )
+
+    definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_immutable_arrays(
+        source,
+        target,
+    )
+
+    assert definition.source_matrices is source
+    assert definition.target_matrices is target
+
+
+def test_raw_definition_constructor_rejects_writable_array_storage() -> None:
+    source = np.ones((2, 1, 1), dtype=np.complex128)
+
+    with pytest.raises(ValueError, match="read-only"):
+        NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+
+
+def test_zero_copy_factory_rejects_read_only_mutable_backing() -> None:
+    owner = np.ones((2, 1, 1), dtype=np.complex128)
+    read_only_view = owner.view()
+    read_only_view.setflags(write=False)
+
+    with pytest.raises(ValueError, match="immutable bytes backing"):
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_immutable_arrays(
+            read_only_view,
+            read_only_view,
+        )
+
+
 def test_definition_retains_exact_nominal_tolerance() -> None:
     tolerance = ComplexUnitaryProcrustesTolerance(1.0e-14, 1.0e-9, 1.0e-12, 1.0e-10)
     matrices = np.ones((2, 3, 1, 1), dtype=np.complex128)
 
-    definition = NumpyBatchedComplexUnitaryProcrustesDefinition(
+    definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
         matrices,
         matrices,
         tolerance,
@@ -96,9 +139,9 @@ def test_definition_rejects_non_ndarray_or_non_complex128_inputs(value: object) 
     valid = np.ones((2, 1, 1), dtype=np.complex128)
 
     with pytest.raises(TypeError):
-        NumpyBatchedComplexUnitaryProcrustesDefinition(value, valid)  # type: ignore[arg-type]
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(value, valid)  # type: ignore[arg-type]
     with pytest.raises(TypeError):
-        NumpyBatchedComplexUnitaryProcrustesDefinition(valid, value)  # type: ignore[arg-type]
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(valid, value)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -119,7 +162,7 @@ def test_definition_rejects_invalid_shapes(
     target = np.empty(target_shape, dtype=np.complex128)
 
     with pytest.raises(ValueError, match=message):
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
 
 
 def test_definition_reports_first_nonfinite_full_index() -> None:
@@ -128,13 +171,17 @@ def test_definition_reports_first_nonfinite_full_index() -> None:
     source[1, 0, 0, 0] = complex(float("inf"), 0.0)
 
     with pytest.raises(ValueError, match=r"\(0, 2, 1, 0\)"):
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, source.copy())
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source, source.copy()
+        )
 
 
 def test_definition_permits_shape_preserving_empty_batch() -> None:
     source = np.empty((4, 0, 3, 2), dtype=np.complex128)
 
-    definition = NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+    definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+        source, source
+    )
 
     assert definition.batch_shape == (4, 0)
     assert definition.batch_size == 0
@@ -146,7 +193,7 @@ def test_definition_rejects_wrong_tolerance_nominal_type() -> None:
     source = np.ones((2, 1, 1), dtype=np.complex128)
 
     with pytest.raises(TypeError, match="tolerance"):
-        NumpyBatchedComplexUnitaryProcrustesDefinition(
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
             source,
             source,
             object(),  # type: ignore[arg-type]
@@ -155,7 +202,9 @@ def test_definition_rejects_wrong_tolerance_nominal_type() -> None:
 
 def test_definition_is_frozen() -> None:
     source = np.ones((2, 1, 1), dtype=np.complex128)
-    definition = NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+    definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+        source, source
+    )
 
     with pytest.raises(FrozenInstanceError):
         definition.tolerance = ComplexUnitaryProcrustesTolerance()  # type: ignore[misc]

@@ -2,18 +2,34 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import FrozenInstanceError, replace
 
 import numpy as np
 import pytest
 
+from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
     NumpyBatchedComplexUnitaryProcrustesResult,
     NumpyBatchedComplexUnitaryProcrustesSolver,
+    contract,
 )
 
 pytestmark = pytest.mark.unit
+
+CANONICAL_ARRAY_FIELD_NAMES = (
+    "right_unitary_completions",
+    "cross_singular_values",
+    "numerical_ranks",
+    "full_rank",
+    "applied_rank_cutoffs",
+    "source_squared_frobenius_norms",
+    "target_squared_frobenius_norms",
+    "optimal_squared_residuals",
+    "optimal_residual_frobenius_norms",
+    "applied_residual_roundoff_cutoffs",
+)
 
 
 def _full_rank_result() -> NumpyBatchedComplexUnitaryProcrustesResult:
@@ -22,7 +38,7 @@ def _full_rank_result() -> NumpyBatchedComplexUnitaryProcrustesResult:
         (2, 3, 2, 2),
     ).copy()
     return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, source)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, source)
     )
 
 
@@ -35,7 +51,38 @@ def _result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     source[0, 1, :, 1] = 0.0 + 0.0j
     target[0, 1, :, 1] = 0.0 + 0.0j
     return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-        NumpyBatchedComplexUnitaryProcrustesDefinition(source, target)
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
+    )
+
+
+def _rebuild_from_arrays(
+    result: NumpyBatchedComplexUnitaryProcrustesResult,
+    *,
+    completions: Complex128Array | None = None,
+    spectra: Float64Array | None = None,
+    rank_cutoffs: Float64Array | None = None,
+) -> NumpyBatchedComplexUnitaryProcrustesResult:
+    return NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
+        row_count=result.row_count,
+        tolerance=result.tolerance,
+        right_unitary_completions=(
+            result.right_unitary_completions if completions is None else completions
+        ),
+        cross_singular_values=(
+            result.cross_singular_values if spectra is None else spectra
+        ),
+        numerical_ranks=result.numerical_ranks,
+        full_rank=result.full_rank,
+        applied_rank_cutoffs=(
+            result.applied_rank_cutoffs if rank_cutoffs is None else rank_cutoffs
+        ),
+        source_squared_frobenius_norms=result.source_squared_frobenius_norms,
+        target_squared_frobenius_norms=result.target_squared_frobenius_norms,
+        optimal_squared_residuals=result.optimal_squared_residuals,
+        optimal_residual_frobenius_norms=result.optimal_residual_frobenius_norms,
+        applied_residual_roundoff_cutoffs=(result.applied_residual_roundoff_cutoffs),
+        backend_identifier=result.backend_identifier,
+        backend_version=result.backend_version,
     )
 
 
@@ -44,6 +91,39 @@ def test_result_exposes_no_postconstruction_array_installer() -> None:
         NumpyBatchedComplexUnitaryProcrustesResult,
         "_install_arrays",
     )
+    assert "object.__setattr__" not in inspect.getsource(contract)
+
+
+def test_result_zero_copy_factory_retains_canonical_arrays_by_identity() -> None:
+    original = _result()
+
+    retained = NumpyBatchedComplexUnitaryProcrustesResult.from_immutable_arrays(
+        row_count=original.row_count,
+        tolerance=original.tolerance,
+        right_unitary_completions=original.right_unitary_completions,
+        cross_singular_values=original.cross_singular_values,
+        numerical_ranks=original.numerical_ranks,
+        full_rank=original.full_rank,
+        applied_rank_cutoffs=original.applied_rank_cutoffs,
+        source_squared_frobenius_norms=original.source_squared_frobenius_norms,
+        target_squared_frobenius_norms=original.target_squared_frobenius_norms,
+        optimal_squared_residuals=original.optimal_squared_residuals,
+        optimal_residual_frobenius_norms=(original.optimal_residual_frobenius_norms),
+        applied_residual_roundoff_cutoffs=(original.applied_residual_roundoff_cutoffs),
+        backend_identifier=original.backend_identifier,
+        backend_version=original.backend_version,
+    )
+
+    for field_name in CANONICAL_ARRAY_FIELD_NAMES:
+        assert getattr(retained, field_name) is getattr(original, field_name)
+
+
+def test_raw_result_constructor_rejects_writable_array_storage() -> None:
+    result = _result()
+    writable_completions = result.right_unitary_completions.copy()
+
+    with pytest.raises(ValueError, match="read-only"):
+        replace(result, right_unitary_completions=writable_completions)
 
 
 def test_result_preserves_batch_shape_and_read_only_evidence() -> None:
@@ -110,10 +190,10 @@ def test_result_defensively_copies_public_arrays() -> None:
     result = _result()
     completions = result.right_unitary_completions.copy()
     spectra = result.cross_singular_values.copy()
-    copied = replace(
+    copied = _rebuild_from_arrays(
         result,
-        right_unitary_completions=completions,
-        cross_singular_values=spectra,
+        completions=completions,
+        spectra=spectra,
     )
     completions[...] = 4.0 + 0.0j
     spectra[...] = 9.0
@@ -135,7 +215,7 @@ def test_result_rejects_inconsistent_rank_cutoff() -> None:
     cutoff[0, 0] += 1.0
 
     with pytest.raises(ValueError, match="cutoff"):
-        replace(result, applied_rank_cutoffs=cutoff)
+        _rebuild_from_arrays(result, rank_cutoffs=cutoff)
 
 
 def test_result_rejects_nonunitary_completion() -> None:
@@ -144,7 +224,7 @@ def test_result_rejects_nonunitary_completion() -> None:
     completion[1, 2, 0, 0] = 2.0 + 0.0j
 
     with pytest.raises(ValueError, match=r"\(1, 2\)"):
-        replace(result, right_unitary_completions=completion)
+        _rebuild_from_arrays(result, completions=completion)
 
 
 def test_result_is_frozen() -> None:

@@ -1,19 +1,57 @@
-\chapter{alignment}
+\chapter{Alignment}
 
-Alignment selects mathematical transformations between prepared representations.
-Optimization owns transformation selection and numerical evidence. It does not own the
-physical or scientific meaning of the representations.
+Alignment selects a mathematical transformation between already prepared numerical
+representations. Optimization owns the transformation-selection problem, numerical
+controls, and reconstructable evidence. It does not own the physical or scientific
+meaning of the matrices.
 
-\section{Ownership}
-PhysKit may adapt units, operators, lattices, hoppings, and frame identities into
-unit-free arrays. KSD may select scientific controls and interpret evidence. These
-consumer responsibilities do not enter Optimization.
+\section{Installation}
+The dependency-free scalar contract is installed with the base distribution. The NumPy
+backend requires the NumPy extra:
+\begin{lstlisting}[language=bash]
+python -m pip install "projectkoios-optimization[numpy]"
+\end{lstlisting}
+The distribution requires Python 3.14 or newer. NumPy support requires NumPy 2.3 or
+newer and earlier than NumPy 3.
 
-\section{Available families}
-The library provides one-pair complex-unitary right Procrustes alignment and a dense
-NumPy batched family. Both act on the right of the source and share one generic numerical
-policy owner.
+\section{Mathematical conventions}
+For a complex matrix $A$:
+\begin{itemize}
+  \item $A^\dagger$ is the conjugate transpose;
+  \item $\lVert A\rVert_F^2=\sum_{ij}|A_{ij}|^2$ is the squared Frobenius norm;
+  \item $\lVert A\rVert_{\max}=\max_{ij}|A_{ij}|$ is the maximum-entry norm; and
+  \item $I_n$ is the $n\times n$ identity matrix.
+\end{itemize}
+All Procrustes transformations in this manual act on the \emph{right}. If $A$ is the
+source and $Q$ is the returned transformation, the aligned matrix is $AQ$, never $QA$.
+The library does not transpose, conjugate, reorder, or reinterpret consumer axes except
+when explicitly forming $A^\dagger B$.
 
-\section{Evidence and interpretation}
-Rank, residual, cutoff, and backend metadata are software evidence. Consumers must not
-infer scientific validity from full rank or a small residual alone.
+\section{Choosing an interface}
+Use scalar Procrustes for one pair of dependency-free tuple matrices. Use NumPy batched
+Procrustes for an array with one or more leading batch dimensions. The scalar and batched
+families share the same objective, rank cutoff, residual reconstruction, and validation
+tolerances.
+
+The scalar contract withholds a transformation when numerical rank is deficient. The
+batched contract retains one SVD-selected completion per item for homogeneous array
+output, but marks deficient completions as diagnostic and provides a fail-closed accessor
+for transformations that are unique for every item.
+
+\section{Ownership boundary}
+Before calling this library, a consumer must decide what each row, column, and leading
+batch index means and must convert physical quantities into suitable unit-free numerical
+representations. PhysKit may own that adaptation. After the solve, KSD or another
+consumer may interpret rank and residual evidence under separately declared scientific
+policy.
+
+The following are not supplied by Alignment:
+\begin{itemize}
+  \item physical units or operator semantics;
+  \item correspondence, topology, path ordering, or periodic closure;
+  \item a scientific rank threshold or acceptable residual;
+  \item a scientific disposition or human acceptance decision; and
+  \item a claim that a diagnostic deficient completion is unique.
+\end{itemize}
+Full numerical rank and a small software residual are evidence, not scientific
+validation.

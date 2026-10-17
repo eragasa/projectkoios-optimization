@@ -1,24 +1,114 @@
-\chapter{alignment/batched\_procrustes}
+\chapter{Batched complex-unitary Procrustes}
 
-Batched Procrustes evaluates the same right-action problem for every item in a preserved
-leading shape. It does not materialize a Python definition or result object per matrix
-pair.
+\section{Batched problem}
+Let $\mathcal{B}=(d_1,\ldots,d_k)$, with $k\ge1$, be the leading batch shape. A source
+and target have shape
+\[
+  \mathcal{B}\mathbin{+}(m,n),
+  \qquad m>0,\quad n>0,
+\]
+and equal complex entries at each leading multi-index $b\in\mathcal{B}$. For each $b$,
+the capability solves
+\[
+  \min_{Q_b^\dagger Q_b=I_n}\lVert A_bQ_b-B_b\rVert_F.
+\]
+All leading dimensions and their C-order indexing are preserved. The capability neither
+flattens topology into a public result nor interprets adjacency between items.
 
-\section{Nominal boundary}
-\texttt{BatchedComplexUnitaryProcrustesSolver} specializes the generic policy to exact
-NumPy batch definitions and results. It owns vectorized additive-cutoff construction.
-Concrete backends own decomposition execution.
+\section{Per-item mathematical procedure}
+The array implementation evaluates the scalar mathematics without creating one Python
+definition or result object per item. For every leading index $b$ it performs the
+following operations:
+\begin{align*}
+  C_b &= A_b^\dagger B_b,\\
+  C_b &= U_b\Sigma_bV_b^\dagger,\\
+  \widetilde Q_b &= U_bV_b^\dagger,\\
+  \tau_b &= \tau_{\mathrm{rank}}^{\mathrm{abs}}
+    +\tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_{b,1},\\
+  r_b &= \sum_{j=1}^{n}\mathbf{1}[\sigma_{b,j}>\tau_b],\\
+  \rho_b^2 &= \lVert A_b\rVert_F^2+\lVert B_b\rVert_F^2
+    -2\sum_{j=1}^{n}\sigma_{b,j}.
+\end{align*}
+The last identity is evaluated with the scaled, roundoff-aware procedure in the scalar
+chapter. Thus each item also receives its own squared-unit cancellation cutoff
+$\delta_b$.
 
-\section{Evidence}
-Every item retains a complete singular spectrum, numerical rank, full-rank status,
-applied rank cutoff, source and target powers, optimal residual, and squared-residual
-roundoff cutoff. Deficient completions remain diagnostic.
+The selected completion $\widetilde Q_b$ always acts on the right:
+\[
+  \widetilde A_b=A_b\widetilde Q_b.
+\]
+If $r_b=n$, $\widetilde Q_b$ is the unique polar factor under the declared numerical
+rank policy. If $r_b<n$, it is only the completion selected by the backend's complete
+SVD and can change with an equally valid choice of null-space bases.
 
-\section{Fail-closed unique access}
-\texttt{require\_unique\_right\_unitary\_transformations()} returns the existing immutable
-completion array only when every item is full rank. Otherwise it raises with the first
-deficient C-order index.
+\section{Array evidence and shapes}
+For input shape $\mathcal{B}+(m,n)$, the result has the following shapes:
+\begin{description}
+  \item[\path{right_unitary_completions}] $\mathcal{B}+(n,n)$, complex128;
+  \item[\path{cross_singular_values}] $\mathcal{B}+(n)$, float64;
+  \item[\path{numerical_ranks}] $\mathcal{B}$, integer;
+  \item[\path{full_rank}] $\mathcal{B}$, Boolean;
+  \item[\path{applied_rank_cutoffs}] $\mathcal{B}$, float64;
+  \item[\path{source_squared_frobenius_norms}] $\mathcal{B}$, float64;
+  \item[\path{target_squared_frobenius_norms}] $\mathcal{B}$, float64;
+  \item[\path{optimal_squared_residuals}] $\mathcal{B}$, float64;
+  \item[\path{optimal_residual_frobenius_norms}] $\mathcal{B}$, float64; and
+  \item[\path{applied_residual_roundoff_cutoffs}] $\mathcal{B}$, float64.
+\end{description}
+All arrays are immutable and relationally validated. Complete spectra, input powers, and
+roundoff cutoffs allow a consumer to reproduce each rank and residual decision.
+
+The result also provides exact derived summaries:
+\begin{itemize}
+  \item \path{batch_shape} is $\mathcal{B}$;
+  \item \path{batch_size} is $\prod_i d_i$, including zero;
+  \item \path{column_count} is $n$;
+  \item \path{all_full_rank} is the Boolean reduction of \path{full_rank};
+  \item \path{rank_deficient_count} counts false entries; and
+  \item \path{first_rank_deficient_index} is the first false index in deterministic
+        C order, or \path{None}.
+\end{itemize}
+
+\section{Fail-closed use of transformations}
+The field \path{right_unitary_completions} deliberately preserves homogeneous output,
+including diagnostic completions. A consumer that requires uniquely identified
+transformations must use
+\begin{lstlisting}[language=Python]
+transformations = result.require_unique_right_unitary_transformations()
+\end{lstlisting}
+This returns the existing immutable completion array, without copying, only if every
+item is full rank. Otherwise it raises \path{ValueError} and identifies the first
+deficient leading index in C order.
+
+If a consumer intentionally inspects deficient completions, it must pair them with
+\path{full_rank}, \path{numerical_ranks}, and \path{applied_rank_cutoffs} and must not
+report them as unique transformations. The library does not decide whether one deficient
+item invalidates an entire scientific path, plaquette, campaign, or other topology.
 
 \section{Empty batches}
-Zero-sized leading dimensions preserve exact output shapes, claim no backend evidence,
-and invoke no SVD.
+At least one leading batch dimension is required, but a leading dimension may be zero.
+For example, shape $(4,0,m,n)$ is valid. An empty batch:
+\begin{itemize}
+  \item preserves every exact output shape;
+  \item invokes no SVD backend;
+  \item carries \path{None} for backend identifier and version;
+  \item has \path{rank_deficient_count == 0};
+  \item has \path{first_rank_deficient_index is None}; and
+  \item is vacuously \path{all_full_rank}.
+\end{itemize}
+The unique-transformation accessor consequently returns the shape-preserving empty
+completion array. None of these vacuous properties claims that a transformation was
+computed.
+
+\section{Whole-batch failure policy}
+Input validation occurs before backend execution. Backend evidence and all numerical
+relations are validated per item. The first numerical failure is reported in
+deterministic C order when an index is available. A failure rejects the whole batch;
+there is no partial result. Numerical rank deficiency remains a successful result and is
+not treated as backend failure.
+
+\section{Memory model}
+For batch size $N=\prod_i d_i$, cross matrices, SVD factors, and completions each scale
+as $O(Nn^2)$; complete spectra scale as $O(Nn)$; and scalar evidence scales as $O(N)$.
+The implementation does not create nested Python tuple matrices for individual items.
+Consumers should account for these required arrays when choosing a batch size.
