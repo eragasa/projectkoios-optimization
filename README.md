@@ -16,6 +16,7 @@ KSD-lineage BIC-selected Gaussian-mixture clustering, positive-definite quadrati
 exact two-dimensional rectangle minimization, dense and sparse full-ellipsoid support,
 deterministic finite-objective selection, ordinary and positive-weight real/complex
 multiple-right-hand-side linear least squares, affine-residual quadratic construction,
+one-pair and tensor-batched complex-unitary right Procrustes alignment,
 positive-exponent finite Fourier-series evaluation at supplied real coordinates,
 shared-grid batched finite Fourier evaluation with one dense channel reduction,
 invariant dense Hermitian spectral-subspace decomposition with complete-spectrum output
@@ -63,6 +64,10 @@ from projectkoios.numerics.linalg.sparse_hermitian_spectrum import (
     SparseHermitianSpectrumSelection,
 )
 
+from projectkoios.optimization.alignment.numpy.batched_procrustes import (
+    NumpyBatchedComplexUnitaryProcrustesDefinition,
+    NumpyBatchedComplexUnitaryProcrustesSolver,
+)
 from projectkoios.optimization.sampling.uniform import UniformRandomSampler
 from projectkoios.optimization.clustering.scipy.gmm import (
     ScipyGaussianMixtureClusterer,

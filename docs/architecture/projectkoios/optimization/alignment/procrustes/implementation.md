@@ -8,12 +8,14 @@ src/python/projectkoios/optimization/alignment/
 ├── procrustes.py
 └── numpy/
     ├── __init__.py
-    └── procrustes.py
+    ├── procrustes.py
+    └── batched_procrustes.py
 ```
 
 `procrustes.py` contains the dependency-free immutable definition, tolerance, status,
 result, nominal solver, closed method enum, and lazy factory. `numpy/procrustes.py`
-contains the sole built-in SVD implementation.
+contains the one-pair built-in SVD implementation. `numpy/batched_procrustes.py` owns the
+direct-array batch definition, immutable result, and vectorized solver.
 
 ## Tests
 
@@ -26,15 +28,21 @@ tests/projectkoios/optimization/alignment/
 ├── test__ComplexUnitaryProcrustesWheel__integration.py
 └── numpy/
     ├── test__NumpyComplexUnitaryProcrustesSolver__integration.py
-    └── test__NumpyComplexUnitaryProcrustesSolver__numerical.py
+    ├── test__NumpyComplexUnitaryProcrustesSolver__numerical.py
+    └── batched_procrustes/
+        ├── test__NumpyBatchedComplexUnitaryProcrustesDefinition__unit.py
+        ├── test__NumpyBatchedComplexUnitaryProcrustesResult__unit.py
+        ├── test__NumpyBatchedComplexUnitaryProcrustesSolver__integration.py
+        ├── test__NumpyBatchedComplexUnitaryProcrustesSolver__numerical.py
+        └── test__NumpyBatchedComplexUnitaryProcrustesWheel__integration.py
 ```
 
-The complete mapped tree is included in strict mypy. The wheel test separately verifies
-that the contract imports without NumPy and that explicit factory selection executes the
-NumPy backend.
+The complete mapped tree is included in strict mypy. Wheel tests separately verify the
+lazy scalar factory and the direct NumPy batched module from isolated built artifacts.
 
 ## Exclusions
 
-There is no rectangular, partial-isometry, batch, aggregate, frame-path, transport,
-closure, phase-synchronization, or campaign module in this slice. Package initializers
-re-export nothing.
+There is no partial-isometry, aggregate, frame-path, transport, closure,
+phase-synchronization, or campaign module in this slice. The batched capability supports
+rectangular source and target matrices with square right-unitary completions, but it does
+not define rectangular transformations. Package initializers re-export nothing.

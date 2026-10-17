@@ -43,4 +43,18 @@ the same identity and cutoff.
 - NumPy SVD nonconvergence becomes `RuntimeError`;
 - numerical rank deficiency is a successful `RANK_DEFICIENT` result, not an exception.
 
-No public full transform is formed on the deficient branch.
+No public full transform is formed on the deficient branch of the one-pair contract.
+
+## Batched numerical distinction
+
+The NumPy batch capability retains homogeneous arrays by returning the SVD-selected
+unitary completion for every item together with explicit effective-rank evidence.
+
+- Full-rank completions are the unique polar factors and match the scalar solver.
+- Deficient completions are diagnostic choices and have `full_rank == False`.
+- Deficient scalar/batch parity applies to singular values, ranks, cutoffs, and residuals,
+  not to a scalar transformation because the scalar contract deliberately returns none.
+- Rank and residual policies otherwise match the existing scalar owner semantics.
+- Batched backend or validation failures reject the whole batch without partial output.
+
+See [batched Procrustes numerics](batched/numerics.md) for array-specific behavior.

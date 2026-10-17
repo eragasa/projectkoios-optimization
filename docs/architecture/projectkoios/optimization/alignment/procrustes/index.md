@@ -26,7 +26,7 @@ The unique full right-unitary polar factor is $Q=UV^\dagger$ when the cross matr
 full rank. The applied numerical-rank cutoff is
 
 $$
-\tau_{\mathrm{rank}}=	au_{\mathrm{abs}}
+\tau_{\mathrm{rank}}=\tau_{\mathrm{abs}}
 +\tau_{\mathrm{rel}}\sigma_{\max}.
 $$
 
@@ -56,9 +56,21 @@ $$
 The result does not establish a scientific rank threshold, frame protocol, path
 continuity, or periodic closure.
 
+## Batched NumPy capability
+
+A distinct NumPy-specific contract evaluates leading-dimensional arrays without
+materializing one Python object graph per matrix pair.
+
+- It preserves the same source-to-target right-action orientation.
+- It preserves the scalar owner's additive numerical-rank cutoff.
+- It returns a unitary SVD completion for every item with explicit full-rank status.
+- A deficient completion is diagnostic and is not represented as a unique solution.
+- The dependency-free one-pair API remains unchanged.
+
 ## Pages
 
 - [Numerics](numerics.md)
 - [Implementation](implementation.md)
 - [Schematics](schematics.md)
+- [Batched NumPy Procrustes alignment](batched/index.md)
 - [Alignment namespace](../index.md)

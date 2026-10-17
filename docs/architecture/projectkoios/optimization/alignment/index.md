@@ -17,8 +17,10 @@ applied numerical-rank cutoff, numerical rank, source and target squared Frobeni
 norms, and independently reconstructable optimal residual.
 
 A full transformation is returned only when the declared numerical-rank policy finds
-$A^\dagger B$ full rank. A deficient result contains no full transformation, because
-the data do not identify its null-space action.
+$A^\dagger B$ full rank. A deficient one-pair result contains no full transformation,
+because the data do not identify its null-space action. A distinct NumPy batch contract
+retains SVD-selected diagnostic completions for homogeneous array processing while
+marking every item's effective rank and full-rank status explicitly.
 
 ## Public vocabulary
 
@@ -31,12 +33,16 @@ the data do not identify its null-space action.
 - `ComplexUnitaryProcrustesMethod`
 - `ComplexUnitaryProcrustesSolverFactory`
 - `NumpyComplexUnitaryProcrustesSolver`
+- `NumpyBatchedComplexUnitaryProcrustesDefinition`
+- `NumpyBatchedComplexUnitaryProcrustesResult`
+- `NumpyBatchedComplexUnitaryProcrustesSolver`
 
 ## Excluded scope
 
-This slice does not own real-orthogonal, rectangular, partial-isometry, batched,
-aggregate, frame-path, transport, closure, synchronization, assignment, or null-space
-completion behavior. Those names from earlier planning are not public contracts.
+This slice does not own real-orthogonal, partial-isometry, aggregate, frame-path,
+transport, closure, synchronization, assignment, or scientific null-space acceptance
+behavior. Batched rectangular source/target arrays are supported only with square
+right-unitary completions; rectangular transformations remain outside scope.
 
 Consumers own frame meaning, path ordering, retained-frame protocols, scientific rank
 thresholds, periodic closure, meshes, failure policy, and acceptance. The numerical-rank
