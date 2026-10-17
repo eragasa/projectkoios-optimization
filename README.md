@@ -44,6 +44,8 @@ from projectkoios.numerics.finite_periodic.finite_series import (
 from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
 from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
     NumpyFiniteFourierMatrixSeriesEvaluator,
+)
+from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation import (
     NumpyTensorProductFourierMatrixSeriesEvaluator,
 )
 from projectkoios.numerics.finite_periodic.numpy.transforms import (

@@ -56,10 +56,13 @@ assert FinitePeriodicParsevalDiagnostics(1.0, 1.0, 0.0).absolute_defect == 0.0
 
 import numpy as np
 from projectkoios.numerics.finite_periodic.numpy import matrix_evaluation
+from projectkoios.numerics.finite_periodic.numpy import tensor_product_evaluation
 from projectkoios.numerics.finite_periodic.numpy import transforms as capability
 from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
     NumpyFiniteFourierMatrixEvaluationDefinition,
     NumpyFiniteFourierMatrixSeriesEvaluator,
+)
+from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation import (
     NumpyTensorProductFourierMatrixEvaluationDefinition,
     NumpyTensorProductFourierMatrixSeriesEvaluator,
 )
@@ -73,6 +76,7 @@ from projectkoios.numerics.finite_periodic.numpy.transforms import (
 
 assert Path(capability.__file__).resolve().is_relative_to(installed)
 assert Path(matrix_evaluation.__file__).resolve().is_relative_to(installed)
+assert Path(tensor_product_evaluation.__file__).resolve().is_relative_to(installed)
 samples = np.array([[[2.0 + 0.0j]], [[2.0 + 0.0j]]], dtype=np.complex128)
 definition = NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
     mesh,

@@ -46,7 +46,9 @@ Current records:
 - `FinitePeriodicParsevalDiagnostics`
 - `FinitePeriodicHermiticityDiagnostics`
 - the array-owning records in `finite_periodic.numpy.matrix_series`,
-  `finite_periodic.numpy.matrix_evaluation`, and `finite_periodic.numpy.transforms`
+  `finite_periodic.numpy.matrix_evaluation`,
+  `finite_periodic.numpy.tensor_product_evaluation`, and
+  `finite_periodic.numpy.transforms`
 
 Planned records:
 

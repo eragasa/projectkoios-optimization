@@ -111,6 +111,7 @@ targets = [
   "src/python/projectkoios/numerics/finite_periodic/numpy/transforms.py",
   "src/python/projectkoios/numerics/finite_periodic/numpy/matrix_series.py",
   "src/python/projectkoios/numerics/finite_periodic/numpy/matrix_evaluation.py",
+  "src/python/projectkoios/numerics/finite_periodic/numpy/tensor_product_evaluation.py",
   "src/python/projectkoios/numerics/finite_periodic/numpy/transform_diagnostics.py",
   "src/python/projectkoios/numerics/finite_periodic/numpy/batched_finite_series.py",
 ]

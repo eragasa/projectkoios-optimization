@@ -10,7 +10,9 @@ projectkoios/numerics/finite_periodic/
 └── numpy/
     ├── batched_finite_series.py  # shared bounded channel evaluator
     ├── matrix_series.py          # immutable mode/coefficient record
-    ├── matrix_evaluation.py      # bounded and separable evaluation contracts
+    ├── matrix_evaluation.py      # bounded arbitrary-mode evaluation
+    ├── tensor_product_evaluation.py
+    │                              # bounded separable grid evaluation
     ├── transforms.py             # complete centered forward transform
     └── transform_diagnostics.py  # Parseval and Hermiticity analyzers
 ```

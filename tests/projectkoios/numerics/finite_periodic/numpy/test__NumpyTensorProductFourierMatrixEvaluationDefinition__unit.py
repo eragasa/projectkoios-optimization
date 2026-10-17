@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 
 from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
-from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
-    NumpyTensorProductFourierMatrixEvaluationDefinition,
-)
 from projectkoios.numerics.finite_periodic.numpy.matrix_series import (
     NumpyFiniteFourierMatrixSeries,
+)
+from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation import (
+    NumpyTensorProductFourierMatrixEvaluationDefinition,
 )
 
 

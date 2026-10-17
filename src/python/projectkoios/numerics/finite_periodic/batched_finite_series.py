@@ -235,7 +235,7 @@ class BatchedFiniteFourierSeriesEvaluator(ABC):
     __slots__ = ()
 
     @final
-    def evaluate(  # noqa: C901
+    def evaluate(
         self,
         definition: BatchedFiniteFourierSeriesEvaluationDefinition,
         /,
@@ -294,26 +294,22 @@ class BatchedFiniteFourierSeriesEvaluator(ABC):
             raise TypeError(
                 "backend must return BatchedFiniteFourierSeriesEvaluationResult"
             )
-        if (
-            type(result.dimension) is not int
-            or result.dimension != definition.dimension
-        ):
-            raise ValueError("backend result dimension is inconsistent")
-        if (
-            type(result.point_count) is not int
-            or result.point_count != definition.point_count
-        ):
-            raise ValueError("backend result point_count is inconsistent")
-        if (
-            type(result.term_count) is not int
-            or result.term_count != definition.term_count
-        ):
-            raise ValueError("backend result term_count is inconsistent")
-        if (
-            type(result.channel_count) is not int
-            or result.channel_count != definition.channel_count
-        ):
-            raise ValueError("backend result channel_count is inconsistent")
+        correlations = (
+            ("dimension", result.dimension, definition.dimension),
+            ("point_count", result.point_count, definition.point_count),
+            ("term_count", result.term_count, definition.term_count),
+            ("channel_count", result.channel_count, definition.channel_count),
+        )
+        mismatch = next(
+            (
+                name
+                for name, actual, expected in correlations
+                if type(actual) is not int or actual != expected
+            ),
+            None,
+        )
+        if mismatch is not None:
+            raise ValueError(f"backend result {mismatch} is inconsistent")
         backend_identifier, backend_version = _backend_evidence(
             result.backend_identifier,
             result.backend_version,

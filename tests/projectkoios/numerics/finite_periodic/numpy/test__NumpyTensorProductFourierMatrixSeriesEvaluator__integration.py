@@ -9,11 +9,13 @@ from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
 from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
     NumpyFiniteFourierMatrixEvaluationDefinition,
     NumpyFiniteFourierMatrixSeriesEvaluator,
-    NumpyTensorProductFourierMatrixEvaluationDefinition,
-    NumpyTensorProductFourierMatrixSeriesEvaluator,
 )
 from projectkoios.numerics.finite_periodic.numpy.matrix_series import (
     NumpyFiniteFourierMatrixSeries,
+)
+from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation import (
+    NumpyTensorProductFourierMatrixEvaluationDefinition,
+    NumpyTensorProductFourierMatrixSeriesEvaluator,
 )
 from projectkoios.numerics.finite_periodic.numpy.transforms import (
     NumpyCenteredUniformMeshMatrixFourierTransformDefinition,
