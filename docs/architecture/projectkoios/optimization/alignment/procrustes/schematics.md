@@ -5,8 +5,11 @@ flowchart TD
     D[ComplexUnitaryProcrustesDefinition] --> C[Construct A† B]
     C --> S[Backend square SVD]
     S --> V[Shared SVD validation]
-    V --> K[Apply declared numerical-rank cutoff]
-    K --> F{Full numerical rank?}
+    V --> K{Declared cutoff rule}
+    K -->|ADDITIVE| KA[Absolute plus scaled relative]
+    K -->|MAXIMUM| KM[Maximum of absolute and scaled relative]
+    KA --> F{Full numerical rank?}
+    KM --> F
     F -->|yes| Q[Construct Q = U V†]
     Q --> U[Validate Q† Q and direct residual]
     F -->|no| N[Return transformation = None]

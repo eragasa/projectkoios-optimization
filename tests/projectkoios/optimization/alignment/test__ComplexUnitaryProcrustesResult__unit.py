@@ -6,8 +6,10 @@ import pytest
 
 from projectkoios.optimization.alignment.procrustes import (
     DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesResult,
     ComplexUnitaryProcrustesStatus,
+    ComplexUnitaryProcrustesTolerance,
 )
 
 pytestmark = pytest.mark.unit
@@ -113,6 +115,32 @@ def test_deficient_status_rejects_null_space_completion() -> None:
             values.optimal_residual_frobenius_norm,
             values.backend_identifier,
             values.backend_version,
+        )
+
+
+def test_maximum_rule_result_rejects_additive_applied_cutoff() -> None:
+    tolerance = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=1.0e-12,
+        rank_relative=1.0e-10,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+
+    with pytest.raises(ValueError, match="applied_rank_cutoff is inconsistent"):
+        ComplexUnitaryProcrustesResult(
+            row_count=2,
+            column_count=2,
+            tolerance=tolerance,
+            status=ComplexUnitaryProcrustesStatus.RANK_DEFICIENT,
+            transformation=None,
+            cross_singular_values=(1.0, 1.0e-10),
+            numerical_rank=1,
+            applied_rank_cutoff=1.01e-10,
+            source_squared_frobenius_norm=1.0000000001,
+            target_squared_frobenius_norm=1.0000000001,
+            optimal_squared_residual=0.0,
+            optimal_residual_frobenius_norm=0.0,
+            backend_identifier="test.svd",
+            backend_version="1",
         )
 
 

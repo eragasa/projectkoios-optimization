@@ -81,6 +81,10 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
     NumpyBatchedComplexUnitaryProcrustesSolver,
 )
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
+    ComplexUnitaryProcrustesTolerance,
+)
 from projectkoios.optimization.sampling.uniform import UniformRandomSampler
 from projectkoios.optimization.clustering.scipy.gmm import (
     ScipyGaussianMixtureClusterer,

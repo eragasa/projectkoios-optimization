@@ -12,6 +12,10 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesResult,
     NumpyBatchedComplexUnitaryProcrustesSolver,
 )
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
+    ComplexUnitaryProcrustesTolerance,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -39,6 +43,23 @@ def _full_rank_result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     )
 
 
+def _maximum_rule_result() -> NumpyBatchedComplexUnitaryProcrustesResult:
+    source = np.eye(2, dtype=np.complex128)[None, ...]
+    target = np.diag((1.0, 1.0e-10)).astype(np.complex128)[None, ...]
+    tolerance = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=1.0e-12,
+        rank_relative=1.0e-10,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+    return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source,
+            target,
+            tolerance,
+        )
+    )
+
+
 def _result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     source = np.broadcast_to(
         np.eye(2, dtype=np.complex128),
@@ -50,6 +71,58 @@ def _result() -> NumpyBatchedComplexUnitaryProcrustesResult:
     return NumpyBatchedComplexUnitaryProcrustesSolver().solve(
         NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
     )
+
+
+def test_maximum_rule_result_rejects_additive_applied_cutoff() -> None:
+    original = _maximum_rule_result()
+
+    with pytest.raises(ValueError, match="applied_rank_cutoffs are inconsistent"):
+        NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
+            row_count=original.row_count,
+            tolerance=original.tolerance,
+            right_unitary_completions=original.right_unitary_completions,
+            cross_singular_values=original.cross_singular_values,
+            numerical_ranks=original.numerical_ranks,
+            full_rank=original.full_rank,
+            applied_rank_cutoffs=np.array((1.01e-10,), dtype=np.float64),
+            source_squared_frobenius_norms=(original.source_squared_frobenius_norms),
+            target_squared_frobenius_norms=(original.target_squared_frobenius_norms),
+            optimal_squared_residuals=original.optimal_squared_residuals,
+            optimal_residual_frobenius_norms=(
+                original.optimal_residual_frobenius_norms
+            ),
+            applied_residual_roundoff_cutoffs=(
+                original.applied_residual_roundoff_cutoffs
+            ),
+            backend_identifier=original.backend_identifier,
+            backend_version=original.backend_version,
+        )
+
+
+def test_maximum_rule_result_rejects_equality_counted_as_full_rank() -> None:
+    original = _maximum_rule_result()
+
+    with pytest.raises(ValueError, match="numerical_ranks are inconsistent"):
+        NumpyBatchedComplexUnitaryProcrustesResult.from_arrays(
+            row_count=original.row_count,
+            tolerance=original.tolerance,
+            right_unitary_completions=original.right_unitary_completions,
+            cross_singular_values=original.cross_singular_values,
+            numerical_ranks=np.array((2,), dtype=np.intp),
+            full_rank=np.array((True,), dtype=np.bool_),
+            applied_rank_cutoffs=original.applied_rank_cutoffs,
+            source_squared_frobenius_norms=(original.source_squared_frobenius_norms),
+            target_squared_frobenius_norms=(original.target_squared_frobenius_norms),
+            optimal_squared_residuals=original.optimal_squared_residuals,
+            optimal_residual_frobenius_norms=(
+                original.optimal_residual_frobenius_norms
+            ),
+            applied_residual_roundoff_cutoffs=(
+                original.applied_residual_roundoff_cutoffs
+            ),
+            backend_identifier=original.backend_identifier,
+            backend_version=original.backend_version,
+        )
 
 
 def test_result_zero_copy_factory_retains_canonical_arrays_by_identity() -> None:

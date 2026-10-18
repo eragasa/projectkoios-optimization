@@ -11,6 +11,21 @@ flowchart LR
     C --> P[Consumer interpretation and policy]
 ```
 
+A singleton batch can represent one vertically stacked aggregate without changing the
+solver contract.
+
+```mermaid
+flowchart LR
+    C[Source members] --> S[Scale by one over square root of member count]
+    R[Target members] --> T[Scale by one over square root of member count]
+    S --> VS[Vertically stack source]
+    T --> VT[Vertically stack target]
+    VS --> B[Singleton rectangular batch]
+    VT --> B
+    B --> X[Mean member cross matrix]
+    X --> P[Right-unitary Procrustes evidence]
+```
+
 Backend ownership is explicit rather than selected implicitly.
 
 ```mermaid

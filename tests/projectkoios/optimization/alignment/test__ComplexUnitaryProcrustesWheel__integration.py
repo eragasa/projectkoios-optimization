@@ -71,8 +71,10 @@ import projectkoios.optimization.alignment.procrustes as procrustes
 from projectkoios.optimization.alignment.procrustes import (
     ComplexUnitaryProcrustesDefinition,
     ComplexUnitaryProcrustesMethod,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesSolverFactory,
     ComplexUnitaryProcrustesStatus,
+    ComplexUnitaryProcrustesTolerance,
 )
 
 installed = Path(os.environ["EXPECTED_WHEEL_ROOT"]).resolve()
@@ -85,6 +87,11 @@ result = solver.solve(
     ComplexUnitaryProcrustesDefinition(
         ((0.0 + 1.0j,),),
         ((1.0 + 0.0j,),),
+        ComplexUnitaryProcrustesTolerance(
+            rank_absolute=1.0e-12,
+            rank_relative=1.0e-10,
+            rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+        ),
     )
 )
 assert result.status is ComplexUnitaryProcrustesStatus.UNIQUE

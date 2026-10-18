@@ -1,7 +1,8 @@
 # SciPy batched Procrustes prospective numerics
 
 Any future SciPy backend must preserve right-action orientation, complete singular
-spectra, additive rank semantics, cancellation-aware residual evidence, deterministic
+spectra, selectable rank-cutoff semantics, cancellation-aware residual evidence,
+deterministic
 failure indexing, and shape-preserving empty behavior.
 
 Backend-specific algorithms, sparse representations, drivers, and convergence controls

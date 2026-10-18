@@ -25,8 +25,11 @@ the capability solves
 \[
   \min_{Q_b^\dagger Q_b=I_n}\lVert A_bQ_b-B_b\rVert_F.
 \]
-All leading dimensions and their C-order indexing are preserved. The capability neither
-flattens topology into a public result nor interprets adjacency between items.
+All leading dimensions and their C-order indexing are preserved. A singleton batch is
+valid, and each item may be rectangular. Consumers may therefore vertically stack
+corresponding matrices into one item; scaling both stacks by $1/\sqrt{M}$ makes the cross
+matrix the mean of $M$ member cross matrices. The capability neither flattens topology
+into a public result nor interprets adjacency between items.
 
 \section{Per-item mathematical procedure}
 The array implementation evaluates the scalar mathematics without creating one Python
@@ -36,8 +39,12 @@ following operations:
   C_b &= A_b^\dagger B_b,\\
   C_b &= U_b\Sigma_bV_b^\dagger,\\
   \widetilde Q_b &= U_bV_b^\dagger,\\
-  \tau_b &= \tau_{\mathrm{rank}}^{\mathrm{abs}}
-    +\tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_{b,1},\\
+  \tau_b &\in \left\{
+    \tau_{\mathrm{rank}}^{\mathrm{abs}}
+      +\tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_{b,1},
+    \max\!\left(\tau_{\mathrm{rank}}^{\mathrm{abs}},
+      \tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_{b,1}\right)
+  \right\},\\
   r_b &= \sum_{j=1}^{n}\mathbf{1}[\sigma_{b,j}>\tau_b],\\
   \rho_b^2 &= \lVert A_b\rVert_F^2+\lVert B_b\rVert_F^2
     -2\sum_{j=1}^{n}\sigma_{b,j}.

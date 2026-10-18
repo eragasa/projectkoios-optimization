@@ -30,6 +30,7 @@ from projectkoios.numerics.validation import exact_positive_integer
 from projectkoios.optimization.alignment.procrustes import (
     DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
     ComplexUnitaryProcrustesBackendEvidence,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesTolerance,
 )
@@ -625,9 +626,9 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
             raise ValueError("numerical_ranks lie outside the dimension bound")
         if bool((arrays.ranks > row_count).any()):
             raise ValueError("numerical_ranks exceed the matrix row-count bound")
-        expected_cutoff = (
-            self.tolerance.rank_absolute
-            + self.tolerance.rank_relative * arrays.spectra[..., 0]
+        expected_cutoff = BatchedComplexUnitaryProcrustesSolver.rank_cutoffs(
+            self.tolerance,
+            arrays.spectra[..., 0],
         )
         if not np.array_equal(arrays.rank_cutoffs, expected_cutoff):
             raise ValueError("applied_rank_cutoffs are inconsistent")
@@ -868,8 +869,8 @@ class BatchedComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver, ABC)
     Notes
     -----
     The nominal batch boundary combines shared Procrustes policy with the exact NumPy
-    definition and result contract. It adds vectorized additive-cutoff
-    construction while leaving decomposition execution to concrete backends.
+    definition and result contract. It adds vectorized declared-cutoff construction
+    while leaving decomposition execution to concrete backends.
     """
 
     __slots__ = ()
@@ -882,7 +883,7 @@ class BatchedComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver, ABC)
         largest_singular_values: Float64Array,
         /,
     ) -> Float64Array:
-        """Return finite vectorized additive rank cutoffs.
+        """Return finite vectorized declared rank cutoffs.
 
         Parameters
         ----------
@@ -910,11 +911,19 @@ class BatchedComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver, ABC)
             largest_singular_values,
             "largest_singular_values",
         )
-        cutoffs = np.asarray(
-            validated_tolerance.rank_absolute
-            + validated_tolerance.rank_relative * largest,
-            dtype=np.float64,
-        )
+        with np.errstate(over="ignore", invalid="ignore"):
+            relative_cutoffs = validated_tolerance.rank_relative * largest
+            if (
+                validated_tolerance.rank_cutoff_rule
+                is ComplexUnitaryProcrustesRankCutoffRule.ADDITIVE
+            ):
+                values = validated_tolerance.rank_absolute + relative_cutoffs
+            else:
+                values = np.maximum(
+                    validated_tolerance.rank_absolute,
+                    relative_cutoffs,
+                )
+        cutoffs = np.asarray(values, dtype=np.float64)
         if not bool(np.isfinite(cutoffs).all()):
             raise FloatingPointError("applied numerical-rank cutoff became nonfinite")
         return cutoffs

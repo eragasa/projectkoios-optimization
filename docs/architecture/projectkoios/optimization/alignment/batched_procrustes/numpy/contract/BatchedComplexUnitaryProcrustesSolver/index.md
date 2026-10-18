@@ -1,7 +1,7 @@
 # BatchedComplexUnitaryProcrustesSolver
 
 `BatchedComplexUnitaryProcrustesSolver` specializes the generic solver base to exact
-NumPy batch definitions and results. It owns vectorized additive-cutoff construction and
+NumPy batch definitions and results. It owns vectorized declared-cutoff construction and
 a typed abstract batch solve boundary.
 
 ## Pages

@@ -3,8 +3,9 @@
 `ComplexUnitaryProcrustesSolver` is the concrete behaviorful shared-policy root for
 scalar and batched right-Procrustes solver families.
 
-It owns exact tolerance validation, additive rank-cutoff policy, the binary64 residual
-roundoff coefficient, and executed-versus-absent backend evidence validation. It does
+It owns exact tolerance validation, selectable additive-or-maximum rank-cutoff policy,
+the binary64 residual roundoff coefficient, and executed-versus-absent backend evidence
+validation. It does
 not declare a generic `solve` return. Scalar and batched nominal bases own their concrete
 definition and result contracts.
 

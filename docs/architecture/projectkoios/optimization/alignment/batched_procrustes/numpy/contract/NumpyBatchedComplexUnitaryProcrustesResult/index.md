@@ -10,7 +10,7 @@ assembly.
   byte-backed copies.
 - `from_immutable_arrays(...)` retains only canonical immutable arrays by identity.
 - The raw frozen constructor performs relational validation without replacing fields.
-- Shapes, nonnegative ordered spectra, additive rank cutoffs, numerical ranks,
+- Shapes, nonnegative ordered spectra, declared rank cutoffs, numerical ranks,
   `full_rank`, powers, reconstructed residuals, roundoff cutoffs, and right-unitarity
   must agree.
 - Nonempty results require coupled backend identifier and version evidence; empty

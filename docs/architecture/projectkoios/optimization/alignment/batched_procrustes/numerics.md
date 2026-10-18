@@ -4,7 +4,8 @@ Every backend must preserve the same mathematical orientation and explicit evide
 
 - Cross matrices are `source.conj().swapaxes(-1, -2) @ target`.
 - Selected completions act as `source @ transformation`.
-- Complete singular spectra support additive rank cutoffs and residual reconstruction.
+- Complete singular spectra support declared additive or maximum rank cutoffs and
+  residual reconstruction.
 - Equality at the rank cutoff is deficient.
 - Cancellation-scale squared residuals may become exact zero only with their applied
   squared-unit roundoff cutoff retained.

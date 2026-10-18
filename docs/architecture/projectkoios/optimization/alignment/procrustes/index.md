@@ -23,14 +23,22 @@ A^\dagger B=U\Sigma V^\dagger.
 $$
 
 The unique full right-unitary polar factor is $Q=UV^\dagger$ when the cross matrix is
-full rank. The applied numerical-rank cutoff is
+full rank. The declared cutoff rule selects either
 
 $$
 \tau_{\mathrm{rank}}=\tau_{\mathrm{abs}}
-+\tau_{\mathrm{rel}}\sigma_{\max}.
++\tau_{\mathrm{rel}}\sigma_{\max}
 $$
 
-Singular values strictly greater than the cutoff count toward `numerical_rank`. At full
+or
+
+$$
+\tau_{\mathrm{rank}}=\max(\tau_{\mathrm{abs}},
+\tau_{\mathrm{rel}}\sigma_{\max}).
+$$
+
+The additive rule remains the backward-compatible default. Singular values strictly
+greater than the cutoff count toward `numerical_rank`. At full
 numerical rank the result status is `UNIQUE` and contains $Q$. Otherwise the status is
 `RANK_DEFICIENT` and `transformation` is `None`; the implementation does not expose a
 unitary assembled from arbitrary null-space singular vectors.
@@ -62,13 +70,15 @@ A distinct NumPy-specific contract evaluates leading-dimensional arrays without
 materializing one Python object graph per matrix pair.
 
 - It preserves the same source-to-target right-action orientation.
-- It preserves the scalar owner's additive numerical-rank cutoff.
+- It preserves the scalar owner's selected additive or maximum numerical-rank cutoff.
 - It returns a unitary SVD completion for every item with explicit full-rank status.
 - A deficient completion is diagnostic and is not represented as a unique solution.
 - Both scalar and batched families inherit one behaviorful generic policy owner.
 
 ## Owned records and solver hierarchy
 
+- [`ComplexUnitaryProcrustesRankCutoffRule`](ComplexUnitaryProcrustesRankCutoffRule/index.md)
+  selects additive or maximum combination of absolute and scaled-relative controls.
 - [`ComplexUnitaryProcrustesDecomposition`](ComplexUnitaryProcrustesDecomposition/index.md)
   names the scalar backend exchange.
 - [`ComplexUnitaryProcrustesResidualEvidence`](ComplexUnitaryProcrustesResidualEvidence/index.md)

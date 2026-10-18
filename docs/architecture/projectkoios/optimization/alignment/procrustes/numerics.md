@@ -20,9 +20,10 @@ rank-dependent transformation, and backend-evidence validators in public field o
 ## Numerical rank
 
 The numerical-rank cutoff uses explicit absolute and relative components and the largest
-cross singular value. Equality with the cutoff is deficient. Numerical rank is evidence
-under a declared software policy, not exact algebraic rank, a condition certificate, or
-a scientific overlap threshold.
+cross singular value. The declared rule combines the components by addition or maximum;
+the additive rule remains the default. Equality with either applied cutoff is deficient.
+Numerical rank is evidence under a declared software policy, not exact algebraic rank, a
+condition certificate, or a scientific overlap threshold.
 
 ## Optimal residual
 

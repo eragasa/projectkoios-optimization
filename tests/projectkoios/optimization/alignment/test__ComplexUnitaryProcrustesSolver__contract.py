@@ -10,6 +10,7 @@ from projectkoios.optimization.alignment.procrustes import (
     ComplexUnitaryProcrustesDecomposition,
     ComplexUnitaryProcrustesDefinition,
     ComplexUnitaryProcrustesMatrix,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesStatus,
     ComplexUnitaryProcrustesTolerance,
@@ -165,6 +166,31 @@ def test_solver_withholds_transform_at_rank_cutoff() -> None:
     assert result.status is ComplexUnitaryProcrustesStatus.RANK_DEFICIENT
     assert result.transformation is None
     assert result.optimal_squared_residual == 0.25
+
+
+def test_solver_withholds_transform_at_maximum_rank_cutoff() -> None:
+    tolerance = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=1.0e-12,
+        rank_relative=1.0e-10,
+        validation_absolute=1.0e-12,
+        validation_relative=1.0e-10,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+    definition = ComplexUnitaryProcrustesDefinition(
+        _identity(2),
+        _diagonal((1.0, 1.0e-10)),
+        tolerance,
+    )
+    solver = _ConfiguredSolver(
+        _decomposition((1.0, 1.0e-10), _identity(2), _identity(2))
+    )
+
+    result = solver.solve(definition)
+
+    assert result.numerical_rank == 1
+    assert result.applied_rank_cutoff == 1.0e-10
+    assert result.status is ComplexUnitaryProcrustesStatus.RANK_DEFICIENT
+    assert result.transformation is None
 
 
 def test_solver_returns_rank_evidence_for_exact_rank_one_overlap() -> None:

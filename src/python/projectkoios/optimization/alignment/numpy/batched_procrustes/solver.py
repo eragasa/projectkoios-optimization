@@ -42,7 +42,7 @@ class CompletionEvidence:
     completions
         SVD-selected right-unitary matrices.
     ranks
-        Numerical ranks under the applied additive cutoffs.
+        Numerical ranks under the applied declared cutoffs.
     full_rank
         Per-item unique-transformation status.
     rank_cutoffs

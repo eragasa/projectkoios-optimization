@@ -10,7 +10,8 @@ validated batch.
 - It selects the right-unitary completion as `left @ right_adjoint`.
 - It validates SVD factors, reconstruction, completion unitarity, direct residuals, and
   finite evidence before constructing the public result.
-- It applies the owner additive rank cutoff; equality is rank deficient.
+- It applies the owner-selected additive or maximum rank cutoff; equality is rank
+  deficient.
 - An empty batch returns exact shape-preserving evidence without calling SVD or claiming
   backend evidence.
 

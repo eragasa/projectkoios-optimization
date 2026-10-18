@@ -14,6 +14,7 @@ from projectkoios.optimization.alignment.numpy.procrustes import (
 )
 from projectkoios.optimization.alignment.procrustes import (
     ComplexUnitaryProcrustesBackendEvidence,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesSolver,
     ComplexUnitaryProcrustesTolerance,
     ScalarComplexUnitaryProcrustesSolver,
@@ -46,6 +47,14 @@ def test_shared_tolerance_and_rank_policy(
 
     assert ComplexUnitaryProcrustesSolver.validate_tolerance(tolerance) is tolerance
     assert ComplexUnitaryProcrustesSolver.rank_cutoff(tolerance, 2.0) == 1.25
+    maximum = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=tolerance.rank_absolute,
+        rank_relative=tolerance.rank_relative,
+        validation_absolute=tolerance.validation_absolute,
+        validation_relative=tolerance.validation_relative,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+    assert ComplexUnitaryProcrustesSolver.rank_cutoff(maximum, 2.0) == 1.0
 
     with pytest.raises(TypeError, match="ComplexUnitaryProcrustesTolerance"):
         ComplexUnitaryProcrustesSolver.validate_tolerance(

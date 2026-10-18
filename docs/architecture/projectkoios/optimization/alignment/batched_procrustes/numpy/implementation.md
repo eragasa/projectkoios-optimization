@@ -71,8 +71,9 @@ ownership boundaries.
   tests cover their transported relations.
 - `ResidualReconstruction` has direct tests for positive, zero-scale, cancellation,
   multidimensional, indexed-negative, nonfinite, dtype, frozen-slot, and façade behavior.
-- Solver integration tests cover right action, one SVD call, additive cutoff, and indexed
-  failure.
-- Numerical tests compare all full-rank items with the scalar owner.
+- Solver integration tests cover right action, one SVD call, additive and maximum
+  cutoffs, strict equality deficiency, and indexed failure.
+- Numerical tests compare all full-rank items with the scalar owner and verify scaled
+  stacked rectangular singleton batches.
 - Deficient parity compares singular/rank/residual evidence but not transformations.
 - The wheel test executes the package façade from an isolated built artifact.

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pytest
 
@@ -140,6 +142,69 @@ def test_deficient_batch_matches_scalar_evidence_without_transform_parity_claim(
             rtol=0.0,
             atol=2.0e-15,
         )
+
+
+def test_scaled_stacked_rectangular_singleton_batch_matches_mean_cross_matrix() -> None:
+    source_members = np.asarray(
+        (
+            ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+            ((1.0, 0.0, 1.0), (0.0, 1.0, 1.0)),
+            ((2.0, 0.0, 0.0), (0.0, 2.0, 1.0)),
+        ),
+        dtype=np.complex128,
+    )
+    target_members = np.asarray(
+        (
+            ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0)),
+            ((0.0, 1.0, 1.0), (1.0, 0.0, -1.0)),
+            ((0.0, 2.0, 0.0), (2.0, 0.0, 1.0)),
+        ),
+        dtype=np.complex128,
+    )
+    member_count, row_count, column_count = source_members.shape
+    scale = math.sqrt(float(member_count))
+    source = np.asarray(
+        source_members.reshape((1, member_count * row_count, column_count)) / scale,
+        dtype=np.complex128,
+    )
+    target = np.asarray(
+        target_members.reshape((1, member_count * row_count, column_count)) / scale,
+        dtype=np.complex128,
+    )
+    expected_cross = np.sum(
+        np.swapaxes(source_members.conjugate(), -1, -2) @ target_members,
+        axis=0,
+    ) / float(member_count)
+    left, expected_spectrum, right_adjoint = np.linalg.svd(expected_cross)
+
+    result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
+    )
+
+    assert result.batch_shape == (1,)
+    assert result.row_count == member_count * row_count
+    assert result.column_count == column_count
+    assert bool(result.full_rank[0])
+    np.testing.assert_allclose(
+        np.swapaxes(source[0].conjugate(), -1, -2) @ target[0],
+        expected_cross,
+        rtol=0.0,
+        atol=3.0 * np.finfo(np.float64).eps,
+    )
+    np.testing.assert_allclose(
+        result.cross_singular_values[0],
+        expected_spectrum,
+        rtol=2.0e-15,
+        atol=2.0e-15,
+    )
+    np.testing.assert_allclose(
+        result.require_unique_right_unitary_transformations()[0],
+        left @ right_adjoint,
+        rtol=0.0,
+        atol=3.0e-15,
+    )
+    assert result.backend_identifier == "numpy.linalg.svd"
+    assert result.backend_version == np.__version__
 
 
 def test_rank_two_frame_fixture_matches_consumer_residual_formula() -> None:

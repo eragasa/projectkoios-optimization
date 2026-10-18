@@ -554,6 +554,21 @@ def _validation_bound(
     )
 
 
+class ComplexUnitaryProcrustesRankCutoffRule(StrEnum):
+    """Select how absolute and relative numerical-rank controls are combined.
+
+    Attributes
+    ----------
+    ADDITIVE
+        Use ``rank_absolute + rank_relative * largest_singular_value``.
+    MAXIMUM
+        Use ``max(rank_absolute, rank_relative * largest_singular_value)``.
+    """
+
+    ADDITIVE = "additive"
+    MAXIMUM = "maximum"
+
+
 @final
 @dataclass(frozen=True, slots=True)
 class ComplexUnitaryProcrustesTolerance:
@@ -569,17 +584,23 @@ class ComplexUnitaryProcrustesTolerance:
         Absolute backend-validation bound component.
     validation_relative
         Relative backend-validation bound component.
+    rank_cutoff_rule
+        Exact rule used to combine the absolute and scaled-relative components.
 
     Notes
     -----
     Numerical-rank controls are software policy, not scientific overlap or
-    identifiability thresholds.
+    identifiability thresholds. The additive rule remains the default for backward
+    compatibility.
     """
 
     rank_absolute: float = 0.0
     rank_relative: float = 1.0e-12
     validation_absolute: float = 1.0e-12
     validation_relative: float = 1.0e-10
+    rank_cutoff_rule: ComplexUnitaryProcrustesRankCutoffRule = (
+        ComplexUnitaryProcrustesRankCutoffRule.ADDITIVE
+    )
 
     def __post_init__(self) -> None:
         """Validate and normalize every tolerance component.
@@ -587,7 +608,8 @@ class ComplexUnitaryProcrustesTolerance:
         Raises
         ------
         TypeError
-            If a component is not an exact built-in float.
+            If a numeric component is not an exact built-in float or the cutoff rule is
+            not the exact closed enum type.
         ValueError
             If a component is nonfinite, negative, out of range, or if either
             tolerance pair is identically zero.
@@ -602,6 +624,10 @@ class ComplexUnitaryProcrustesTolerance:
             self.validation_relative,
             "validation_relative",
         )
+        if type(self.rank_cutoff_rule) is not ComplexUnitaryProcrustesRankCutoffRule:
+            raise TypeError(
+                "rank_cutoff_rule must be ComplexUnitaryProcrustesRankCutoffRule"
+            )
         if rank_absolute == 0.0 and rank_relative == 0.0:
             raise ValueError("at least one numerical-rank tolerance must be positive")
         if validation_absolute == 0.0 and validation_relative == 0.0:
@@ -867,8 +893,8 @@ class ComplexUnitaryProcrustesSolver:
     -----
     Concrete solver families inherit final shared policy methods and implement a typed
     :meth:`solve` operation. The common policy fixes right action, exact tolerance
-    ownership, additive rank cutoffs, residual roundoff scaling, and backend-evidence
-    validation.
+    ownership, selectable rank-cutoff combination, residual roundoff scaling, and
+    backend-evidence validation.
     """
 
     __slots__ = ()
@@ -908,7 +934,7 @@ class ComplexUnitaryProcrustesSolver:
         largest_singular_value: float,
         /,
     ) -> float:
-        """Return the finite additive cutoff for one singular spectrum.
+        """Return the finite declared cutoff for one singular spectrum.
 
         Parameters
         ----------
@@ -936,8 +962,16 @@ class ComplexUnitaryProcrustesSolver:
             largest_singular_value,
             "largest_singular_value",
         )
+        relative_cutoff = validated.rank_relative * largest
+        if (
+            validated.rank_cutoff_rule
+            is ComplexUnitaryProcrustesRankCutoffRule.ADDITIVE
+        ):
+            cutoff = validated.rank_absolute + relative_cutoff
+        else:
+            cutoff = max(validated.rank_absolute, relative_cutoff)
         return finite_float_result(
-            validated.rank_absolute + validated.rank_relative * largest,
+            cutoff,
             "applied numerical-rank cutoff became nonfinite",
         )
 
@@ -1297,6 +1331,7 @@ __all__ = [
     "ComplexUnitaryProcrustesDefinition",
     "ComplexUnitaryProcrustesMatrix",
     "ComplexUnitaryProcrustesMethod",
+    "ComplexUnitaryProcrustesRankCutoffRule",
     "ComplexUnitaryProcrustesResidualEvidence",
     "ComplexUnitaryProcrustesResult",
     "ComplexUnitaryProcrustesSolver",

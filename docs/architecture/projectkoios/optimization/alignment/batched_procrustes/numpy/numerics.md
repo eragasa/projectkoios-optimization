@@ -11,11 +11,19 @@ evidence under the existing tolerance record.
 
 ## Rank cutoff
 
-The batched solver uses the same additive owner cutoff as the one-pair scalar contract.
+The batched solver uses the same declared owner rule as the one-pair scalar contract.
+The backward-compatible additive rule is
 
 $$
 \tau_b=\tau_{\mathrm{absolute}}+
-\tau_{\mathrm{relative}}\,\sigma_{b,\max}.
+\tau_{\mathrm{relative}}\,\sigma_{b,\max},
+$$
+
+and the selectable maximum rule is
+
+$$
+\tau_b=\max(\tau_{\mathrm{absolute}},
+\tau_{\mathrm{relative}}\,\sigma_{b,\max}).
 $$
 
 - Equality with the cutoff is deficient.
@@ -24,7 +32,7 @@ $$
 - Aggregate rank properties are exact reductions of `full_rank`, not separate evidence.
 - The unique-transformation accessor raises before returning matrices if any item is
   deficient; diagnostic completions remain available through their explicit field.
-- A different downstream `max(absolute, relative)` convention is not encoded upstream.
+- Consumers select the rule explicitly through the shared tolerance record.
 
 ## Residual evidence
 

@@ -77,7 +77,8 @@ future or inferred support.
 Use consistent notation and define every symbol before use. Preserve operation order
 when it affects public numerical behavior. For Procrustes capabilities, for example,
 retain the documented right action, `source` adjoint times `target` cross matrix,
-`left @ right_adjoint` selection, additive rank cutoff, strict-greater-than comparison,
+`left @ right_adjoint` selection, selectable additive-or-maximum rank cutoff,
+strict-greater-than comparison,
 and squared-residual roundoff cutoff.
 
 Keep consumer-owned meaning outside Optimization. Units, operators, lattice topology,

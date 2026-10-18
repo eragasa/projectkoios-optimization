@@ -9,6 +9,7 @@ import pytest
 from projectkoios.optimization.alignment.procrustes import (
     DEFAULT_COMPLEX_UNITARY_PROCRUSTES_TOLERANCE,
     ComplexUnitaryProcrustesDefinition,
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesTolerance,
 )
 
@@ -22,6 +23,7 @@ def test_default_tolerance_separates_rank_and_validation_controls() -> None:
     assert tolerance.rank_relative == 1.0e-12
     assert tolerance.validation_absolute == 1.0e-12
     assert tolerance.validation_relative == 1.0e-10
+    assert tolerance.rank_cutoff_rule is ComplexUnitaryProcrustesRankCutoffRule.ADDITIVE
 
 
 @pytest.mark.parametrize("field", ["rank_absolute", "validation_absolute"])
@@ -55,6 +57,13 @@ def test_relative_tolerances_reject_invalid_values(field: str, value: object) ->
 
     with pytest.raises((TypeError, ValueError)):
         ComplexUnitaryProcrustesTolerance(**cast(Any, arguments))
+
+
+def test_rank_cutoff_rule_requires_exact_closed_enum() -> None:
+    with pytest.raises(TypeError, match="ComplexUnitaryProcrustesRankCutoffRule"):
+        ComplexUnitaryProcrustesTolerance(
+            rank_cutoff_rule=cast(Any, "maximum"),
+        )
 
 
 def test_each_tolerance_pair_requires_a_positive_component() -> None:

@@ -9,6 +9,7 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     BatchedComplexUnitaryProcrustesSolver,
 )
 from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesTolerance,
 )
 
@@ -52,6 +53,23 @@ def test_nominal_batched_solver_constructs_vectorized_additive_cutoffs(
     )
 
     np.testing.assert_array_equal(cutoffs, rank_cutoff_case.expected_cutoffs)
+    assert cutoffs.dtype == np.dtype(np.float64)
+
+
+def test_nominal_batched_solver_constructs_vectorized_maximum_cutoffs() -> None:
+    tolerance = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=0.25,
+        rank_relative=0.5,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+    largest = np.array([[0.25, 2.0], [4.0, 8.0]], dtype=np.float64)
+
+    cutoffs = BatchedComplexUnitaryProcrustesSolver.rank_cutoffs(tolerance, largest)
+
+    np.testing.assert_array_equal(
+        cutoffs,
+        np.array([[0.25, 1.0], [2.0, 4.0]], dtype=np.float64),
+    )
     assert cutoffs.dtype == np.dtype(np.float64)
 
 

@@ -89,7 +89,8 @@ For one definition, the scalar solver performs the following procedure.
         componentwise summation.
   \item Request a complete square SVD $C=U\Sigma V^\dagger$ from the selected backend.
   \item Validate the complete spectrum, factor unitarity, and reconstruction of $C$.
-  \item Calculate the additive numerical-rank cutoff and numerical rank.
+  \item Calculate the declared additive or maximum numerical-rank cutoff and numerical
+        rank.
   \item Calculate source power, target power, the optimal residual, and its roundoff
         cutoff.
   \item At full numerical rank, form $Q=UV^\dagger$, validate right unitarity, and
@@ -99,14 +100,15 @@ For one definition, the scalar solver performs the following procedure.
 No full transformation is formed or returned on the deficient scalar branch.
 
 \section{Numerical controls}
-The tolerance record contains four exact built-in floats:
+The tolerance record contains four exact built-in floats and one exact cutoff-rule enum:
 \begin{align*}
   \tau_{\mathrm{rank}}^{\mathrm{abs}} &\ge 0,
   &0\le\tau_{\mathrm{rank}}^{\mathrm{rel}}&<1,\\
   \tau_{\mathrm{validation}}^{\mathrm{abs}} &\ge 0,
   &0\le\tau_{\mathrm{validation}}^{\mathrm{rel}}&<1.
 \end{align*}
-Neither the rank pair nor the validation pair may be identically zero. The defaults are
+Neither the rank pair nor the validation pair may be identically zero. The cutoff rule
+is \path{ADDITIVE} or \path{MAXIMUM}. The defaults are
 \begin{align*}
   \tau_{\mathrm{rank}}^{\mathrm{abs}} &=0,
   &\tau_{\mathrm{rank}}^{\mathrm{rel}}&=10^{-12},\\
@@ -116,24 +118,32 @@ Neither the rank pair nor the validation pair may be identically zero. The defau
 Construct an explicit policy when the defaults are not appropriate:
 \begin{lstlisting}[language=Python]
 from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesTolerance,
 )
 
 tolerance = ComplexUnitaryProcrustesTolerance(
-    rank_absolute=0.0,
-    rank_relative=1.0e-12,
+    rank_absolute=1.0e-12,
+    rank_relative=1.0e-10,
     validation_absolute=1.0e-12,
     validation_relative=1.0e-10,
+    rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
 )
 \end{lstlisting}
 These are software controls. They are not scientific overlap thresholds.
 
 \section{Numerical rank}
-For largest singular value $\sigma_1$, the applied cutoff is
+For largest singular value $\sigma_1$, the default additive cutoff is
 \[
   \tau_{\mathrm{rank}}
   =\tau_{\mathrm{rank}}^{\mathrm{abs}}
    +\tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_1.
+\]
+The selectable maximum rule instead uses
+\[
+  \tau_{\mathrm{rank}}
+  =\max\!\left(\tau_{\mathrm{rank}}^{\mathrm{abs}},
+   \tau_{\mathrm{rank}}^{\mathrm{rel}}\sigma_1\right).
 \]
 The reported numerical rank is
 \[

@@ -1,6 +1,6 @@
 # Result numerics
 
-The result independently verifies ordered nonnegative spectra, additive cutoffs, ranks,
+The result independently verifies ordered nonnegative spectra, declared cutoffs, ranks,
 rank status, powers, reconstructed residuals, residual norms, roundoff cutoffs, and
 right-unitarity. Empty batches forbid backend claims; nonempty batches require them.
 

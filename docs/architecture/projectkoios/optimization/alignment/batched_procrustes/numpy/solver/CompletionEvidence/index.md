@@ -6,7 +6,7 @@ completion stage.
 ## Ownership
 
 - `completions` holds SVD-selected right-unitary matrices.
-- `ranks` and `full_rank` hold additive-cutoff uniqueness evidence.
+- `ranks` and `full_rank` hold declared-cutoff uniqueness evidence.
 - `rank_cutoffs` records the exact applied per-item cutoffs.
 - The record performs no backend work and does not claim deficient completions are
   unique.

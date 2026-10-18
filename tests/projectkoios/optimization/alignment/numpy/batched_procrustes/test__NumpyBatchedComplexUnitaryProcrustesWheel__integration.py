@@ -47,14 +47,27 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
     NumpyBatchedComplexUnitaryProcrustesSolver,
 )
+from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
+    ComplexUnitaryProcrustesTolerance,
+)
 
 installed = Path(os.environ["EXPECTED_WHEEL_ROOT"]).resolve()
 assert Path(capability.__file__).resolve().is_relative_to(installed)
 source = np.broadcast_to(np.eye(2, dtype=np.complex128), (2, 3, 2, 2)).copy()
 rotation = np.asarray(((0.0, 1.0), (-1.0, 0.0)), dtype=np.complex128)
 target = source @ rotation
+tolerance = ComplexUnitaryProcrustesTolerance(
+    rank_absolute=1.0e-12,
+    rank_relative=1.0e-10,
+    rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+)
 result = NumpyBatchedComplexUnitaryProcrustesSolver().solve(
-    NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(source, target)
+    NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+        source,
+        target,
+        tolerance,
+    )
 )
 assert result.batch_shape == (2, 3)
 assert np.all(result.full_rank)

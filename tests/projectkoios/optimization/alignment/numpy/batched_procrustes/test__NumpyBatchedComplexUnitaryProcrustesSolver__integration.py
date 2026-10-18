@@ -14,6 +14,7 @@ from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesSolver,
 )
 from projectkoios.optimization.alignment.procrustes import (
+    ComplexUnitaryProcrustesRankCutoffRule,
     ComplexUnitaryProcrustesTolerance,
 )
 
@@ -262,6 +263,77 @@ def test_rank_cutoff_uses_owner_absolute_plus_relative_rule(
         rtol=0.0,
         atol=0.0,
     )
+
+
+def test_maximum_rank_cutoff_is_selectable_and_equality_is_deficient() -> None:
+    source = np.broadcast_to(
+        np.eye(2, dtype=np.complex128),
+        (2, 2, 2),
+    ).copy()
+    target = np.asarray(
+        (
+            np.diag((1.0, 1.0e-10)),
+            np.diag((1.0, 1.005e-10)),
+        ),
+        dtype=np.complex128,
+    )
+    maximum = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=1.0e-12,
+        rank_relative=1.0e-10,
+        validation_absolute=_VALIDATION_ABSOLUTE,
+        validation_relative=_VALIDATION_RELATIVE,
+        rank_cutoff_rule=ComplexUnitaryProcrustesRankCutoffRule.MAXIMUM,
+    )
+    additive = ComplexUnitaryProcrustesTolerance(
+        rank_absolute=1.0e-12,
+        rank_relative=1.0e-10,
+        validation_absolute=_VALIDATION_ABSOLUTE,
+        validation_relative=_VALIDATION_RELATIVE,
+    )
+    solver = NumpyBatchedComplexUnitaryProcrustesSolver()
+
+    maximum_result = solver.solve(
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source,
+            target,
+            maximum,
+        )
+    )
+    additive_result = solver.solve(
+        NumpyBatchedComplexUnitaryProcrustesDefinition.from_arrays(
+            source[1:],
+            target[1:],
+            additive,
+        )
+    )
+
+    np.testing.assert_array_equal(
+        maximum_result.cross_singular_values,
+        np.array(((1.0, 1.0e-10), (1.0, 1.005e-10)), dtype=np.float64),
+    )
+    np.testing.assert_array_equal(
+        maximum_result.applied_rank_cutoffs,
+        np.array((1.0e-10, 1.0e-10), dtype=np.float64),
+    )
+    np.testing.assert_array_equal(
+        maximum_result.numerical_ranks,
+        np.array((1, 2), dtype=np.intp),
+    )
+    np.testing.assert_array_equal(
+        maximum_result.full_rank,
+        np.array((False, True), dtype=np.bool_),
+    )
+    assert additive_result.applied_rank_cutoffs[0] == pytest.approx(
+        1.01e-10,
+        rel=0.0,
+        abs=np.finfo(np.float64).eps ** 2,
+    )
+    assert additive_result.numerical_ranks[0] == 1
+    assert not bool(additive_result.full_rank[0])
+    assert maximum_result.backend_identifier == "numpy.linalg.svd"
+    assert maximum_result.backend_version == np.__version__
+    with pytest.raises(ValueError, match="batch index \\(0,\\) is rank deficient"):
+        maximum_result.require_unique_right_unitary_transformations()
 
 
 @pytest.mark.parametrize(
