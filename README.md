@@ -18,8 +18,8 @@ deterministic finite-objective selection, ordinary and positive-weight real/comp
 multiple-right-hand-side linear least squares, affine-residual quadratic construction,
 one-pair and tensor-batched complex-unitary right Procrustes alignment,
 positive-exponent finite Fourier-series evaluation at supplied real coordinates,
-shared-grid batched finite Fourier evaluation with bounded phase batches, centered
-uniform one-, two-, and three-dimensional matrix Fourier transforms, bounded selected-
+shared-grid batched finite Fourier evaluation with bounded phase batches, parity-generic
+centered uniform one-, two-, and three-dimensional matrix Fourier transforms, bounded selected-
 mode matrix evaluation, and Parseval and cyclic-Hermiticity diagnostics,
 invariant dense Hermitian spectral-subspace decomposition with complete-spectrum output
 and selected-projector construction, dense batched complete Hermitian-spectrum
@@ -46,6 +46,7 @@ from projectkoios.numerics.finite_periodic.numpy.matrix_evaluation import (
     NumpyFiniteFourierMatrixSeriesEvaluator,
 )
 from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation import (
+    NumpyTensorProductFourierMatrixEvaluationDefinition,
     NumpyTensorProductFourierMatrixSeriesEvaluator,
 )
 from projectkoios.numerics.finite_periodic.numpy.transforms import (

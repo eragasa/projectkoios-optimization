@@ -9,7 +9,8 @@ coordinates \(q\), modes are integer lattice coordinates \(n\), and every phase 
 
 Dependency-free records:
 
-- `CenteredUniformMesh` describes the common even axis size and exact per-axis offsets;
+- `CenteredUniformMesh` describes the common positive axis size and exact per-axis
+  offsets for even or odd parity;
 - `FinitePeriodicParsevalDiagnostics` records the two Parseval energies and absolute
   defect; and
 - `FinitePeriodicHermiticityDiagnostics` records twisted cyclic and ordinary
@@ -42,7 +43,7 @@ NumPy records and operations:
 
 Numerics owns:
 
-- centered mode enumeration;
+- parity-aware centered mode enumeration;
 - explicit mesh-offset origin phases;
 - forward normalization by \(1/N^d\);
 - positive-exponent finite-series evaluation;

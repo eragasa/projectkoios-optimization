@@ -163,7 +163,7 @@ class NumpyTensorProductFourierMatrixEvaluationDefinition:
             "maximum_working_elements",
         )
         lower = -(self.source_mesh.size // 2)
-        upper = self.source_mesh.size // 2 - 1
+        upper = (self.source_mesh.size - 1) // 2
         modes = self.series.integer_modes
         if bool(((modes < lower) | (modes > upper)).any()):
             raise ValueError("series modes must lie inside the source mesh inventory")
@@ -313,7 +313,11 @@ class NumpyTensorProductFourierMatrixSeriesEvaluator:
             for component in range(mesh.dimension)
         )
         np.add.at(coefficient_grid, indices, series.matrix_coefficients)
-        integer_axis = np.arange(-(size // 2), size // 2, dtype=np.float64)
+        integer_axis = np.arange(
+            -(size // 2),
+            (size - 1) // 2 + 1,
+            dtype=np.float64,
+        )
         nonleading_phases: list[Complex128Array] = []
         with np.errstate(over="raise", invalid="raise", divide="raise"):
             for coordinates in definition.coordinate_axes[1:]:

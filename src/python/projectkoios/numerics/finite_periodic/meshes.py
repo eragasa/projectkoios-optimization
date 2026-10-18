@@ -25,17 +25,17 @@ class CenteredUniformMesh:
         Exact spatial dimension. This capability supports one, two, and three
         dimensions.
     size
-        Positive even number of points on every tensor axis.
+        Positive number of points on every tensor axis.
     offsets
         Exact built-in finite offsets, one per axis. Axis ``a`` contains coordinates
         ``-1/2 + (i + offsets[a]) / size`` for ``i = 0, ..., size - 1``.
 
     Notes
     -----
-    The even mesh size fixes the centered half-open integer inventory
-    ``-size/2, ..., size/2 - 1`` and makes every Nyquist boundary explicit. Offsets are
-    not reduced modulo one because the supplied origin is part of the transform
-    convention and retained evidence.
+    The centered integer inventory is ``-size//2, ..., (size - 1)//2``. Even sizes have
+    one lower Nyquist boundary; odd sizes have ordinary inversion pairs and no Nyquist
+    mode. Offsets are not reduced modulo one because the supplied origin is part of the
+    transform convention and retained evidence.
     """
 
     dimension: int
@@ -43,7 +43,7 @@ class CenteredUniformMesh:
     offsets: tuple[float, ...]
 
     def __post_init__(self) -> None:
-        """Validate exact dimensions, even size, and finite axis offsets.
+        """Validate exact dimensions, positive size, and finite axis offsets.
 
         Raises
         ------
@@ -55,9 +55,7 @@ class CenteredUniformMesh:
         dimension = exact_positive_integer(self.dimension, "dimension")
         if dimension not in (1, 2, 3):
             raise ValueError("dimension must be one, two, or three")
-        size = exact_positive_integer(self.size, "size")
-        if size % 2 != 0:
-            raise ValueError("size must be even")
+        exact_positive_integer(self.size, "size")
         if type(self.offsets) is not tuple:
             raise TypeError("offsets must be an exact tuple")
         if len(self.offsets) != dimension:

@@ -28,9 +28,12 @@ def test_mesh_rejects_dimensions_outside_owned_range() -> None:
         CenteredUniformMesh(4, 4, (0.0, 0.0, 0.0, 0.0))
 
 
-def test_mesh_rejects_odd_size_without_ambiguous_nyquist_inventory() -> None:
-    with pytest.raises(ValueError):
-        CenteredUniformMesh(2, 5, (0.5, 0.5))
+@pytest.mark.parametrize("size", [513, 1025, 2049])
+def test_one_dimensional_odd_mesh_has_centered_inventory_size(size: int) -> None:
+    mesh = CenteredUniformMesh(1, size, (0.5,))
+
+    assert mesh.point_count == size
+    assert mesh.coordinate_origin == (-0.5 + 0.5 / float(size),)
 
 
 def test_mesh_rejects_noncanonical_offsets() -> None:

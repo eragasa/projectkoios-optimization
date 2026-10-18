@@ -48,12 +48,12 @@ or replace frozen fields after construction.
 2. calls `numpy.fft.fftn(..., norm="forward")` on the first `d` tensor axes;
 3. centers each transformed axis with `numpy.fft.fftshift`;
 4. enumerates integer modes lexicographically over
-   `[-N/2, ..., N/2 - 1]^d`;
+   `[-floor(N/2), ..., floor((N - 1)/2)]^d`;
 5. applies the negative-exponent phase for the exact first mesh coordinate; and
 6. returns immutable flattened `M × n × n` coefficients with backend evidence.
 
-The transform supports `d = 1, 2, 3`, one common positive even `N`, arbitrary finite
-per-axis offsets, and any positive square matrix size.
+The transform supports `d = 1, 2, 3`, one common positive even or odd `N`, arbitrary
+finite per-axis offsets, and any positive square matrix size.
 
 ## Bounded inverse evaluation
 
@@ -109,7 +109,9 @@ reports the sample-mean and coefficient-sum squared Frobenius energies.
 `NumpyCenteredUniformMeshHermiticityAnalyzer` reshapes a complete result to its tensor
 inventory. It pairs every mode with its centered cyclic negative, derives signed wrap
 counts per axis, and applies the exact phase implied by the retained coordinate origin.
-The ordinary diagnostic excludes every lower Nyquist boundary hyperplane.
+For even sizes, the ordinary diagnostic excludes every lower Nyquist boundary
+hyperplane. Odd sizes have no Nyquist mode, so ordinary inversion covers the complete
+inventory and no mode is excluded.
 
 Neither analyzer applies a tolerance or returns an acceptance Boolean.
 
@@ -118,11 +120,15 @@ Neither analyzer applies a tolerance or returns an acceptance Boolean.
 - Unit tests cover exact mesh and diagnostic-record invariants.
 - Contract tests cover exact dtypes, immutable ownership, tensor shape, square matrices,
   coordinate width, and the temporary phase bound.
-- Integration tests recover an independently constructed single mode and verify complete
-  round trips in one, two, and three dimensions.
+- Integration tests recover independently constructed even- and odd-parity modes and
+  verify complete round trips in one, two, and three dimensions.
 - Numerical tests compare reduced-coordinate phases with oblique-2D and FCC-primitive
   physical dual-lattice phases.
-- Hermitian random matrix fields verify cyclic Nyquist phases and ordinary pairing.
+- Hermitian random matrix fields verify even cyclic Nyquist phases, odd complete
+  ordinary pairing, and Parseval identities.
+- Odd one-dimensional scales `N = 513`, `1025`, and `2049` verify the centered positive
+  endpoint; `N = 2049` to a shifted axis of length `8191` verifies bounded separable
+  evaluation at the required scale.
 - Instrumented evaluation verifies every temporary phase matrix respects the declared
   element bound.
 - An isolated-wheel test verifies dependency-free imports followed by NumPy execution.

@@ -2,21 +2,24 @@
 
 ## Mesh convention
 
-For dimension \(d\in\{1,2,3\}\), common even axis size \(N\), and retained offsets
+For dimension \(d\in\{1,2,3\}\), common positive axis size \(N\), and retained offsets
 \(s_a\), the axis coordinates are
 
 \[
  q_{i,a}=-\frac12+\frac{i_a+s_a}{N},\qquad i_a=0,\ldots,N-1.
 \]
 
-The centered half-open integer axis is
+The parity-aware centered integer axis is
 
 \[
- \mathcal I_N=\{-N/2,\ldots,N/2-1\},
+ \mathcal I_N=\{-\lfloor N/2\rfloor,\ldots,\lfloor(N-1)/2\rfloor\}.
 \]
 
-and the complete ordered inventory is the tensor product \(\mathcal I_N^d\) in NumPy
-`ij` lexicographic order.
+For even $N$ this is the half-open inventory
+$\{-N/2,\ldots,N/2-1\}$ with one lower Nyquist endpoint. For odd $N$ it is the
+symmetric inventory
+$\{-(N-1)/2,\ldots,(N-1)/2\}$ with no Nyquist mode. The complete ordered inventory is
+the tensor product \(\mathcal I_N^d\) in NumPy `ij` lexicographic order.
 
 ## Forward transform
 
@@ -85,8 +88,10 @@ mesh origin implies
  C_{\bar n}=\exp(-2\pi i\,N q_0\cdot w)C_n^\dagger.
 \]
 
-This is the twisted cyclic relation measured over the complete inventory. Away from the
-lower Nyquist boundary hyperplanes, \(w=0\), and the ordinary relation is
+This is the twisted cyclic relation measured over the complete inventory. For odd $N$,
+ordinary inversion remains inside the symmetric inventory, $w=0$ for every mode, and
+the ordinary diagnostic covers the complete inventory. For even $N$, away from the
+lower Nyquist boundary hyperplanes, $w=0$ and the ordinary relation is
 \(C_{-n}=C_n^\dagger\).
 
 For the conventional even Monkhorst--Pack offset \(s_a=1/2\), each single-axis Nyquist
@@ -95,8 +100,8 @@ wrap contributes the familiar factor \(-1\).
 ## Failure classification
 
 - `TypeError`: wrong nominal type, exact built-in type, array class, or dtype.
-- `ValueError`: invalid dimension, odd or nonpositive size, malformed shape, mutable
-  storage, nonfinite public input, or inconsistent result correlation.
+- `ValueError`: invalid dimension, nonpositive size, malformed shape, mutable storage,
+  nonfinite public input, or inconsistent result correlation.
 - `FloatingPointError`: nonfinite FFT, phase, reduction, Parseval, or Hermiticity
   arithmetic.
 

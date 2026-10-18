@@ -38,7 +38,11 @@ def _centered_integer_modes(mesh: CenteredUniformMesh, /) -> Int64Array:
     numpy.ndarray
         Int64 array with shape ``(mesh.point_count, mesh.dimension)``.
     """
-    axis = np.arange(-(mesh.size // 2), mesh.size // 2, dtype=np.int64)
+    axis = np.arange(
+        -(mesh.size // 2),
+        (mesh.size - 1) // 2 + 1,
+        dtype=np.int64,
+    )
     components = np.meshgrid(*(axis,) * mesh.dimension, indexing="ij")
     return cast(
         Int64Array,
@@ -210,7 +214,7 @@ class NumpyCenteredUniformMeshMatrixFourierTransformer:
     ``C_R = N**(-d) * sum_i F(q_i) * exp(-2*pi*1j*dot(q_i, R))``
 
     with ``q_i[a] = -1/2 + (i[a] + offsets[a]) / N``. NumPy FFT axes are
-    shifted into the centered half-open inventory before the exact origin phase is
+    shifted into the centered parity-aware inventory before the exact origin phase is
     applied.
     """
 

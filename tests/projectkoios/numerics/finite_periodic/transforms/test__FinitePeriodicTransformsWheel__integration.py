@@ -50,8 +50,8 @@ from projectkoios.numerics.finite_periodic.transforms import (
 
 installed = Path(os.environ["EXPECTED_WHEEL_ROOT"]).resolve()
 assert not any(name == "numpy" or name.startswith("numpy.") for name in sys.modules)
-mesh = CenteredUniformMesh(1, 2, (0.5,))
-assert mesh.coordinate_origin == (-0.25,)
+mesh = CenteredUniformMesh(1, 3, (0.5,))
+assert mesh.coordinate_origin == (-0.5 + 0.5 / 3.0,)
 assert FinitePeriodicParsevalDiagnostics(1.0, 1.0, 0.0).absolute_defect == 0.0
 
 import numpy as np
@@ -77,13 +77,13 @@ from projectkoios.numerics.finite_periodic.numpy.transforms import (
 assert Path(capability.__file__).resolve().is_relative_to(installed)
 assert Path(matrix_evaluation.__file__).resolve().is_relative_to(installed)
 assert Path(tensor_product_evaluation.__file__).resolve().is_relative_to(installed)
-samples = np.array([[[2.0 + 0.0j]], [[2.0 + 0.0j]]], dtype=np.complex128)
+samples = np.full((3, 1, 1), 2.0 + 0.0j, dtype=np.complex128)
 definition = NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
     mesh,
     samples,
 )
 transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(definition)
-coordinates = np.array([[-0.25], [0.25]], dtype=np.float64)
+coordinates = (-0.5 + (np.arange(3, dtype=np.float64) + 0.5) / 3.0)[:, None]
 evaluated = NumpyFiniteFourierMatrixSeriesEvaluator().evaluate(
     NumpyFiniteFourierMatrixEvaluationDefinition.from_array(
         transformed.series,

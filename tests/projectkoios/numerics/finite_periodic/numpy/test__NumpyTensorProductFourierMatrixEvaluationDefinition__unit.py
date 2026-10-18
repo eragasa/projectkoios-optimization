@@ -30,6 +30,23 @@ def test_rejects_mode_outside_construction_box() -> None:
         )
 
 
+def test_odd_mesh_accepts_both_centered_endpoints() -> None:
+    mesh = CenteredUniformMesh(1, 5, (0.5,))
+    series = NumpyFiniteFourierMatrixSeries.from_arrays(
+        1,
+        np.array([[-2], [2]], dtype=np.int64),
+        np.ones((2, 1, 1), dtype=np.complex128),
+    )
+
+    definition = NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
+        mesh,
+        series,
+        (np.array([0.0], dtype=np.float64),),
+    )
+
+    assert definition.coefficient_grid_elements == 5
+
+
 def test_rejects_insufficient_bound_for_coefficient_grid() -> None:
     mesh = CenteredUniformMesh(3, 4, (0.5, 0.5, 0.5))
     series = NumpyFiniteFourierMatrixSeries.from_arrays(

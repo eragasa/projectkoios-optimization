@@ -129,7 +129,7 @@ class NumpyCenteredUniformMeshHermiticityAnalyzer:
         mesh = result.mesh
         size = mesh.size
         lower = -(size // 2)
-        upper = size // 2 - 1
+        upper = (size - 1) // 2
         axis_modes = np.arange(lower, upper + 1, dtype=np.int64)
         target_modes = -axis_modes
         wraps = np.zeros(size, dtype=np.int64)
@@ -166,10 +166,11 @@ class NumpyCenteredUniformMeshHermiticityAnalyzer:
             defects = np.linalg.norm(partner - expected, axis=(-2, -1))
             twisted = float(np.max(defects))
             ordinary_mask = np.ones((size,) * mesh.dimension, dtype=np.bool_)
-            for component in range(mesh.dimension):
-                shape = [1] * mesh.dimension
-                shape[component] = size
-                ordinary_mask &= axis_modes.reshape(tuple(shape)) != lower
+            if size % 2 == 0:
+                for component in range(mesh.dimension):
+                    shape = [1] * mesh.dimension
+                    shape[component] = size
+                    ordinary_mask &= axis_modes.reshape(tuple(shape)) != lower
             ordinary = float(np.max(defects[ordinary_mask]))
         if not math.isfinite(twisted) or not math.isfinite(ordinary):
             raise FloatingPointError(

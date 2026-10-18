@@ -72,7 +72,8 @@ class FinitePeriodicHermiticityDiagnostics:
         negative and applying the exact mesh-origin wrap phase.
     ordinary_maximum_frobenius_defect
         Maximum Frobenius defect over pairs not touching a Nyquist boundary, where no
-        cyclic wrap phase is required.
+        cyclic wrap phase is required. For odd meshes this covers the complete
+        inventory because no Nyquist mode exists.
 
     Notes
     -----

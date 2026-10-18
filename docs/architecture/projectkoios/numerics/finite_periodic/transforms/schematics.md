@@ -21,6 +21,19 @@ flowchart LR
     T --> V
 ```
 
+## Parity-aware inventory
+
+```mermaid
+flowchart TD
+    N[Positive mesh size N] --> P{Parity}
+    P -->|Odd| O[Symmetric modes from minus floor N over 2 to plus floor N over 2]
+    P -->|Even| E[Half-open modes from minus N over 2 to N over 2 minus one]
+    O --> I[Complete centered inventory]
+    E --> I
+    O --> H[Ordinary Hermiticity covers every mode]
+    E --> T[Lower Nyquist boundary uses twisted cyclic pairing]
+```
+
 ## Class relationships
 
 ```mermaid
