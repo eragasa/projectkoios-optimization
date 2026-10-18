@@ -106,7 +106,7 @@ def test_production_returns_do_not_expose_callable_type_parameters() -> None:
     assert violations == []
 
 
-def test_production_avoids_reflection_and_unprotected_frozen_mutation() -> None:
+def test_production_avoids_assertions_reflection_and_frozen_mutation() -> None:
     source_root = Path(__file__).parents[1] / "src" / "python"
     violations: list[str] = []
 
@@ -114,6 +114,8 @@ def test_production_avoids_reflection_and_unprotected_frozen_mutation() -> None:
         relative = path.relative_to(source_root).as_posix()
         module = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(module):
+            if isinstance(node, ast.Assert):
+                violations.append(f"{relative}:{node.lineno}:assert")
             if (
                 isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                 and node.name == "__getattr__"

@@ -235,8 +235,10 @@ class BatchedHermitianSpectrumDefinition:
         """Return the inferred nonempty or explicitly retained empty dimension."""
         if self.matrices:
             return len(self.matrices[0])
-        assert self._empty_dimension is not None
-        return self._empty_dimension
+        dimension = self._empty_dimension
+        if dimension is None:
+            raise RuntimeError("validated empty definition is missing its dimension")
+        return dimension
 
     @classmethod
     def empty(
