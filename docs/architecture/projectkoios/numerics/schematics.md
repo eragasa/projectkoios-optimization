@@ -8,9 +8,11 @@ flowchart TD
     V --> L[Linear algebra]
     V --> G[Geometry]
     V --> S[Sequences]
+    V --> Q[Quadrature]
     L --> P[Finite-periodic numerics]
     G --> P
     P --> D[Diagnostics]
+    Q --> D
     L --> D
     D --> R[Immutable numerical results]
 ```

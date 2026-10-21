@@ -13,6 +13,7 @@ projectkoios/numerics/
 ├── linalg/
 ├── sequences/
 ├── finite_periodic/
+├── quadrature/
 ├── numerical_analysis/
 └── statistics/
 ```
@@ -44,6 +45,8 @@ The implemented namespace foundation provides:
 - centered uniform one-, two-, and three-dimensional mesh and diagnostic records;
 - optional NumPy finite-series, centered matrix-transform, bounded evaluation, Parseval,
   and cyclic-Hermiticity implementations;
+- dependency-free uniform closed-interval quadrature definitions plus immutable NumPy
+  trapezoidal weights, homogeneous-Dirichlet restriction, and diagonal mass algebra;
 - dense and sparse linear-algebra capabilities documented under `linalg`;
 - strict typing and `projectkoios/numerics/py.typed`; and
 - isolated dependency-free and optional-backend wheel imports.

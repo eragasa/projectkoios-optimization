@@ -20,8 +20,9 @@ one-pair and tensor-batched complex-unitary right Procrustes alignment,
 positive-exponent finite Fourier-series evaluation at supplied real coordinates,
 shared-grid batched finite Fourier evaluation with bounded phase batches, parity-generic
 centered uniform one-, two-, and three-dimensional matrix Fourier transforms, bounded selected-
-mode matrix evaluation, and Parseval and cyclic-Hermiticity diagnostics,
-invariant dense Hermitian spectral-subspace decomposition with complete-spectrum output
+mode matrix evaluation, Parseval and cyclic-Hermiticity diagnostics, endpoint-inclusive
+uniform trapezoidal quadrature with explicit homogeneous-Dirichlet restriction and
+diagonal mass algebra, invariant dense Hermitian spectral-subspace decomposition with complete-spectrum output
 and selected-projector construction, dense batched complete Hermitian-spectrum
 evaluation, and sparse partial Hermitian-spectrum selection with explicit convergence
 controls and residual evidence.
@@ -76,6 +77,12 @@ from projectkoios.numerics.linalg.scipy.sparse_hermitian_spectrum import (
 from projectkoios.numerics.linalg.sparse_hermitian_spectrum import (
     SparseHermitianPartialSpectrumDefinition,
     SparseHermitianSpectrumSelection,
+)
+from projectkoios.numerics.quadrature.uniform_1d import (
+    UniformClosedIntervalTrapezoidalRuleDefinition,
+)
+from projectkoios.numerics.quadrature.numpy.uniform_1d import (
+    NumpyUniformClosedIntervalTrapezoidalRule,
 )
 
 from projectkoios.optimization.alignment.numpy.batched_procrustes import (

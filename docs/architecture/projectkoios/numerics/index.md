@@ -6,9 +6,10 @@ contract.
 
 ## Status
 
-Finite-series evaluation, centered uniform finite-mesh matrix transforms, Frobenius
-values, Hermitian spectral-subspace decomposition, dense complete Hermitian spectra,
-and sparse partial Hermitian spectra are implemented. Other capabilities remain
+Finite-series evaluation, centered uniform finite-mesh matrix transforms, uniform
+closed-interval trapezoidal quadrature, Frobenius values, Hermitian spectral-subspace
+decomposition, dense complete Hermitian spectra, and sparse partial Hermitian spectra
+are implemented. Other capabilities remain
 architecture candidates unless their pages explicitly identify implemented source.
 
 ## Capability organization
@@ -20,6 +21,7 @@ architecture candidates unless their pages explicitly identify implemented sourc
 | Geometry | `geometry` | evaluate primal and dual mathematical geometry |
 | Deterministic sequences | `sequences` | calculate indexed low-discrepancy points |
 | Finite-periodic numerics | `finite_periodic` | transform, sew, project, calculate holonomy, reconstruct supplied states, and calculate real-space moments |
+| Quadrature | `quadrature` | construct unit-free integration weights and diagonal mass algebra |
 | Numerical analysis | `numerical_analysis` | evaluate convergence, derivatives, tensors, and roots |
 | Statistical diagnostics | `statistics` | calculate covariance, conditioning, intervals, and probabilities |
 
@@ -52,6 +54,12 @@ from projectkoios.numerics.finite_periodic.numpy.tensor_product_evaluation impor
 from projectkoios.numerics.finite_periodic.numpy.transforms import (
     NumpyCenteredUniformMeshMatrixFourierTransformer,
 )
+from projectkoios.numerics.quadrature.uniform_1d import (
+    UniformClosedIntervalTrapezoidalRuleDefinition,
+)
+from projectkoios.numerics.quadrature.numpy.uniform_1d import (
+    NumpyUniformClosedIntervalTrapezoidalRule,
+)
 ```
 
 Package initializers remain import-empty. Consumers import exact defining modules.
@@ -65,3 +73,4 @@ Package initializers remain import-empty. Consumers import exact defining module
 - [NumPy numerical support](numpy/index.md)
 - [Linear algebra](linalg/index.md)
 - [Finite-periodic numerics](finite_periodic/index.md)
+- [Uniform one-dimensional quadrature](quadrature/index.md)
