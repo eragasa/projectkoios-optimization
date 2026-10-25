@@ -17,22 +17,22 @@ Dependency-free values:
 - `ComplexMatrixFrobenius`
 - `complex_matrix_frobenius(matrix)`
 
-Optional backend evaluation:
+Optional backend scalar evaluation:
 
-- `numpy_matrix_frobenius(matrix)` and `NumpyFrobeniusNorm(matrix).result()` for dense
-  NumPy arrays;
-- `scipy_csr_matrix_frobenius(matrix)` and
+- `NumpyFrobeniusPower(matrix).result()` and
+  `NumpyFrobeniusNorm(matrix).result()` for dense NumPy arrays;
+- `ScipyCsrFrobeniusPower(matrix).result()` and
   `ScipyCsrFrobeniusNorm(matrix).result()` for SciPy CSR matrices and arrays.
 
 The dependency-free input annotation uses `FiniteComplexMatrix` from its owning
 `projectkoios.numerics.typing` module; the Frobenius module does not re-export that shared
-representation alias. The NumPy operation accepts exact finite nonempty two-dimensional
+representation alias. The NumPy evaluations accept exact finite nonempty two-dimensional
 float64 or complex128 arrays directly without mutation or dtype conversion. The SciPy
-operation accepts the corresponding CSR matrix and array representations, canonicalizes
-a private copy, and never densifies or mutates the caller object. All paths return the
-same immutable detailed result retaining row count, column count, raw Frobenius power,
-and nonnegative Frobenius norm. Nominal evaluations return only the built-in scalar norm
-through `MatrixNormABC.result()`.
+evaluations accept the corresponding CSR matrix and array representations, canonicalize
+a private copy, and never densify or mutate the caller object. Backend power and norm
+capabilities return separate built-in scalar results. The dependency-free tuple operation
+continues to return the immutable detailed record with row count, column count, power,
+and norm. Nominal norm evaluations return through `MatrixNormABC.result()`.
 
 ## Boundary
 

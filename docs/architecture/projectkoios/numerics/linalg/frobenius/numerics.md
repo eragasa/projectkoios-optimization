@@ -21,7 +21,9 @@ The capability intentionally requires a finite raw power. A matrix whose norm co
 represented by a scaled norm algorithm but whose raw power overflows is therefore
 rejected, because returning the raw power is part of this API.
 
-The result constructor independently checks positive dimensions, finite nonnegative
-values, and the exact relation `norm == sqrt(power)`. This is deterministic binary64
-software verification, not a claim of exact real-arithmetic summation or scientific
-validation.
+The dependency-free detailed-result constructor independently checks positive
+dimensions, finite nonnegative values, and the exact relation
+`norm == sqrt(power)`. Optional backend power and norm classes expose those two scalar
+quantities separately while using the same ordered reduction. This is deterministic
+binary64 software verification, not a claim of exact real-arithmetic summation or
+scientific validation.

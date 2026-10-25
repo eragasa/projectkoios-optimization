@@ -79,9 +79,9 @@ solver or certificate hierarchy.
   `FiniteComplexMatrix` representation remains owned and exported only by
   `projectkoios.numerics.typing`.
 - Matrix-norm foundation: `MatrixNormEnum` and `MatrixNormABC`.
-- Dense Frobenius execution: `NumpyFrobeniusNorm` and `numpy_matrix_frobenius`.
-- CSR Frobenius execution: `ScipyCsrFrobeniusNorm` and
-  `scipy_csr_matrix_frobenius`.
+- Dense Frobenius execution: `NumpyFrobeniusPower` and `NumpyFrobeniusNorm`.
+- CSR Frobenius execution: `ScipyCsrFrobeniusPower` and
+  `ScipyCsrFrobeniusNorm`.
 - Dense maximum-entry execution: `NumpyMaximumAbsoluteEntryNorm`.
 - CSR maximum-entry execution: `ScipyCsrMaximumAbsoluteEntryNorm`.
 
