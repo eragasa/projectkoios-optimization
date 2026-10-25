@@ -4,6 +4,12 @@ The dense NumPy implementation validates an exact nonempty two-dimensional ndarr
 exact float64 or complex128 storage and finite entries. It evaluates entry magnitudes and
 takes their maximum without mutating or normalizing the caller array.
 
+The SciPy implementation requires a CSR matrix or array with the same exact dtypes. It
+validates source values, copies the representation, sums duplicate coordinates,
+eliminates explicit zeros, sorts indices, and reduces canonical stored magnitudes. An
+initial zero incorporates all implicit sparse zeros and defines the all-zero result.
+Duplicate-consolidation overflow is rejected before magnitude reduction.
+
 The public result is converted to an exact built-in float. A finite complex entry can
 have a nonrepresentable binary64 magnitude; nonfinite magnitude evaluation therefore
 raises `FloatingPointError` rather than returning infinity. Zero matrices return exact

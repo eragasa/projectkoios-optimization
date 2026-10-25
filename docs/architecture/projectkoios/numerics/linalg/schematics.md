@@ -80,8 +80,8 @@ prospective transformations.
 
 - Frobenius power and norm are current.
 - The matrix-norm semantic enum, nominal callable boundary, dense NumPy and SciPy CSR
-  Frobenius evaluators, and dense NumPy maximum-entry evaluator are current; sparse
-  maximum-entry and spectral evaluators remain prospective.
+  Frobenius and maximum-entry evaluators are current; spectral evaluators remain
+  prospective.
 - Projector complement, compression, orthonormalization, and common-space injection are
   prospective.
 - Prospective nodes do not inherit acceptance from implemented capabilities.
@@ -97,7 +97,7 @@ flowchart LR
     A --> B[NumpyFrobeniusNorm]
     A --> S[ScipyCsrFrobeniusNorm]
     A --> M[NumpyMaximumAbsoluteEntryNorm]
-    A -. reviewed backend required .-> C[Sparse maximum-entry evaluator: prospective]
+    A --> C[ScipyCsrMaximumAbsoluteEntryNorm]
     A -. reviewed algorithm required .-> D[Spectral norm evaluator: prospective]
 ```
 

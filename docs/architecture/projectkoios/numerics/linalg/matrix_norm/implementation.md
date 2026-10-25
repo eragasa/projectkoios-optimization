@@ -20,9 +20,10 @@ Optional matrix representation aliases are owned separately:
   `csr_array` representations.
 
 Those aliases do not perform runtime validation and importing them explicitly imports
-their optional backend. `NumpyFrobeniusNorm`, `ScipyCsrFrobeniusNorm`, and
-`NumpyMaximumAbsoluteEntryNorm` are the current concrete implementations of the nominal
-contract; additional semantics and backends require separate review.
+their optional backend. `NumpyFrobeniusNorm`, `ScipyCsrFrobeniusNorm`,
+`NumpyMaximumAbsoluteEntryNorm`, and `ScipyCsrMaximumAbsoluteEntryNorm` are the current
+concrete implementations of the nominal contract; additional semantics and backends
+require separate review.
 
 ## Mapped tests
 

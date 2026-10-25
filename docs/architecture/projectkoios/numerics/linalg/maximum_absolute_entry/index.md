@@ -6,24 +6,25 @@ $$
 \lVert A\rVert_{\max}=\max_{i,j}|A_{ij}|.
 $$
 
-`projectkoios.numerics.linalg.numpy.maximum_absolute_entry` currently evaluates this
-unit-free scalar directly for nonempty finite float64 or complex128 NumPy matrices.
+Capability-local NumPy and SciPy modules evaluate this unit-free scalar directly for
+nonempty finite float64 or complex128 dense and CSR matrix representations.
 
 ## Public API
 
-- `numpy_matrix_maximum_absolute_entry(matrix)`
 - `NumpyMaximumAbsoluteEntryNorm`
+- `ScipyCsrMaximumAbsoluteEntryNorm`
 
-The detailed function returns an exact built-in finite nonnegative float. The nominal
-evaluator exposes the same operation through `MatrixNormABC` and identifies
-`MatrixNormEnum.maximum_absolute_entry`.
+Each nominal evaluator validates its representation, performs the reduction, returns an
+exact built-in finite nonnegative float through `MatrixNormABC`, and identifies
+`MatrixNormEnum.maximum_absolute_entry`. No parallel function API or detailed result
+record is needed for this scalar-only operation.
 
 ## Boundary
 
-This capability owns representation validation, entry-magnitude evaluation, and
-binary64 failure behavior. It does not own units, normalization, thresholds, matrix
-meaning, display labels, or scientific interpretation. SciPy CSR support requires its
-own capability-local backend implementation.
+This capability owns representation validation, entry-magnitude evaluation, CSR
+canonicalization, and binary64 failure behavior. It does not own units, normalization,
+thresholds, matrix meaning, display labels, or scientific interpretation. The SciPy path
+copies before canonicalization and neither densifies nor mutates the caller object.
 
 ## Pages
 

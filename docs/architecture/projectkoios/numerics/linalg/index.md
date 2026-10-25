@@ -20,8 +20,8 @@ The namespace grows by capability rather than through a universal decomposition 
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
 - The dependency-free semantic matrix-norm enum and nominal callable boundary are
-  implemented, together with dense NumPy and SciPy CSR Frobenius evaluation and dense
-  NumPy maximum-absolute-entry evaluation.
+  implemented, together with dense NumPy and SciPy CSR Frobenius and
+  maximum-absolute-entry evaluation.
 - Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
   compression remain prospective.
 
@@ -41,8 +41,8 @@ acceptance from implemented modules.
 - `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
 - `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC` callable
   boundary; capability-local NumPy and SciPy modules provide concrete evaluators.
-- `numpy/maximum_absolute_entry.py` owns direct dense maximum-entry evaluation; SciPy CSR
-  support remains prospective.
+- `numpy/maximum_absolute_entry.py` and `scipy/maximum_absolute_entry.py` own direct dense
+  and CSR maximum-entry evaluation.
 - `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
   common-space injection; it remains planned.
 - `compression.py` would own projector-based compression and embedding; it remains
@@ -81,8 +81,8 @@ solver or certificate hierarchy.
 - Dense Frobenius execution: `NumpyFrobeniusNorm` and `numpy_matrix_frobenius`.
 - CSR Frobenius execution: `ScipyCsrFrobeniusNorm` and
   `scipy_csr_matrix_frobenius`.
-- Dense maximum-entry execution: `NumpyMaximumAbsoluteEntryNorm` and
-  `numpy_matrix_maximum_absolute_entry`.
+- Dense maximum-entry execution: `NumpyMaximumAbsoluteEntryNorm`.
+- CSR maximum-entry execution: `ScipyCsrMaximumAbsoluteEntryNorm`.
 
 ## Frame nonuniqueness boundary
 
