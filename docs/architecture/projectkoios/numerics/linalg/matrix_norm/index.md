@@ -20,15 +20,13 @@ evaluation remain subclass responsibilities.
 
 ## Status boundary
 
-The enum names the reviewed matrix-norm semantics without claiming that every norm has a
-concrete evaluator. `projectkoios.numerics.linalg.numpy.frobenius` and
-`projectkoios.numerics.linalg.scipy.frobenius` supply the current dense and CSR Frobenius
-implementations. Capability-local NumPy and SciPy modules supply the current dense and
-CSR maximum-entry implementations, and the NumPy spectral-norm module supplies complete
-dense largest-singular-value evaluation. Sparse spectral evaluation remains prospective.
+The enum defines three matrix-norm semantic identities. Capability-local NumPy and SciPy
+modules implement dense and CSR Frobenius norms and maximum-entry norms. The NumPy
+spectral-norm module implements complete dense largest-singular-value evaluation. No
+sparse spectral-norm implementation exists.
+
 The foundation supplies no factory, dispatcher, unit handling, or scientific threshold
-policy. Detailed numerical behavior remains owned by each capability-local operation
-module.
+policy. Each capability-local operation module owns its numerical behavior.
 
 ## Pages
 

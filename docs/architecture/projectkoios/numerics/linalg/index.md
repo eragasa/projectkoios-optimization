@@ -45,12 +45,12 @@ acceptance from implemented modules.
   evaluations.
 - `numpy/maximum_absolute_entry.py` and `scipy/maximum_absolute_entry.py` own direct dense
   and CSR maximum-entry evaluation.
-- `numpy/spectral_norm.py` owns complete dense largest-singular-value evaluation; sparse
-  spectral evaluation remains prospective pending a separate iterative contract.
-- `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
-  common-space injection; it remains planned.
-- `compression.py` would own projector-based compression and embedding; it remains
-  planned.
+- `numpy/spectral_norm.py` owns complete dense largest-singular-value evaluation. No
+  sparse spectral-norm implementation exists. Its iterative contract requires separate
+  review.
+- Planned `orthonormalization.py` owns symmetric Gram inverse-square-root construction
+  and common-space injection.
+- Planned `compression.py` owns projector-based compression and embedding.
 - Each additional dense or sparse matrix-norm evaluator requires capability-specific
   review; semantic enum membership alone does not establish implementation.
 - A generic `eigensystems.py` module is not introduced merely to collect unrelated
@@ -98,7 +98,7 @@ capabilities avoid implicit coordinate-dependent frame policy.
   $U$.
 - Exact degeneracy therefore admits no canonical eigenbasis without additional policy.
 - The invariant-subspace capability returns a projector rather than public eigenvectors.
-- Frame extraction remains blocked pending reviewed clustering, phase fixing,
+- Frame extraction is blocked. Its contract requires reviewed clustering, phase fixing,
   degenerate-block completion, coordinate dependence, and failure behavior.
 - KSD remains responsible for stating whether a consumer needs eigenvector-diagonal
   frames or only an orthonormal basis for a retained subspace.

@@ -10,9 +10,8 @@ Finite-series evaluation, centered uniform finite-mesh matrix transforms, unifor
 closed-interval trapezoidal quadrature, Frobenius values, dense
 maximum-absolute-entry and spectral norms, the nominal matrix-norm contract foundation,
 Hermitian spectral-subspace decomposition, dense complete Hermitian spectra, and sparse
-partial Hermitian spectra are
-implemented. Other capabilities remain
-architecture candidates unless their pages explicitly identify implemented source.
+partial Hermitian spectra are implemented. Each capability page states whether its
+source exists or remains prospective.
 
 ## Capability organization
 

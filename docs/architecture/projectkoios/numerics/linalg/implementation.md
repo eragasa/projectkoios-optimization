@@ -77,8 +77,8 @@ selection.
 
 ## Verification organization
 
-Each accepted capability receives mirrored contract, backend, bounded numerical, and
-wheel verification appropriate to its mathematical output.
+Each implemented capability receives mirrored contract, backend, bounded numerical, and
+wheel verification matched to its mathematical output.
 
 - Spectral-subspace verification covers strict inputs, analytic and high-precision
   references, projector identities, degeneracy boundaries, invariances, malicious
@@ -102,7 +102,7 @@ Linear algebra source depends only on the standard library and its selected opti
 backend, while downstream layers retain their own semantics.
 
 - Numerics must not import Optimization, PhysKit, or KSD.
-- Optimization may consume numerical records for objective construction and
-  transformation selection.
+- Optimization owns objective construction and transformation selection over numerical
+  records.
 - PhysKit and KSD retain units, model identities, thresholds, evidence, and scientific
   interpretation.
