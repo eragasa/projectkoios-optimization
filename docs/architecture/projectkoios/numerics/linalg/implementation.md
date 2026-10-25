@@ -23,9 +23,11 @@ pages.
 - [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal
   `result()` contract shared by matrix-norm evaluations.
 - [`maximum_absolute_entry/`](maximum_absolute_entry/index.md) documents direct dense
-  maximum-entry evaluation.
-- Orthonormalization, compression, and additional optional matrix-norm evaluators remain
-  prospective.
+  and CSR maximum-entry evaluation.
+- [`spectral_norm/`](spectral_norm/index.md) documents complete dense
+  largest-singular-value evaluation.
+- Orthonormalization, compression, sparse spectral evaluation, and additional norm
+  semantics remain prospective.
 
 ## Module organization
 
@@ -37,13 +39,13 @@ carry its own validation, evidence, and qualification.
   `sparse_hermitian_spectrum.py`, `frobenius.py`, and `matrix_norm.py` are current
   contract modules.
 - `numpy/hermitian_spectral_subspace.py`, `numpy/hermitian_spectrum.py`,
-  `numpy/frobenius.py`, and `numpy/maximum_absolute_entry.py` are current concrete
-  backend modules.
+  `numpy/frobenius.py`, `numpy/maximum_absolute_entry.py`, and
+  `numpy/spectral_norm.py` are current concrete backend modules.
 - `scipy/hermitian_spectrum.py`, `scipy/sparse_hermitian_spectrum.py`,
   `scipy/frobenius.py`, and `scipy/maximum_absolute_entry.py` are current SciPy backend
   modules.
-- `orthonormalization.py`, `compression.py`, and additional NumPy/SciPy matrix-norm
-  evaluators remain planned.
+- `orthonormalization.py`, `compression.py`, and sparse spectral-norm and additional
+  matrix-norm evaluators remain planned.
 - `numpy/__init__.py` remains import-empty.
 
 ## Record boundary
@@ -88,6 +90,9 @@ wheel verification appropriate to its mathematical output.
 - Sparse partial-spectrum verification covers canonical CSR storage, explicit selection
   and convergence controls, sparse Hermiticity evidence, SciPy ARPACK behavior,
   deterministic start vectors, and residual bounds.
+- Dense spectral-norm verification covers analytic largest singular values, rectangular
+  edge cases, storage layout and caller ownership, complete-SVD failure translation, and
+  nonfinite backend output.
 - Future capabilities require independent verification contracts and do not inherit
   acceptance from either spectral slice.
 

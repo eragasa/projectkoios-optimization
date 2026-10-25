@@ -24,9 +24,11 @@ The enum names the reviewed matrix-norm semantics without claiming that every no
 concrete evaluator. `projectkoios.numerics.linalg.numpy.frobenius` and
 `projectkoios.numerics.linalg.scipy.frobenius` supply the current dense and CSR Frobenius
 implementations. Capability-local NumPy and SciPy modules supply the current dense and
-CSR maximum-entry implementations. The foundation supplies no factory, dispatcher, unit
-handling, or scientific threshold policy. Detailed numerical behavior
-remains owned by each capability-local operation module.
+CSR maximum-entry implementations, and the NumPy spectral-norm module supplies complete
+dense largest-singular-value evaluation. Sparse spectral evaluation remains prospective.
+The foundation supplies no factory, dispatcher, unit handling, or scientific threshold
+policy. Detailed numerical behavior remains owned by each capability-local operation
+module.
 
 ## Pages
 
