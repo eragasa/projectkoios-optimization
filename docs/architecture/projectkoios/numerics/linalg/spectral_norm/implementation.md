@@ -21,7 +21,8 @@ tests/projectkoios/numerics/linalg/numpy/spectral_norm/
 └── test__NumpySpectralNorm__integration.py
 ```
 
-Tests cover real and complex matrices, rectangular and nonnormal shape, rank deficiency,
+Tests cover analytically derived real and complex largest singular values with an
+explicit binary64 roundoff bound, rectangular and nonnormal shape, rank deficiency,
 one-row and one-column matrices, exact zero, storage layouts and views, read-only input,
 caller nonmutation, invalid shape and dtype, nonfinite source entries, unrepresentable
 finite-input output, nonconvergence translation, nonfinite backend output, semantic
