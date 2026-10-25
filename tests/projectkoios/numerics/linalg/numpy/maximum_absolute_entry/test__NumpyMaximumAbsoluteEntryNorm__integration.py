@@ -27,47 +27,45 @@ pytestmark = pytest.mark.integration
         ),
     ],
 )
-def test_evaluator_accepts_supported_dense_storage(
+def test_evaluation_accepts_supported_dense_storage(
     matrix: DenseMatrix,
     expected: float,
 ) -> None:
-    result = NumpyMaximumAbsoluteEntryNorm()(matrix)
+    result = NumpyMaximumAbsoluteEntryNorm(matrix).result()
 
     assert result == expected
     assert type(result) is float
 
 
-def test_evaluator_reports_maximum_absolute_entry_semantics() -> None:
-    evaluator = NumpyMaximumAbsoluteEntryNorm()
+def test_evaluation_reports_maximum_absolute_entry_semantics() -> None:
     matrix: DenseMatrix = np.asarray(((3.0 + 4.0j, 4.0j),), dtype=np.complex128)
+    evaluation = NumpyMaximumAbsoluteEntryNorm(matrix)
 
-    result = evaluator(matrix)
+    result = evaluation.result()
 
-    assert evaluator.matrix_norm is MatrixNormEnum.maximum_absolute_entry
+    assert evaluation.matrix_norm is MatrixNormEnum.maximum_absolute_entry
     assert result == 5.0
 
 
 def test_accepts_storage_layouts_and_noncontiguous_views() -> None:
-    evaluator = NumpyMaximumAbsoluteEntryNorm()
     fortran_matrix: DenseMatrix = np.asfortranarray(
         np.asarray(((-1.0, 2.0, -7.0), (4.0, 5.0, 6.0)), dtype=np.float64)
     )
     source = np.arange(-6.0, 6.0, dtype=np.float64).reshape(3, 4)
     noncontiguous_view: DenseMatrix = source[:, ::2]
 
-    assert evaluator(fortran_matrix) == 7.0
-    assert evaluator(noncontiguous_view) == 6.0
+    assert NumpyMaximumAbsoluteEntryNorm(fortran_matrix).result() == 7.0
+    assert NumpyMaximumAbsoluteEntryNorm(noncontiguous_view).result() == 6.0
 
 
 def test_operation_does_not_mutate_writable_or_read_only_input() -> None:
-    evaluator = NumpyMaximumAbsoluteEntryNorm()
     writable: DenseMatrix = np.asarray(((1.0 + 2.0j, 3.0 + 4.0j),), dtype=np.complex128)
     writable_before = writable.copy()
     read_only: DenseMatrix = np.asarray(((-3.0, 2.0),), dtype=np.float64)
     read_only.setflags(write=False)
 
-    writable_result = evaluator(writable)
-    read_only_result = evaluator(read_only)
+    writable_result = NumpyMaximumAbsoluteEntryNorm(writable).result()
+    read_only_result = NumpyMaximumAbsoluteEntryNorm(read_only).result()
 
     assert np.array_equal(writable, writable_before)
     assert writable.flags.writeable
@@ -79,7 +77,7 @@ def test_operation_does_not_mutate_writable_or_read_only_input() -> None:
 def test_zero_matrix_has_exact_zero_norm() -> None:
     matrix: DenseMatrix = np.zeros((2, 3), dtype=np.complex128)
 
-    result = NumpyMaximumAbsoluteEntryNorm()(matrix)
+    result = NumpyMaximumAbsoluteEntryNorm(matrix).result()
 
     assert result == 0.0
 
@@ -94,7 +92,7 @@ def test_zero_matrix_has_exact_zero_norm() -> None:
 )
 def test_rejects_non_matrix_or_empty_shape(matrix: DenseMatrix) -> None:
     with pytest.raises(ValueError, match="two-dimensional|nonempty"):
-        NumpyMaximumAbsoluteEntryNorm()(matrix)
+        NumpyMaximumAbsoluteEntryNorm(matrix).result()
 
 
 @pytest.mark.parametrize(
@@ -106,7 +104,7 @@ def test_rejects_non_matrix_or_empty_shape(matrix: DenseMatrix) -> None:
 )
 def test_rejects_nonfinite_entries(matrix: DenseMatrix) -> None:
     with pytest.raises(ValueError, match="finite"):
-        NumpyMaximumAbsoluteEntryNorm()(matrix)
+        NumpyMaximumAbsoluteEntryNorm(matrix).result()
 
 
 def test_finite_complex_entry_magnitude_overflow_fails_closed() -> None:
@@ -115,4 +113,4 @@ def test_finite_complex_entry_magnitude_overflow_fails_closed() -> None:
     )
 
     with pytest.raises(FloatingPointError, match="became nonfinite"):
-        NumpyMaximumAbsoluteEntryNorm()(matrix)
+        NumpyMaximumAbsoluteEntryNorm(matrix).result()

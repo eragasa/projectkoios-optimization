@@ -19,7 +19,7 @@ The namespace grows by capability rather than through a universal decomposition 
 - Sparse partial Hermitian-spectrum evaluation is implemented with a SciPy ARPACK
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
-- The dependency-free semantic matrix-norm enum and nominal callable boundary are
+- The dependency-free semantic matrix-norm enum and nominal `result()` boundary are
   implemented, together with dense NumPy and SciPy CSR Frobenius and
   maximum-absolute-entry evaluation.
 - Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
@@ -39,8 +39,9 @@ acceptance from implemented modules.
 - `sparse_hermitian_spectrum.py` owns canonical CSR partial-spectrum selection and
   residual evidence; it is implemented with a SciPy sparse backend.
 - `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
-- `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC` callable
-  boundary; capability-local NumPy and SciPy modules provide concrete evaluators.
+- `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC`
+  `result()` boundary; capability-local NumPy and SciPy modules provide concrete
+  evaluations.
 - `numpy/maximum_absolute_entry.py` and `scipy/maximum_absolute_entry.py` own direct dense
   and CSR maximum-entry evaluation.
 - `orthonormalization.py` would own symmetric Gram inverse-square-root construction and

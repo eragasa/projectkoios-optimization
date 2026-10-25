@@ -11,11 +11,11 @@ nonempty finite float64 or complex128 dense and CSR matrix representations.
 
 ## Public API
 
-- `NumpyMaximumAbsoluteEntryNorm`
-- `ScipyCsrMaximumAbsoluteEntryNorm`
+- `NumpyMaximumAbsoluteEntryNorm(matrix).result()`
+- `ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()`
 
-Each nominal evaluator validates its representation, performs the reduction, returns an
-exact built-in finite nonnegative float through `MatrixNormABC`, and identifies
+Each nominal evaluation validates its retained representation, performs the reduction,
+returns an exact built-in finite nonnegative float through `MatrixNormABC`, and identifies
 `MatrixNormEnum.maximum_absolute_entry`. No parallel function API or detailed result
 record is needed for this scalar-only operation.
 

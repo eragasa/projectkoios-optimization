@@ -15,20 +15,15 @@ from projectkoios.numerics.linalg.matrix_norm import (
 pytestmark = pytest.mark.unit
 
 
-class _ConfiguredNorm(MatrixNormABC[int]):
-    __slots__ = ("input", "output")
-
-    def __init__(self, output: float) -> None:
-        self.input: int | None = None
-        self.output = output
+class _ConfiguredNorm(MatrixNormABC[float]):
+    __slots__ = ()
 
     @property
     def matrix_norm(self) -> MatrixNormEnum:
         return MatrixNormEnum.frobenius
 
-    def _evaluate(self, matrix: int, /) -> float:
-        self.input = matrix
-        return self.output
+    def _evaluate(self, matrix: float, /) -> float:
+        return matrix
 
 
 class _FailingNorm(MatrixNormABC[int]):
@@ -57,28 +52,27 @@ def test_base_is_abstract() -> None:
     assert isabstract(MatrixNormABC)
 
 
-def test_public_call_passes_input_and_returns_exact_float() -> None:
-    evaluator = _ConfiguredNorm(2.5)
+def test_result_returns_exact_float_for_retained_input() -> None:
+    evaluation = _ConfiguredNorm(2.5)
 
-    result = evaluator(7)
+    result = evaluation.result()
 
-    assert evaluator.input == 7
-    assert evaluator.matrix_norm is MatrixNormEnum.frobenius
+    assert evaluation.matrix_norm is MatrixNormEnum.frobenius
     assert result == 2.5
     assert type(result) is float
 
 
 @pytest.mark.parametrize("output", [float("nan"), float("inf"), -float("inf")])
-def test_public_call_rejects_nonfinite_implementation_output(output: float) -> None:
+def test_result_rejects_nonfinite_implementation_output(output: float) -> None:
     with pytest.raises(FloatingPointError, match="nonfinite"):
-        _ConfiguredNorm(output)(1)
+        _ConfiguredNorm(output).result()
 
 
-def test_public_call_rejects_negative_implementation_output() -> None:
+def test_result_rejects_negative_implementation_output() -> None:
     with pytest.raises(FloatingPointError, match="negative"):
-        _ConfiguredNorm(-1.0)(1)
+        _ConfiguredNorm(-1.0).result()
 
 
-def test_public_call_propagates_implementation_failure() -> None:
+def test_result_propagates_implementation_failure() -> None:
     with pytest.raises(LookupError, match="implementation failure"):
-        _FailingNorm()(1)
+        _FailingNorm(1).result()

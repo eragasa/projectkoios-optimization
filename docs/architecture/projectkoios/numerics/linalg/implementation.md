@@ -20,8 +20,8 @@ pages.
   partial Hermitian-spectrum selection.
 - [`frobenius/`](frobenius/index.md) documents dependency-free complex-matrix Frobenius
   values.
-- [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal callable
-  contract shared by matrix-norm evaluators.
+- [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal
+  `result()` contract shared by matrix-norm evaluations.
 - [`maximum_absolute_entry/`](maximum_absolute_entry/index.md) documents direct dense
   maximum-entry evaluation.
 - Orthonormalization, compression, and additional optional matrix-norm evaluators remain

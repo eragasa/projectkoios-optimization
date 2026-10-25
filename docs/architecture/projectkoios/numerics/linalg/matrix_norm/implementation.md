@@ -7,10 +7,10 @@ src/python/projectkoios/numerics/linalg/
 └── matrix_norm.py
 ```
 
-The module imports only the standard library. `MatrixNormABC` supplies the final result
-validation template, while concrete subclasses must implement the read-only
-`matrix_norm` property and `_evaluate`. No factory or backend registration exists in this
-foundation.
+The module imports only the standard library. `MatrixNormABC` retains the matrix passed
+to construction and supplies the final `result()` validation template, while concrete
+subclasses implement the read-only `matrix_norm` property and `_evaluate`. No factory or
+backend registration exists in this foundation.
 
 Optional matrix representation aliases are owned separately:
 

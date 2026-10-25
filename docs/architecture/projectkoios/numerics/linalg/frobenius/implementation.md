@@ -16,9 +16,9 @@ ordered scalar reduction without importing an optional backend. The NumPy module
 exact ndarray representation checks and direct dense-array evaluation. The SciPy module
 owns the concrete CSR boundary, private-copy canonicalization, and sparse evaluation.
 `ComplexMatrixFrobenius` validates its canonical fields explicitly and never replaces
-them after frozen construction. `NumpyFrobeniusNorm` and `ScipyCsrFrobeniusNorm` are
-stateless nominal evaluators that delegate to their detailed backend operations. Package
-initializers remain import-empty.
+them after frozen construction. `NumpyFrobeniusNorm` and `ScipyCsrFrobeniusNorm` retain
+the matrix supplied at construction and delegate `result()` evaluation to their detailed
+backend operations. Package initializers remain import-empty.
 
 ## Mapped tests
 

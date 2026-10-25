@@ -79,7 +79,7 @@ The composition view distinguishes implemented reductions from independently rev
 prospective transformations.
 
 - Frobenius power and norm are current.
-- The matrix-norm semantic enum, nominal callable boundary, dense NumPy and SciPy CSR
+- The matrix-norm semantic enum, nominal `result()` boundary, dense NumPy and SciPy CSR
   Frobenius and maximum-entry evaluators are current; spectral evaluators remain
   prospective.
 - Projector complement, compression, orthonormalization, and common-space injection are
@@ -93,7 +93,7 @@ flowchart LR
     G[Sampled Gram matrix] --> O[Symmetric orthonormalization: prospective]
     O --> J[Common-space injection: prospective]
     N[Finite complex matrix] --> M[Implemented Frobenius power and norm]
-    E[MatrixNormEnum] --> A[MatrixNormABC callable boundary]
+    E[MatrixNormEnum] --> A[MatrixNormABC result boundary]
     A --> B[NumpyFrobeniusNorm]
     A --> S[ScipyCsrFrobeniusNorm]
     A --> M[NumpyMaximumAbsoluteEntryNorm]

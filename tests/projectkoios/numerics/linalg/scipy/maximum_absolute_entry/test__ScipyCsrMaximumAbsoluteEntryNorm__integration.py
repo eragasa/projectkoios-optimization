@@ -33,25 +33,25 @@ pytestmark = pytest.mark.integration
         ),
     ],
 )
-def test_evaluator_accepts_both_csr_representations(
+def test_evaluation_accepts_both_csr_representations(
     matrix: CsrMatrix,
     expected: float,
 ) -> None:
-    result = ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+    result = ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
     assert result == expected
     assert type(result) is float
 
 
-def test_evaluator_reports_maximum_absolute_entry_semantics() -> None:
-    evaluator = ScipyCsrMaximumAbsoluteEntryNorm()
+def test_evaluation_reports_maximum_absolute_entry_semantics() -> None:
     matrix: CsrMatrix = sp.csr_array(
         np.asarray(((3.0 + 4.0j, 4.0j),), dtype=np.complex128)
     )
+    evaluation = ScipyCsrMaximumAbsoluteEntryNorm(matrix)
 
-    result = evaluator(matrix)
+    result = evaluation.result()
 
-    assert evaluator.matrix_norm is MatrixNormEnum.maximum_absolute_entry
+    assert evaluation.matrix_norm is MatrixNormEnum.maximum_absolute_entry
     assert result == 5.0
 
 
@@ -70,7 +70,7 @@ def test_private_canonicalization_uses_represented_values_without_mutation() -> 
     canonical_before = matrix.has_canonical_format
     sorted_before = matrix.has_sorted_indices
 
-    result = ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+    result = ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
     assert result == 5.0
     assert np.array_equal(matrix.data, data_before)
@@ -81,7 +81,6 @@ def test_private_canonicalization_uses_represented_values_without_mutation() -> 
 
 
 def test_duplicate_cancellation_and_all_zero_storage_return_exact_zero() -> None:
-    evaluator = ScipyCsrMaximumAbsoluteEntryNorm()
     cancellation: CsrMatrix = sp.csr_array(
         (
             np.asarray((5.0, -5.0), dtype=np.float64),
@@ -92,8 +91,8 @@ def test_duplicate_cancellation_and_all_zero_storage_return_exact_zero() -> None
     )
     empty: CsrMatrix = sp.csr_matrix((2, 3), dtype=np.complex128)
 
-    assert evaluator(cancellation) == 0.0
-    assert evaluator(empty) == 0.0
+    assert ScipyCsrMaximumAbsoluteEntryNorm(cancellation).result() == 0.0
+    assert ScipyCsrMaximumAbsoluteEntryNorm(empty).result() == 0.0
 
 
 def test_large_implicit_zero_dimension_is_not_densified() -> None:
@@ -106,7 +105,7 @@ def test_large_implicit_zero_dimension_is_not_densified() -> None:
         shape=(1, 1_000_000_000),
     )
 
-    result = ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+    result = ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
     assert result == 2.0
 
@@ -121,7 +120,7 @@ def test_large_implicit_zero_dimension_is_not_densified() -> None:
 )
 def test_rejects_non_matrix_or_empty_shape(matrix: CsrMatrix) -> None:
     with pytest.raises(ValueError, match="two-dimensional|nonempty"):
-        ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+        ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
 
 @pytest.mark.parametrize(
@@ -133,7 +132,7 @@ def test_rejects_non_matrix_or_empty_shape(matrix: CsrMatrix) -> None:
 )
 def test_rejects_unsupported_exact_dtype(matrix: CsrMatrix) -> None:
     with pytest.raises(TypeError, match="dtype"):
-        ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+        ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
 
 @pytest.mark.parametrize(
@@ -147,7 +146,7 @@ def test_rejects_unsupported_exact_dtype(matrix: CsrMatrix) -> None:
 )
 def test_rejects_nonfinite_source_entries(matrix: CsrMatrix) -> None:
     with pytest.raises(ValueError, match="finite"):
-        ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+        ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
 
 def test_duplicate_consolidation_overflow_fails_closed() -> None:
@@ -161,7 +160,7 @@ def test_duplicate_consolidation_overflow_fails_closed() -> None:
     )
 
     with pytest.raises(FloatingPointError, match="consolidation became nonfinite"):
-        ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+        ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()
 
 
 def test_finite_complex_entry_magnitude_overflow_fails_closed() -> None:
@@ -170,4 +169,4 @@ def test_finite_complex_entry_magnitude_overflow_fails_closed() -> None:
     )
 
     with pytest.raises(FloatingPointError, match="became nonfinite"):
-        ScipyCsrMaximumAbsoluteEntryNorm()(matrix)
+        ScipyCsrMaximumAbsoluteEntryNorm(matrix).result()

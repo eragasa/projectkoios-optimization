@@ -26,7 +26,8 @@ diagonal mass algebra, invariant dense Hermitian spectral-subspace decomposition
 and selected-projector construction, dense batched complete Hermitian-spectrum
 evaluation, and sparse partial Hermitian-spectrum selection with explicit convergence
 controls and residual evidence. A dependency-free nominal matrix-norm foundation defines
-the shared semantic enum and callable result-validation boundary, with direct dense NumPy
+the shared semantic enum and explicit `result()` validation boundary, with direct dense
+NumPy
 and SciPy CSR Frobenius and maximum-absolute-entry evaluation; spectral algorithms
 remain separately pending.
 

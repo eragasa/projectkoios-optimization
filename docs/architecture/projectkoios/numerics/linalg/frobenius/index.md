@@ -19,9 +19,10 @@ Dependency-free values:
 
 Optional backend evaluation:
 
-- `numpy_matrix_frobenius(matrix)` and `NumpyFrobeniusNorm` for dense NumPy arrays;
-- `scipy_csr_matrix_frobenius(matrix)` and `ScipyCsrFrobeniusNorm` for SciPy CSR
-  matrices and arrays.
+- `numpy_matrix_frobenius(matrix)` and `NumpyFrobeniusNorm(matrix).result()` for dense
+  NumPy arrays;
+- `scipy_csr_matrix_frobenius(matrix)` and
+  `ScipyCsrFrobeniusNorm(matrix).result()` for SciPy CSR matrices and arrays.
 
 The dependency-free input annotation uses `FiniteComplexMatrix` from its owning
 `projectkoios.numerics.typing` module; the Frobenius module does not re-export that shared
@@ -30,8 +31,8 @@ float64 or complex128 arrays directly without mutation or dtype conversion. The 
 operation accepts the corresponding CSR matrix and array representations, canonicalizes
 a private copy, and never densifies or mutates the caller object. All paths return the
 same immutable detailed result retaining row count, column count, raw Frobenius power,
-and nonnegative Frobenius norm. Nominal evaluators return only the built-in scalar norm
-through `MatrixNormABC`.
+and nonnegative Frobenius norm. Nominal evaluations return only the built-in scalar norm
+through `MatrixNormABC.result()`.
 
 ## Boundary
 

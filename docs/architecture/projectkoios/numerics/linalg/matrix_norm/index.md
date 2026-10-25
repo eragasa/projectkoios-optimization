@@ -1,7 +1,7 @@
 # Matrix-norm contract foundation
 
 `projectkoios.numerics.linalg.matrix_norm` owns the dependency-free semantic vocabulary
-and nominal callable boundary shared by matrix-norm implementations.
+and nominal construction-plus-`result()` boundary shared by matrix-norm implementations.
 
 ## Public API
 
@@ -14,8 +14,9 @@ identifiers. Consumers reuse the owner enum and maintain any presentation mappin
 their own facade boundary.
 
 `MatrixNormABC` is generic only in the concrete matrix representation accepted by a
-subclass. Its final callable boundary returns an exact built-in finite nonnegative float;
-representation validation and numerical evaluation remain subclass responsibilities.
+subclass. Construction retains the matrix and its final `result()` boundary returns an
+exact built-in finite nonnegative float; representation validation and numerical
+evaluation remain subclass responsibilities.
 
 ## Status boundary
 

@@ -53,12 +53,12 @@ def test_detailed_operation_evaluates_both_csr_representations(
 
 
 def test_evaluator_reports_semantics_and_returns_scalar_norm() -> None:
-    evaluator = ScipyCsrFrobeniusNorm()
     matrix: CsrMatrix = sp.csr_array(np.asarray(((3.0, 4.0),), dtype=np.float64))
+    evaluation = ScipyCsrFrobeniusNorm(matrix)
 
-    result = evaluator(matrix)
+    result = evaluation.result()
 
-    assert evaluator.matrix_norm is MatrixNormEnum.frobenius
+    assert evaluation.matrix_norm is MatrixNormEnum.frobenius
     assert result == 5.0
     assert type(result) is float
 

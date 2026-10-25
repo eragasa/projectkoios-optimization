@@ -1,4 +1,4 @@
-"""Nominal callable contract and semantic enumeration for matrix norms."""
+"""Nominal result contract and semantic enumeration for matrix norms."""
 
 from __future__ import annotations
 
@@ -17,14 +17,19 @@ class MatrixNormEnum(Enum):
 
 
 class MatrixNormABC[MatrixT](ABC):
-    """Define one nominal matrix-norm evaluator for a specific representation.
+    """Define one nominal matrix-norm evaluation for a specific representation.
 
-    Concrete subclasses select their accepted matrix representation through ``MatrixT``
-    and implement :meth:`_evaluate`. The public callable boundary validates a unit-free
-    scalar result without coercing backend scalar types.
+    Construction retains the supplied matrix representation. Concrete subclasses select
+    that representation through ``MatrixT`` and implement :meth:`_evaluate`. The public
+    :meth:`result` boundary validates a unit-free scalar without coercing backend scalar
+    types.
     """
 
-    __slots__ = ()
+    __slots__ = ("_matrix",)
+
+    def __init__(self, matrix: MatrixT, /) -> None:
+        """Retain the matrix representation evaluated by :meth:`result`."""
+        self._matrix = matrix
 
     @property
     @abstractmethod
@@ -33,13 +38,8 @@ class MatrixNormABC[MatrixT](ABC):
         raise NotImplementedError
 
     @final
-    def __call__(self, matrix: MatrixT, /) -> float:
-        """Evaluate one matrix and validate the implementation result.
-
-        Parameters
-        ----------
-        matrix
-            Matrix representation accepted by the concrete subclass.
+    def result(self) -> float:
+        """Evaluate the retained matrix and validate the implementation result.
 
         Returns
         -------
@@ -53,7 +53,7 @@ class MatrixNormABC[MatrixT](ABC):
         FloatingPointError
             If the implementation returns a nonfinite or negative value.
         """
-        result = self._evaluate(matrix)
+        result = self._evaluate(self._matrix)
         if type(result) is not float:
             raise TypeError(
                 "matrix norm implementation must return an exact built-in float"
