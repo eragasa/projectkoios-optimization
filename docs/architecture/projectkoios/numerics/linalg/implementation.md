@@ -24,10 +24,9 @@ pages.
   `result()` contract shared by matrix-norm evaluations.
 - [`maximum_absolute_entry/`](maximum_absolute_entry/index.md) documents direct dense
   and CSR maximum-entry evaluation.
-- [`spectral_norm/`](spectral_norm/index.md) documents complete dense
-  largest-singular-value evaluation.
-- Orthonormalization, compression, sparse spectral evaluation, and additional norm
-  semantics remain prospective.
+- [`spectral_norm/`](spectral_norm/index.md) documents complete dense and deterministic
+  CSR largest-singular-value evaluation.
+- Orthonormalization, compression, and additional norm semantics remain prospective.
 
 ## Module organization
 
@@ -42,11 +41,13 @@ carry its own validation, evidence, and qualification.
   `numpy/frobenius.py`, `numpy/maximum_absolute_entry.py`, and
   `numpy/spectral_norm.py` are current concrete backend modules.
 - `scipy/hermitian_spectrum.py`, `scipy/sparse_hermitian_spectrum.py`,
-  `scipy/frobenius.py`, and `scipy/maximum_absolute_entry.py` are current SciPy backend
-  modules.
-- `orthonormalization.py`, `compression.py`, and sparse spectral-norm and additional
-  matrix-norm evaluators remain planned.
-- `numpy/__init__.py` remains import-empty.
+  `scipy/frobenius.py`, `scipy/maximum_absolute_entry.py`, and
+  `scipy/spectral_norm.py` are current SciPy backend modules.
+- `scipy/_csr.py` owns private canonical binary64 CSR normalization shared by matrix-norm
+  implementations.
+- `orthonormalization.py`, `compression.py`, and additional matrix-norm evaluators remain
+  planned.
+- `numpy/__init__.py` and `scipy/__init__.py` remain import-empty.
 
 ## Record boundary
 
@@ -93,6 +94,9 @@ wheel verification matched to its mathematical output.
 - Dense spectral-norm verification covers analytic largest singular values, rectangular
   edge cases, storage layout and caller ownership, complete-SVD failure translation, and
   nonfinite backend output.
+- CSR spectral-norm verification covers direct and iterative real and complex cases,
+  explicit controls, deterministic starts, pinned SciPy Krylov boundaries, caller
+  ownership, scale-safe small shapes, nonconvergence, and internal residual qualification.
 - Future capabilities require independent verification contracts and do not inherit
   acceptance from either spectral slice.
 

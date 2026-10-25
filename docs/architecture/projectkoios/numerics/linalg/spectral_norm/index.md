@@ -1,50 +1,62 @@
-# Dense spectral norm
+# Matrix spectral norm
 
-`projectkoios.numerics.linalg.numpy.spectral_norm` owns direct dense NumPy evaluation of
+The spectral norm of a nonempty rectangular matrix is
 
 $$
 \lVert A\rVert_2 = \sigma_{\max}(A),
 $$
 
-the largest singular value of one general nonempty rectangular matrix. This is the
-induced Euclidean matrix norm. For a general matrix, eigenvalue magnitudes do not define
-this norm. For a normal square matrix, the largest eigenvalue magnitude equals this norm.
+the largest singular value. For a general matrix, eigenvalue magnitudes do not define
+this norm. The capability provides separate dense-complete and sparse-piecewise
+implementations under the canonical `MatrixNormEnum.spectral` identity.
 
 ## Public API
 
-- `NumpySpectralNorm(matrix).result()`
+- `NumpySpectralNorm(matrix).result()` performs a complete dense NumPy decomposition.
+- `ScipyCsrSpectralNormControls(tolerance, maximum_iterations, krylov_dimension, seed)`
+  records mandatory sparse numerical controls.
+- `ScipyCsrSpectralNorm(matrix, controls).result()` performs deterministic sparse
+  evaluation.
 
-Construction retains the supplied matrix reference. `result()` validates and evaluates
-the current represented matrix, then returns an exact built-in finite nonnegative
-`float`. `matrix_norm` identifies `MatrixNormEnum.spectral`.
+Every evaluator retains the supplied matrix reference and returns an exact built-in
+finite nonnegative `float`. Dense and sparse implementations remain distinct public
+classes because their numerical contracts differ.
 
-## Representation contract
+## Representation contracts
 
-The accepted representation is an exact two-dimensional NumPy ndarray with:
+The dense implementation accepts exact nonempty finite two-dimensional NumPy ndarrays
+with exact `float64` or `complex128` storage.
 
-- positive row and column counts;
-- exact `float64` or `complex128` storage; and
-- finite real and imaginary components.
+The sparse implementation accepts nonempty finite two-dimensional SciPy `csr_matrix` or
+`csr_array` values with exact `float64` or `complex128` storage. It canonicalizes a
+private copy, consolidates duplicate coordinates, removes explicit zeros, sorts indices,
+and preserves caller storage.
 
-The operation accepts C-order, Fortran-order, strided, writable, and read-only storage.
-It performs no dtype conversion, normalization, or caller mutation.
+## Sparse algorithm identity
 
-## Capability boundary
+The sparse evaluator uses one piecewise primary contract:
 
-The capability owns the complete dense singular-value call, largest-value selection,
-and classification of input, nonconvergence, and failed finite arithmetic. It does not
-own physical units, power-of-two scaling policy for specialized extreme-range
-residuals, sparse iteration controls, residual evidence, scientific thresholds, or
-acceptance.
+- exact-zero canonical storage returns exact `0.0`;
+- `min(shape) <= 2` uses scale-safe direct sparse small-Gram arithmetic; and
+- `min(shape) >= 3` uses deterministic approximate
+  `scipy.sparse.linalg.svds(k=1, which="LM", solver="arpack")`.
 
-Consumers restore the matrix-entry unit to the scalar norm. No sparse spectral-norm
-implementation exists. Its iterative architecture and verification are independent of
-this dense implementation.
+The small-shape branch exists because pinned SciPy's complex ARPACK route rejects the
+minimum-dimension-two request. It is not a fallback. Neither sparse branch materializes
+the caller matrix as dense or delegates to the dense evaluator.
+
+## Ownership boundary
+
+Numerics owns representation validation, backend selection inside each concrete class,
+convergence controls, deterministic start construction, internal residual qualification,
+and numerical failure classification. Consumers restore matrix-entry units and own
+scientific interpretation, thresholds, acceptance, and uncertainty.
 
 ## Pages
 
 - [`NumpySpectralNorm` class](../numpy/spectral_norm/NumpySpectralNorm/index.md)
-- [`spectral_norm.py` source module](../numpy/spectral_norm/index.md)
+- [`ScipyCsrSpectralNorm` class](../scipy/spectral_norm/ScipyCsrSpectralNorm/index.md)
+- [`ScipyCsrSpectralNormControls` class](../scipy/spectral_norm/ScipyCsrSpectralNormControls/index.md)
 - [Numerics](numerics.md)
 - [Implementation](implementation.md)
 - [Schematics](schematics.md)

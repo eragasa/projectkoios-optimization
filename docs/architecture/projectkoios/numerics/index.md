@@ -7,7 +7,7 @@ contract.
 ## Status
 
 Finite-series evaluation, centered uniform finite-mesh matrix transforms, uniform
-closed-interval trapezoidal quadrature, Frobenius values, dense
+closed-interval trapezoidal quadrature, Frobenius values, dense and CSR
 maximum-absolute-entry and spectral norms, the nominal matrix-norm contract foundation,
 Hermitian spectral-subspace decomposition, dense complete Hermitian spectra, and sparse
 partial Hermitian spectra are implemented. Each capability page states whether its

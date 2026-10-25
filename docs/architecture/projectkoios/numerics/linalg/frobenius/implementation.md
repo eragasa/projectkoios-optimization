@@ -14,9 +14,10 @@ src/python/projectkoios/numerics/linalg/
 The dependency-free module owns the detailed result, exact tuple operation, and shared
 ordered scalar reduction without importing an optional backend. The NumPy module owns
 exact ndarray representation checks and separate dense power and norm evaluations. The
-SciPy module owns the concrete CSR boundary, private-copy canonicalization, and separate
-sparse power and norm evaluations. `ComplexMatrixFrobenius` validates its canonical
-fields explicitly and never replaces them after frozen construction. The backend norm
+SciPy module owns separate sparse power and norm evaluations and consumes the single
+private CSR canonicalization operation in `scipy/_csr.py`.
+`ComplexMatrixFrobenius` validates its canonical fields explicitly and never replaces
+them after frozen construction. The backend norm
 classes compose their matching power classes and take the binary64 square root. Package
 initializers remain import-empty.
 

@@ -1,20 +1,48 @@
-# Dense spectral-norm schematics
+# Matrix spectral-norm schematics
+
+## Implementation selection
+
+```mermaid
+flowchart TB
+    E[MatrixNormEnum.spectral]
+    D[NumpySpectralNorm]
+    S[ScipyCsrSpectralNorm plus mandatory controls]
+    DS[Complete numpy.linalg.svdvals]
+    C[Private canonical CSR copy]
+    M{Minimum dimension}
+    Z[Exact canonical zero]
+    G[Scale-safe sparse small Gram including zero]
+    A[Deterministic ARPACK svds]
+    Q[Internal unit-vector and two-equation residual qualification]
+    R[MatrixNormABC scalar validation]
+
+    E --> D --> DS --> R
+    E --> S --> C --> M
+    M -->|at most 2| G --> R
+    M -->|at least 3 and no stored entries| Z --> R
+    M -->|at least 3 and nonzero| A --> Q --> R
+```
+
+## Sparse failure flow
 
 ```mermaid
 flowchart LR
-    D[Exact dense NumPy ndarray]
-    V[Class, dtype, shape, emptiness, and finiteness validation]
-    S[Complete numpy.linalg.svdvals call]
-    L[First descending singular value]
-    B[MatrixNormABC scalar validation]
-    F[Exact finite nonnegative built-in float]
+    V[CSR representation and control validation]
+    K[Canonicalization]
+    N{Direct or iterative numerical branch}
+    T[Triplet qualification for iterative branch]
+    F[Built-in finite nonnegative float]
 
-    D --> V --> S --> L --> B --> F
-    V -. malformed input .-> X[TypeError or ValueError]
-    S -. NumPy LinAlgError .-> R[RuntimeError]
-    S -. nonfinite output .-> P[FloatingPointError]
+    V --> K --> N
+    N -->|direct| F
+    N -->|iterative| T --> F
+    V -. malformed public input .-> X[TypeError or ValueError]
+    K -. nonfinite duplicate sum .-> P[FloatingPointError]
+    N -. ARPACK or decomposition nonconvergence .-> R[RuntimeError]
+    N -. nonfinite arithmetic .-> P
+    T -. finite excessive residual .-> R
+    T -. nonfinite arithmetic or nonunit vectors .-> P
 ```
 
-The dense path contains no iterative controls, residual record, owner-level scaling,
-fallback algorithm, unit handling, or sparse conversion. No sparse spectral-norm
-implementation exists. Its iterative contract requires a separate architecture review.
+The sparse evaluator has no dense conversion, dense-evaluator delegation, solver
+fallback, public residual record, cache, function facade, or implicit controls object.
