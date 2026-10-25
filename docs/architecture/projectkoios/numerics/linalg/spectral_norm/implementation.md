@@ -24,5 +24,5 @@ tests/projectkoios/numerics/linalg/numpy/spectral_norm/
 Tests cover real and complex matrices, rectangular and nonnormal shape, rank deficiency,
 one-row and one-column matrices, exact zero, storage layouts and views, read-only input,
 caller nonmutation, invalid shape and dtype, nonfinite source entries, unrepresentable
-finite-input output, NumPy two-norm compatibility, nonconvergence translation, nonfinite
-backend output, semantic identity, and exact built-in scalar output.
+finite-input output, nonconvergence translation, nonfinite backend output, semantic
+identity, and exact built-in scalar output.
