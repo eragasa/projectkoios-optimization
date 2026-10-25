@@ -21,7 +21,9 @@ pages.
 - [`frobenius/`](frobenius/index.md) documents dependency-free complex-matrix Frobenius
   values.
 - [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal callable
-  contract shared by future matrix-norm evaluators.
+  contract shared by matrix-norm evaluators.
+- [`maximum_absolute_entry/`](maximum_absolute_entry/index.md) documents direct dense
+  maximum-entry evaluation.
 - Orthonormalization, compression, and additional optional matrix-norm evaluators remain
   prospective.
 
@@ -34,8 +36,9 @@ carry its own validation, evidence, and qualification.
 - `hermitian_spectral_subspace.py`, `hermitian_spectrum.py`,
   `sparse_hermitian_spectrum.py`, `frobenius.py`, and `matrix_norm.py` are current
   contract modules.
-- `numpy/hermitian_spectral_subspace.py`, `numpy/hermitian_spectrum.py`, and
-  `numpy/frobenius.py` are current concrete backend modules.
+- `numpy/hermitian_spectral_subspace.py`, `numpy/hermitian_spectrum.py`,
+  `numpy/frobenius.py`, and `numpy/maximum_absolute_entry.py` are current concrete
+  backend modules.
 - `scipy/hermitian_spectrum.py`, `scipy/sparse_hermitian_spectrum.py`, and
   `scipy/frobenius.py` are current SciPy backend modules.
 - `orthonormalization.py`, `compression.py`, and additional NumPy/SciPy matrix-norm

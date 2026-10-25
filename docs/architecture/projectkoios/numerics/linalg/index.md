@@ -4,8 +4,8 @@
 records, and matrix reductions that do not select optimizer arguments.
 
 - Current capabilities include invariant Hermitian subspaces, dense batched complete
-  Hermitian spectra, sparse partial Hermitian spectra, finite complex-matrix Frobenius
-  values, and the shared nominal matrix-norm contract foundation.
+  Hermitian spectra, sparse partial Hermitian spectra, Frobenius values, dense
+  maximum-absolute-entry norms, and the shared nominal matrix-norm contract foundation.
 - Prospective capabilities require separate mathematical contracts and qualification.
 - Physical semantics and objective-driven selection remain outside this namespace.
 
@@ -20,7 +20,8 @@ The namespace grows by capability rather than through a universal decomposition 
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
 - The dependency-free semantic matrix-norm enum and nominal callable boundary are
-  implemented, together with dense NumPy and SciPy CSR Frobenius evaluation.
+  implemented, together with dense NumPy and SciPy CSR Frobenius evaluation and dense
+  NumPy maximum-absolute-entry evaluation.
 - Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
   compression remain prospective.
 
@@ -39,7 +40,9 @@ acceptance from implemented modules.
   residual evidence; it is implemented with a SciPy sparse backend.
 - `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
 - `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC` callable
-  boundary; `numpy/frobenius.py` provides the first concrete evaluator.
+  boundary; capability-local NumPy and SciPy modules provide concrete evaluators.
+- `numpy/maximum_absolute_entry.py` owns direct dense maximum-entry evaluation; SciPy CSR
+  support remains prospective.
 - `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
   common-space injection; it remains planned.
 - `compression.py` would own projector-based compression and embedding; it remains
@@ -78,6 +81,8 @@ solver or certificate hierarchy.
 - Dense Frobenius execution: `NumpyFrobeniusNorm` and `numpy_matrix_frobenius`.
 - CSR Frobenius execution: `ScipyCsrFrobeniusNorm` and
   `scipy_csr_matrix_frobenius`.
+- Dense maximum-entry execution: `NumpyMaximumAbsoluteEntryNorm` and
+  `numpy_matrix_maximum_absolute_entry`.
 
 ## Frame nonuniqueness boundary
 
@@ -122,6 +127,7 @@ schematics.
 - [Batched complete Hermitian spectra](hermitian_spectrum/index.md)
 - [Sparse partial Hermitian spectra](sparse_hermitian_spectrum/index.md)
 - [Matrix Frobenius values](frobenius/index.md)
+- [Maximum-absolute-entry matrix norm](maximum_absolute_entry/index.md)
 - [Matrix-norm contract foundation](matrix_norm/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)

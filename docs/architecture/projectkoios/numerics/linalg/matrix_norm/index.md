@@ -22,9 +22,10 @@ representation validation and numerical evaluation remain subclass responsibilit
 The enum names the reviewed matrix-norm semantics without claiming that every norm has a
 concrete evaluator. `projectkoios.numerics.linalg.numpy.frobenius` and
 `projectkoios.numerics.linalg.scipy.frobenius` supply the current dense and CSR Frobenius
-implementations. The foundation supplies no factory, dispatcher, unit handling, or
-scientific threshold policy. Detailed Frobenius values remain owned by
-`projectkoios.numerics.linalg.frobenius` and its capability-local backend modules.
+implementations. `projectkoios.numerics.linalg.numpy.maximum_absolute_entry` supplies the
+current dense maximum-entry implementation. The foundation supplies no factory,
+dispatcher, unit handling, or scientific threshold policy. Detailed numerical behavior
+remains owned by each capability-local operation module.
 
 ## Pages
 
