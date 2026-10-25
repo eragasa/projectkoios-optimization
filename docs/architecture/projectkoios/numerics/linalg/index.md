@@ -20,7 +20,8 @@ The namespace grows by capability rather than through a universal decomposition 
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
 - The dependency-free semantic matrix-norm enum and nominal callable boundary are
-  implemented; optional dense and CSR evaluators are not yet implemented.
+  implemented, together with dense NumPy Frobenius evaluation; CSR evaluators are not
+  yet implemented.
 - Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
   compression remain prospective.
 
@@ -39,12 +40,12 @@ acceptance from implemented modules.
   residual evidence; it is implemented with a SciPy sparse backend.
 - `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
 - `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC` callable
-  boundary; it is implemented without concrete backend evaluators.
+  boundary; `numpy/frobenius.py` provides the first concrete evaluator.
 - `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
   common-space injection; it remains planned.
 - `compression.py` would own projector-based compression and embedding; it remains
   planned.
-- Each concrete dense or sparse matrix-norm evaluator requires capability-specific
+- Each additional dense or sparse matrix-norm evaluator requires capability-specific
   review; semantic enum membership alone does not establish implementation.
 - A generic `eigensystems.py` module is not introduced merely to collect unrelated
   spectral behaviors.
@@ -75,6 +76,7 @@ solver or certificate hierarchy.
   `FiniteComplexMatrix` representation remains owned and exported only by
   `projectkoios.numerics.typing`.
 - Matrix-norm foundation: `MatrixNormEnum` and `MatrixNormABC`.
+- Dense Frobenius execution: `NumpyFrobeniusNorm` and `numpy_matrix_frobenius`.
 
 ## Frame nonuniqueness boundary
 
@@ -118,7 +120,7 @@ schematics.
 - [Hermitian spectral-subspace decomposition](hermitian_spectral_subspace/index.md)
 - [Batched complete Hermitian spectra](hermitian_spectrum/index.md)
 - [Sparse partial Hermitian spectra](sparse_hermitian_spectrum/index.md)
-- [Complex-matrix Frobenius values](frobenius/index.md)
+- [Matrix Frobenius values](frobenius/index.md)
 - [Matrix-norm contract foundation](matrix_norm/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)

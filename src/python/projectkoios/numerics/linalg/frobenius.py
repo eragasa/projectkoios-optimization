@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import final
 
@@ -14,18 +15,27 @@ from projectkoios.numerics.validation import (
 )
 
 
-def _power(matrix: _FiniteComplexMatrix, /) -> float:
-    """Compute a deterministic binary64 Frobenius power.
+def _squared_magnitude(entry: complex, /) -> float:
+    """Return one finite binary64 squared magnitude."""
+    magnitude = abs(entry)
+    power = magnitude * magnitude
+    if not math.isfinite(power):
+        raise FloatingPointError("Frobenius power term became nonfinite")
+    return power
+
+
+def _frobenius_power(entries: Iterable[complex], /) -> float:
+    """Compute deterministic binary64 Frobenius power in supplied entry order.
 
     Parameters
     ----------
-    matrix
-        Validated finite complex matrix.
+    entries
+        Validated finite complex values in the representation's canonical order.
 
     Returns
     -------
     float
-        Row-major ``math.fsum`` of squared entry magnitudes.
+        ``math.fsum`` of squared entry magnitudes.
 
     Raises
     ------
@@ -33,20 +43,10 @@ def _power(matrix: _FiniteComplexMatrix, /) -> float:
         If an individual squared magnitude or the accumulated raw power becomes
         nonfinite.
     """
-    terms: list[float] = []
     # A scaled norm could preserve the square root for larger inputs, but it would hide
     # overflow of the public raw-power value. Each term therefore fails independently.
-    for row in matrix:
-        for entry in row:
-            magnitude = abs(entry)
-            power = magnitude * magnitude
-            if not math.isfinite(power):
-                raise FloatingPointError("Frobenius power term became nonfinite")
-            terms.append(power)
-    # Preserve row-major term order and use the standard library's reproducible,
-    # compensated-style summation rather than backend-dependent array reduction.
     try:
-        result = math.fsum(terms)
+        result = math.fsum(_squared_magnitude(entry) for entry in entries)
     except OverflowError as error:
         raise FloatingPointError("Frobenius power became nonfinite") from error
     if not math.isfinite(result):
@@ -127,7 +127,7 @@ def complex_matrix_frobenius(
     squared Frobenius norm cannot be represented in binary64.
     """
     normalized = validate_finite_complex_matrix(matrix, "matrix")
-    power = _power(normalized)
+    power = _frobenius_power(entry for row in normalized for entry in row)
     return ComplexMatrixFrobenius(
         len(normalized),
         len(normalized[0]),

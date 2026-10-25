@@ -26,8 +26,8 @@ diagonal mass algebra, invariant dense Hermitian spectral-subspace decomposition
 and selected-projector construction, dense batched complete Hermitian-spectrum
 evaluation, and sparse partial Hermitian-spectrum selection with explicit convergence
 controls and residual evidence. A dependency-free nominal matrix-norm foundation defines
-the shared semantic enum and callable result-validation boundary; concrete dense and CSR
-norm evaluators remain separately pending.
+the shared semantic enum and callable result-validation boundary, with direct dense NumPy
+Frobenius evaluation; CSR and additional norm evaluators remain separately pending.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
@@ -69,6 +69,10 @@ from projectkoios.numerics.linalg.hermitian_spectrum import (
 from projectkoios.numerics.linalg.matrix_norm import (
     MatrixNormABC,
     MatrixNormEnum,
+)
+from projectkoios.numerics.linalg.numpy.frobenius import (
+    NumpyFrobeniusNorm,
+    numpy_matrix_frobenius,
 )
 from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
     NumpyBatchedHermitianSpectrumSolver,

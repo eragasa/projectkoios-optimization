@@ -22,7 +22,7 @@ pages.
   values.
 - [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal callable
   contract shared by future matrix-norm evaluators.
-- Orthonormalization, compression, and concrete optional matrix-norm evaluators remain
+- Orthonormalization, compression, and additional optional matrix-norm evaluators remain
   prospective.
 
 ## Module organization
@@ -34,11 +34,11 @@ carry its own validation, evidence, and qualification.
 - `hermitian_spectral_subspace.py`, `hermitian_spectrum.py`,
   `sparse_hermitian_spectrum.py`, `frobenius.py`, and `matrix_norm.py` are current
   contract modules.
-- `numpy/hermitian_spectral_subspace.py` and `numpy/hermitian_spectrum.py` are current
-  concrete backend modules.
+- `numpy/hermitian_spectral_subspace.py`, `numpy/hermitian_spectrum.py`, and
+  `numpy/frobenius.py` are current concrete backend modules.
 - `scipy/hermitian_spectrum.py` and `scipy/sparse_hermitian_spectrum.py` are current
   dense-complete and sparse-partial SciPy backend modules.
-- `orthonormalization.py`, `compression.py`, and concrete NumPy/SciPy matrix-norm
+- `orthonormalization.py`, `compression.py`, and additional NumPy/SciPy matrix-norm
   evaluators remain planned.
 - `numpy/__init__.py` remains import-empty.
 

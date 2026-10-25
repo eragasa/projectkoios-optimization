@@ -20,10 +20,10 @@ representation validation and numerical evaluation remain subclass responsibilit
 ## Status boundary
 
 The enum names the reviewed matrix-norm semantics without claiming that every norm has a
-concrete evaluator. This foundation currently supplies no NumPy or SciPy norm evaluator,
-factory, dispatcher, unit handling, or scientific threshold policy. The existing
-dependency-free complex Frobenius operation remains separately owned by
-`projectkoios.numerics.linalg.frobenius`.
+concrete evaluator. `projectkoios.numerics.linalg.numpy.frobenius` supplies the current
+dense NumPy Frobenius implementation. The foundation supplies no factory, dispatcher,
+unit handling, or scientific threshold policy. Detailed Frobenius values remain owned by
+`projectkoios.numerics.linalg.frobenius` and its capability-local backend modules.
 
 ## Pages
 

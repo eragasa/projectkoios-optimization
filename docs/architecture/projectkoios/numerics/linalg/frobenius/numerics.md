@@ -1,13 +1,16 @@
 # Frobenius numerics
 
-For every validated entry, the implementation evaluates `abs(entry)` and then its
-binary64 square. It accumulates all powers with `math.fsum` in deterministic row-major
-order. The norm is exactly the binary64 `sqrt` of the retained power.
+For every validated entry, each representation path converts the binary64 scalar to a
+built-in complex value, evaluates `abs(entry)`, and then evaluates its binary64 square.
+It accumulates all powers with `math.fsum` in deterministic logical row-major order. The
+norm is exactly the binary64 `sqrt` of the retained power. NumPy arrays are traversed
+directly through their logical flat iterator, so contiguous layout and view strides do
+not change term order.
 
 The contract distinguishes malformed data from failed finite arithmetic:
 
-- non-tuple, empty, ragged, non-complex, or nonfinite input raises `TypeError` or
-  `ValueError`;
+- malformed dependency-free tuple input or a NumPy value with the wrong representation,
+  shape, dtype, or finiteness raises `TypeError` or `ValueError`;
 - overflow of a squared magnitude or the accumulated power raises
   `FloatingPointError`;
 - infinity is never returned as either public value.
