@@ -27,7 +27,7 @@ and selected-projector construction, dense batched complete Hermitian-spectrum
 evaluation, and sparse partial Hermitian-spectrum selection with explicit convergence
 controls and residual evidence. A dependency-free nominal matrix-norm foundation defines
 the shared semantic enum and callable result-validation boundary, with direct dense NumPy
-Frobenius evaluation; CSR and additional norm evaluators remain separately pending.
+and SciPy CSR Frobenius evaluation; additional norm semantics remain separately pending.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
@@ -76,6 +76,10 @@ from projectkoios.numerics.linalg.numpy.frobenius import (
 )
 from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
     NumpyBatchedHermitianSpectrumSolver,
+)
+from projectkoios.numerics.linalg.scipy.frobenius import (
+    ScipyCsrFrobeniusNorm,
+    scipy_csr_matrix_frobenius,
 )
 from projectkoios.numerics.linalg.scipy.hermitian_spectrum import (
     ScipyBatchedHermitianSpectrumSolver,

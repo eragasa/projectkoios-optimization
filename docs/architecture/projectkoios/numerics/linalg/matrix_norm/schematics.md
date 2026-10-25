@@ -14,5 +14,6 @@ flowchart LR
     M --> A --> I --> V --> B --> R
 ```
 
-Concrete dense and CSR evaluators remain outside the implemented foundation. Consumers
-attach units and presentation labels after receiving the unit-free scalar.
+Concrete dense NumPy and SciPy CSR Frobenius evaluators implement this foundation in
+their capability-local backend modules. Consumers attach units and presentation labels
+after receiving the unit-free scalar.

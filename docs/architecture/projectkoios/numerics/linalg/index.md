@@ -20,8 +20,7 @@ The namespace grows by capability rather than through a universal decomposition 
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
 - The dependency-free semantic matrix-norm enum and nominal callable boundary are
-  implemented, together with dense NumPy Frobenius evaluation; CSR evaluators are not
-  yet implemented.
+  implemented, together with dense NumPy and SciPy CSR Frobenius evaluation.
 - Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
   compression remain prospective.
 
@@ -77,6 +76,8 @@ solver or certificate hierarchy.
   `projectkoios.numerics.typing`.
 - Matrix-norm foundation: `MatrixNormEnum` and `MatrixNormABC`.
 - Dense Frobenius execution: `NumpyFrobeniusNorm` and `numpy_matrix_frobenius`.
+- CSR Frobenius execution: `ScipyCsrFrobeniusNorm` and
+  `scipy_csr_matrix_frobenius`.
 
 ## Frame nonuniqueness boundary
 

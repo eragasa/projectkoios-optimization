@@ -36,8 +36,8 @@ carry its own validation, evidence, and qualification.
   contract modules.
 - `numpy/hermitian_spectral_subspace.py`, `numpy/hermitian_spectrum.py`, and
   `numpy/frobenius.py` are current concrete backend modules.
-- `scipy/hermitian_spectrum.py` and `scipy/sparse_hermitian_spectrum.py` are current
-  dense-complete and sparse-partial SciPy backend modules.
+- `scipy/hermitian_spectrum.py`, `scipy/sparse_hermitian_spectrum.py`, and
+  `scipy/frobenius.py` are current SciPy backend modules.
 - `orthonormalization.py`, `compression.py`, and additional NumPy/SciPy matrix-norm
   evaluators remain planned.
 - `numpy/__init__.py` remains import-empty.
