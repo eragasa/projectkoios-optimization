@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import final
 
-from projectkoios.numerics.typing import FiniteComplexMatrix
+from projectkoios.numerics.typing import FiniteComplexMatrix as _FiniteComplexMatrix
 from projectkoios.numerics.validation import (
     exact_nonnegative_float,
     exact_positive_integer,
@@ -14,7 +14,7 @@ from projectkoios.numerics.validation import (
 )
 
 
-def _power(matrix: FiniteComplexMatrix, /) -> float:
+def _power(matrix: _FiniteComplexMatrix, /) -> float:
     """Compute a deterministic binary64 Frobenius power.
 
     Parameters
@@ -94,7 +94,7 @@ class ComplexMatrixFrobenius:
 
 
 def complex_matrix_frobenius(
-    matrix: FiniteComplexMatrix,
+    matrix: _FiniteComplexMatrix,
     /,
 ) -> ComplexMatrixFrobenius:
     """Compute Frobenius power and norm for a finite complex matrix.
@@ -138,6 +138,5 @@ def complex_matrix_frobenius(
 
 __all__ = [
     "ComplexMatrixFrobenius",
-    "FiniteComplexMatrix",
     "complex_matrix_frobenius",
 ]

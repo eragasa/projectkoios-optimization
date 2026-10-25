@@ -13,15 +13,16 @@ records, array-shape validation, backend selection, or scientific semantics.
 
 The module currently exports:
 
-- `Float64Array`;
-- `Complex128Array`;
-- `Int64Array`;
-- `IntpArray`;
-- `BoolArray`; and
+- `Float64Array` and `Complex128Array` for rank-independent binary64 storage;
+- `Float64Matrix` and `Complex128Matrix` for matrix-consuming capability signatures;
+- `DenseMatrix`, the closed union of those two matrix aliases;
+- `Int64Array`, `IntpArray`, and `BoolArray`; and
 - `NumpyArrayLike`.
 
-The names specify dtype, not rank or shape. Each consuming capability remains responsible
-for checking its required dimension and shape at runtime.
+The dtype-specific names identify static scalar storage. NumPy annotations do not enforce
+rank, nonemptiness, exact runtime dtype, or finiteness, so each matrix-consuming
+capability validates those invariants at its public boundary. The matrix names communicate
+the required semantic rank without claiming static shape enforcement.
 
 ## Optional-dependency boundary
 
@@ -33,5 +34,6 @@ dtype aliases repeatedly.
 
 ## Verification
 
-Mapped integration tests type-check representative arrays of every exported concrete
-dtype and verify their runtime dtypes. Strict mypy includes the mapped NumPy typing tests.
+Mapped integration tests type-check representative arrays and real/complex dense
+matrices of every exported concrete dtype and verify their runtime dtypes. Strict mypy
+includes the mapped NumPy typing tests.

@@ -9,8 +9,8 @@ beneath the capability-neutral contract layer.
 
 ## Current status
 
-Three linear algebra capabilities currently have owner implementations and mirrored
-architecture pages.
+The current linear-algebra modules have owner implementations and mirrored architecture
+pages.
 
 - [`hermitian_spectral_subspace/`](hermitian_spectral_subspace/index.md) documents
   invariant-only Hermitian spectral-subspace decomposition.
@@ -20,7 +20,9 @@ architecture pages.
   partial Hermitian-spectrum selection.
 - [`frobenius/`](frobenius/index.md) documents dependency-free complex-matrix Frobenius
   values.
-- Orthonormalization, compression, other norms, and their optional backends remain
+- [`matrix_norm/`](matrix_norm/index.md) documents the semantic enum and nominal callable
+  contract shared by future matrix-norm evaluators.
+- Orthonormalization, compression, and concrete optional matrix-norm evaluators remain
   prospective.
 
 ## Module organization
@@ -30,12 +32,14 @@ carry its own validation, evidence, and qualification.
 
 - `projectkoios/numerics/linalg/__init__.py` remains import-empty.
 - `hermitian_spectral_subspace.py`, `hermitian_spectrum.py`,
-  `sparse_hermitian_spectrum.py`, and `frobenius.py` are current contract modules.
+  `sparse_hermitian_spectrum.py`, `frobenius.py`, and `matrix_norm.py` are current
+  contract modules.
 - `numpy/hermitian_spectral_subspace.py` and `numpy/hermitian_spectrum.py` are current
   concrete backend modules.
 - `scipy/hermitian_spectrum.py` and `scipy/sparse_hermitian_spectrum.py` are current
   dense-complete and sparse-partial SciPy backend modules.
-- `orthonormalization.py`, `compression.py`, and matching backend modules remain planned.
+- `orthonormalization.py`, `compression.py`, and concrete NumPy/SciPy matrix-norm
+  evaluators remain planned.
 - `numpy/__init__.py` remains import-empty.
 
 ## Record boundary

@@ -25,7 +25,9 @@ uniform trapezoidal quadrature with explicit homogeneous-Dirichlet restriction a
 diagonal mass algebra, invariant dense Hermitian spectral-subspace decomposition with complete-spectrum output
 and selected-projector construction, dense batched complete Hermitian-spectrum
 evaluation, and sparse partial Hermitian-spectrum selection with explicit convergence
-controls and residual evidence.
+controls and residual evidence. A dependency-free nominal matrix-norm foundation defines
+the shared semantic enum and callable result-validation boundary; concrete dense and CSR
+norm evaluators remain separately pending.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
@@ -63,6 +65,10 @@ from projectkoios.numerics.linalg.hermitian_spectral_subspace import (
 from projectkoios.numerics.linalg.hermitian_spectrum import (
     BatchedHermitianSpectrumDefinition,
     BatchedHermitianSpectrumTolerance,
+)
+from projectkoios.numerics.linalg.matrix_norm import (
+    MatrixNormABC,
+    MatrixNormEnum,
 )
 from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
     NumpyBatchedHermitianSpectrumSolver,

@@ -40,14 +40,16 @@ enums. Structural protocols are not used. Public result records remain backend-n
 The implemented namespace foundation provides:
 
 - import-empty `projectkoios.numerics` and `finite_periodic` packages;
-- dependency-free built-in numerical typing and validation plus NumPy-specific array validation;
+- dependency-free built-in numerical typing and validation, optional NumPy dense-matrix
+  aliases and validation, and an optional concrete SciPy CSR representation alias;
 - dependency-free scalar and shared-grid finite Fourier-series contracts;
 - centered uniform one-, two-, and three-dimensional mesh and diagnostic records;
 - optional NumPy finite-series, centered matrix-transform, bounded evaluation, Parseval,
   and cyclic-Hermiticity implementations;
 - dependency-free uniform closed-interval quadrature definitions plus immutable NumPy
   trapezoidal weights, homogeneous-Dirichlet restriction, and diagonal mass algebra;
-- dense and sparse linear-algebra capabilities documented under `linalg`;
+- dense and sparse linear-algebra capabilities plus the nominal matrix-norm contract
+  foundation documented under `linalg`;
 - strict typing and `projectkoios/numerics/py.typed`; and
 - isolated dependency-free and optional-backend wheel imports.
 

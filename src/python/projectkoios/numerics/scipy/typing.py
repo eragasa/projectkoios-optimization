@@ -3,8 +3,8 @@
 SciPy does not currently expose complete static types for the objects used here. These
 interfaces describe only the operations that Project Koios consumes; they are typing
 boundaries for third-party return values, not solver or backend capability contracts.
-Importing this module imports NumPy. Importing ``projectkoios.numerics.scipy`` alone
-remains dependency-free.
+Importing this module imports NumPy and SciPy. Importing
+``projectkoios.numerics.scipy`` alone remains dependency-free.
 """
 
 from __future__ import annotations
@@ -12,8 +12,12 @@ from __future__ import annotations
 from typing import Protocol, overload
 
 import numpy as np
+import scipy.sparse
 
 from ..numpy.typing import Float64Array
+
+type CsrMatrix = scipy.sparse.csr_matrix | scipy.sparse.csr_array
+"""Concrete SciPy compressed-sparse-row matrix and array representations."""
 
 
 class Float64SparseMatrix(Protocol):
@@ -86,4 +90,4 @@ class OptimizeResult(Protocol):
     message: str
 
 
-__all__ = ["Float64SparseMatrix", "GaussianKde", "OptimizeResult"]
+__all__ = ["CsrMatrix", "Float64SparseMatrix", "GaussianKde", "OptimizeResult"]

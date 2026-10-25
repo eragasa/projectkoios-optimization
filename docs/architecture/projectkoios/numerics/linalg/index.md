@@ -4,8 +4,8 @@
 records, and matrix reductions that do not select optimizer arguments.
 
 - Current capabilities include invariant Hermitian subspaces, dense batched complete
-  Hermitian spectra, sparse partial Hermitian spectra, and finite complex-matrix
-  Frobenius values.
+  Hermitian spectra, sparse partial Hermitian spectra, finite complex-matrix Frobenius
+  values, and the shared nominal matrix-norm contract foundation.
 - Prospective capabilities require separate mathematical contracts and qualification.
 - Physical semantics and objective-driven selection remain outside this namespace.
 
@@ -19,8 +19,10 @@ The namespace grows by capability rather than through a universal decomposition 
 - Sparse partial Hermitian-spectrum evaluation is implemented with a SciPy ARPACK
   backend.
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
-- Frame-producing eigensystems, orthonormalization, other norms, and compression remain
-  prospective.
+- The dependency-free semantic matrix-norm enum and nominal callable boundary are
+  implemented; optional dense and CSR evaluators are not yet implemented.
+- Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
+  compression remain prospective.
 
 ## Capability inventory
 
@@ -36,11 +38,14 @@ acceptance from implemented modules.
 - `sparse_hermitian_spectrum.py` owns canonical CSR partial-spectrum selection and
   residual evidence; it is implemented with a SciPy sparse backend.
 - `frobenius.py` owns finite complex-matrix Frobenius power and norm; it is implemented.
+- `matrix_norm.py` owns `MatrixNormEnum` and the generic nominal `MatrixNormABC` callable
+  boundary; it is implemented without concrete backend evaluators.
 - `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
   common-space injection; it remains planned.
 - `compression.py` would own projector-based compression and embedding; it remains
   planned.
-- Other matrix norms and each optional backend require capability-specific review.
+- Each concrete dense or sparse matrix-norm evaluator requires capability-specific
+  review; semantic enum membership alone does not establish implementation.
 - A generic `eigensystems.py` module is not introduced merely to collect unrelated
   spectral behaviors.
 
@@ -66,8 +71,10 @@ solver or certificate hierarchy.
 - Sparse execution: `SparseHermitianPartialSpectrumSolver`,
   `ScipySparseHermitianPartialSpectrumSolver`, and
   `scipy_sparse_hermitian_csr_matrix`.
-- Frobenius values: `FiniteComplexMatrix`, `ComplexMatrixFrobenius`, and
-  `complex_matrix_frobenius`.
+- Frobenius values: `ComplexMatrixFrobenius` and `complex_matrix_frobenius`; the shared
+  `FiniteComplexMatrix` representation remains owned and exported only by
+  `projectkoios.numerics.typing`.
+- Matrix-norm foundation: `MatrixNormEnum` and `MatrixNormABC`.
 
 ## Frame nonuniqueness boundary
 
@@ -112,6 +119,7 @@ schematics.
 - [Batched complete Hermitian spectra](hermitian_spectrum/index.md)
 - [Sparse partial Hermitian spectra](sparse_hermitian_spectrum/index.md)
 - [Complex-matrix Frobenius values](frobenius/index.md)
+- [Matrix-norm contract foundation](matrix_norm/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
 - [Numerics namespace](../index.md)

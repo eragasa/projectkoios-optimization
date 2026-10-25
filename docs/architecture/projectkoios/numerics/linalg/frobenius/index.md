@@ -12,13 +12,14 @@ for one nonempty finite rectangular complex matrix.
 
 ## Public API
 
-- `FiniteComplexMatrix`
 - `ComplexMatrixFrobenius`
 - `complex_matrix_frobenius(matrix)`
 
-The immutable result retains the row count, column count, raw Frobenius power, and
-nonnegative Frobenius norm. Exact built-in tuples and complex values keep the contract
-independent of optional array libraries.
+The input annotation uses `FiniteComplexMatrix` from its owning
+`projectkoios.numerics.typing` module; the Frobenius module does not re-export that shared
+representation alias. The immutable result retains the row count, column count, raw
+Frobenius power, and nonnegative Frobenius norm. Exact built-in tuples and complex values
+keep the contract independent of optional array libraries.
 
 ## Boundary
 

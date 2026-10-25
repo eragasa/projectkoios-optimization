@@ -7,9 +7,9 @@ contract.
 ## Status
 
 Finite-series evaluation, centered uniform finite-mesh matrix transforms, uniform
-closed-interval trapezoidal quadrature, Frobenius values, Hermitian spectral-subspace
-decomposition, dense complete Hermitian spectra, and sparse partial Hermitian spectra
-are implemented. Other capabilities remain
+closed-interval trapezoidal quadrature, Frobenius values, the nominal matrix-norm
+contract foundation, Hermitian spectral-subspace decomposition, dense complete Hermitian
+spectra, and sparse partial Hermitian spectra are implemented. Other capabilities remain
 architecture candidates unless their pages explicitly identify implemented source.
 
 ## Capability organization

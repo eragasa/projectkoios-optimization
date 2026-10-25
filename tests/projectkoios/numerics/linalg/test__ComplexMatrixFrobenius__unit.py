@@ -6,12 +6,18 @@ from typing import Any, cast
 
 import pytest
 
+import projectkoios.numerics.linalg.frobenius as frobenius
 from projectkoios.numerics.linalg.frobenius import (
     ComplexMatrixFrobenius,
     complex_matrix_frobenius,
 )
 
 pytestmark = pytest.mark.unit
+
+
+def test_does_not_reexport_shared_matrix_representation() -> None:
+    assert "FiniteComplexMatrix" not in frobenius.__all__
+    assert not hasattr(frobenius, "FiniteComplexMatrix")
 
 
 def test_evaluates_rectangular_complex_matrix_with_stable_power_sum() -> None:

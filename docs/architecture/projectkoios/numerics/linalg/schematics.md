@@ -79,6 +79,8 @@ The composition view distinguishes implemented reductions from independently rev
 prospective transformations.
 
 - Frobenius power and norm are current.
+- The matrix-norm semantic enum and nominal callable boundary are current; concrete
+  backend evaluators remain prospective.
 - Projector complement, compression, orthonormalization, and common-space injection are
   prospective.
 - Prospective nodes do not inherit acceptance from implemented capabilities.
@@ -90,6 +92,8 @@ flowchart LR
     G[Sampled Gram matrix] --> O[Symmetric orthonormalization: prospective]
     O --> J[Common-space injection: prospective]
     N[Finite complex matrix] --> M[Implemented Frobenius power and norm]
+    E[MatrixNormEnum] --> A[MatrixNormABC callable boundary]
+    A -. reviewed backend required .-> B[Concrete matrix-norm evaluator: prospective]
 ```
 
 ## Optimization boundary
