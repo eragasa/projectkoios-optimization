@@ -43,6 +43,8 @@ this dense implementation.
 
 ## Pages
 
+- [`NumpySpectralNorm` class](../numpy/spectral_norm/NumpySpectralNorm/index.md)
+- [`spectral_norm.py` source module](../numpy/spectral_norm/index.md)
 - [Numerics](numerics.md)
 - [Implementation](implementation.md)
 - [Schematics](schematics.md)

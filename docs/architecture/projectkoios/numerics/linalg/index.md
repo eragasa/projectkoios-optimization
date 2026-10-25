@@ -134,6 +134,7 @@ schematics.
 - [Matrix Frobenius values](frobenius/index.md)
 - [Maximum-absolute-entry matrix norm](maximum_absolute_entry/index.md)
 - [Dense spectral norm](spectral_norm/index.md)
+- [NumPy linear-algebra backends](numpy/index.md)
 - [Matrix-norm contract foundation](matrix_norm/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)
