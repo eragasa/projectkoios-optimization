@@ -5,7 +5,8 @@ records, and matrix reductions that do not select optimizer arguments.
 
 - Current capabilities include invariant Hermitian subspaces, dense batched complete
   Hermitian spectra, sparse partial Hermitian spectra, Frobenius values, dense
-  maximum-absolute-entry norms, and the shared nominal matrix-norm contract foundation.
+  maximum-absolute-entry and spectral norms, and the shared nominal matrix-norm contract
+  foundation.
 - Prospective capabilities require separate mathematical contracts and qualification.
 - Physical semantics and objective-driven selection remain outside this namespace.
 
@@ -21,9 +22,9 @@ The namespace grows by capability rather than through a universal decomposition 
 - Dependency-free finite complex-matrix Frobenius power and norm are implemented.
 - The dependency-free semantic matrix-norm enum and nominal `result()` boundary are
   implemented, together with dense NumPy and SciPy CSR Frobenius and
-  maximum-absolute-entry evaluation.
-- Frame-producing eigensystems, orthonormalization, additional norm evaluators, and
-  compression remain prospective.
+  maximum-absolute-entry evaluation and dense NumPy spectral-norm evaluation.
+- Frame-producing eigensystems, orthonormalization, sparse spectral norms, additional
+  norm semantics, and compression remain prospective.
 
 ## Capability inventory
 
@@ -44,10 +45,12 @@ acceptance from implemented modules.
   evaluations.
 - `numpy/maximum_absolute_entry.py` and `scipy/maximum_absolute_entry.py` own direct dense
   and CSR maximum-entry evaluation.
-- `orthonormalization.py` would own symmetric Gram inverse-square-root construction and
-  common-space injection; it remains planned.
-- `compression.py` would own projector-based compression and embedding; it remains
-  planned.
+- `numpy/spectral_norm.py` owns complete dense largest-singular-value evaluation. No
+  sparse spectral-norm implementation exists. Its iterative contract requires separate
+  review.
+- Planned `orthonormalization.py` owns symmetric Gram inverse-square-root construction
+  and common-space injection.
+- Planned `compression.py` owns projector-based compression and embedding.
 - Each additional dense or sparse matrix-norm evaluator requires capability-specific
   review; semantic enum membership alone does not establish implementation.
 - A generic `eigensystems.py` module is not introduced merely to collect unrelated
@@ -84,6 +87,7 @@ solver or certificate hierarchy.
   `ScipyCsrFrobeniusNorm`.
 - Dense maximum-entry execution: `NumpyMaximumAbsoluteEntryNorm`.
 - CSR maximum-entry execution: `ScipyCsrMaximumAbsoluteEntryNorm`.
+- Dense spectral-norm execution: `NumpySpectralNorm`.
 
 ## Frame nonuniqueness boundary
 
@@ -94,7 +98,7 @@ capabilities avoid implicit coordinate-dependent frame policy.
   $U$.
 - Exact degeneracy therefore admits no canonical eigenbasis without additional policy.
 - The invariant-subspace capability returns a projector rather than public eigenvectors.
-- Frame extraction remains blocked pending reviewed clustering, phase fixing,
+- Frame extraction is blocked. Its contract requires reviewed clustering, phase fixing,
   degenerate-block completion, coordinate dependence, and failure behavior.
 - KSD remains responsible for stating whether a consumer needs eigenvector-diagonal
   frames or only an orthonormal basis for a retained subspace.
@@ -129,6 +133,8 @@ schematics.
 - [Sparse partial Hermitian spectra](sparse_hermitian_spectrum/index.md)
 - [Matrix Frobenius values](frobenius/index.md)
 - [Maximum-absolute-entry matrix norm](maximum_absolute_entry/index.md)
+- [Dense spectral norm](spectral_norm/index.md)
+- [NumPy linear-algebra backends](numpy/index.md)
 - [Matrix-norm contract foundation](matrix_norm/index.md)
 - [Schematics](schematics.md)
 - [Implementation organization](implementation.md)

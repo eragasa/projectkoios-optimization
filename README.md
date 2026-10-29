@@ -28,7 +28,8 @@ evaluation, and sparse partial Hermitian-spectrum selection with explicit conver
 controls and residual evidence. A dependency-free nominal matrix-norm foundation defines
 the shared semantic enum and explicit `result()` validation boundary, with direct dense
 NumPy and SciPy CSR Frobenius-power, Frobenius-norm, and maximum-absolute-entry
-evaluation; spectral algorithms remain separately pending.
+evaluation and dense NumPy spectral-norm evaluation. Sparse spectral evaluation is not
+implemented.
 
 Package initializers intentionally perform no eager capability or backend imports.
 Consumers import exact owning modules:
@@ -81,6 +82,7 @@ from projectkoios.numerics.linalg.numpy.hermitian_spectrum import (
 from projectkoios.numerics.linalg.numpy.maximum_absolute_entry import (
     NumpyMaximumAbsoluteEntryNorm,
 )
+from projectkoios.numerics.linalg.numpy.spectral_norm import NumpySpectralNorm
 from projectkoios.numerics.linalg.scipy.frobenius import (
     ScipyCsrFrobeniusNorm,
     ScipyCsrFrobeniusPower,
