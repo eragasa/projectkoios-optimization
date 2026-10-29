@@ -1,55 +1,69 @@
-# Dense spectral-norm implementation
+# Matrix spectral-norm implementation
 
-## Source
+## Sources
 
 ```text
-src/python/projectkoios/numerics/linalg/numpy/
-└── spectral_norm.py
+src/python/projectkoios/numerics/linalg/
+├── numpy/spectral_norm.py
+├── scipy/_csr.py
+└── scipy/spectral_norm.py
 ```
 
-`NumpySpectralNorm` is final and specializes `MatrixNormABC[DenseMatrix]`. The inherited
-constructor retains the supplied array reference. `_evaluate` performs the following
-ordered stages:
+`NumpySpectralNorm` and `ScipyCsrSpectralNorm` are final concrete specializations of
+`MatrixNormABC`. Both report `MatrixNormEnum.spectral`; neither hides the other behind a
+factory or representation dispatcher.
 
-1. validate exact ndarray representation and exact binary64 dtype;
-2. validate two-dimensional nonempty shape;
-3. validate finite source entries;
-4. call `numpy.linalg.svdvals` once under local floating-warning control;
-5. translate exact NumPy SVD nonconvergence;
-6. reject nonfinite singular-value output; and
-7. return the first descending singular value as a built-in `float`.
+## Dense stages
 
-`MatrixNormABC.result()` then enforces exact built-in type, finiteness, and nonnegativity.
-The module contains no function facade, helper layer, factory, dispatcher, class method,
-static method, cache, scaling branch, sparse branch, or result record. The NumPy package
-initializer remains import-empty.
+`NumpySpectralNorm._evaluate`:
 
-The module, class, property, and evaluation method contain NumPy-style ownership,
-parameter, return, failure, and numerical-boundary documentation. Inline comments state
-the runtime limits of static NumPy aliases, floating-warning policy, exception translation
-boundary, and descending singular-value selection.
+1. validates exact ndarray representation, dtype, shape, emptiness, and finiteness;
+2. calls `numpy.linalg.svdvals` once;
+3. translates NumPy SVD nonconvergence;
+4. rejects nonfinite output; and
+5. returns the first descending singular value.
+
+## Sparse stages
+
+`ScipyCsrSpectralNorm._evaluate`:
+
+1. validates the CSR representation and exact binary64 dtype;
+2. canonicalizes an independent copy and verifies duplicate consolidation remains
+   finite;
+3. validates shape- and dtype-dependent Krylov controls;
+4. uses a scaled sparse one-by-one or two-by-two Gram calculation when the smaller axis
+   has size at most two, including its exact-zero case;
+5. returns exact zero for empty canonical data on larger shapes; or
+6. constructs a deterministic normalized real or complex start vector and calls
+   `scipy.sparse.linalg.svds` with fixed `k=1`, `which="LM"`, and `solver="arpack"`;
+7. validates output arrays, finiteness, singular-vector unit norms, and both singular
+   equations; and
+8. returns the finite nonnegative singular value.
+
+The sparse class catches ARPACK nonconvergence and decomposition nonconvergence. Finite
+triplets outside the residual bound fail with `RuntimeError`. Nonfinite backend or
+residual arithmetic fails with `FloatingPointError`.
+
+## Shared CSR canonicalization
+
+`scipy/_csr.py` contains one private canonicalization operation used by Frobenius,
+maximum-entry, and spectral CSR evaluators. This single operation prevents duplicated CSR
+validation and normalization kernels. It is not exported from the package.
 
 ## Mapped tests
 
 ```text
-tests/projectkoios/numerics/linalg/numpy/spectral_norm/
-└── test__NumpySpectralNorm__integration.py
+tests/projectkoios/numerics/linalg/
+├── numpy/spectral_norm/test__NumpySpectralNorm__integration.py
+└── scipy/spectral_norm/
+    ├── test__ScipyCsrSpectralNormControls__unit.py
+    └── test__ScipyCsrSpectralNorm__integration.py
 ```
 
-Every test function documents its public invariant and input role. Tests cover:
-
-- analytically derived real, complex, rectangular, nonnormal, rank-deficient, one-row,
-  one-column, and zero cases;
-- an explicit dimension- and scale-dependent binary64 error bound;
-- C-order, Fortran-order, strided, writable, and read-only storage;
-- caller-value and writeability preservation;
-- distinct dimensionality, empty-shape, dtype, and source-finiteness failures;
-- finite input with an unrepresentable binary64 norm;
-- exact NumPy SVD nonconvergence translation;
-- nonfinite backend-output rejection;
-- `MatrixNormEnum.spectral` identity; and
-- exact built-in scalar result type.
-
-The two backend substitutions are scoped test fixtures for nondeterministic failure
-paths. They require no production hook, fallback, environment branch, or compatibility
-layer.
+The sparse tests cover analytic real and complex cases, direct and iterative dimensions,
+deterministic complex starts, control validation, pinned SciPy Krylov boundaries, zero
+short-circuiting, duplicate consolidation, caller nonmutation, read-only storage,
+non-densification in both numerical branches, extreme-range direct arithmetic, large
+implicit dimensions, source failures, nonconvergence, nonfinite output, residual
+arithmetic and normalization products, unit-vector qualification, and excessive finite
+residuals.

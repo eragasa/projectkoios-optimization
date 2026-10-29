@@ -11,13 +11,12 @@ src/python/projectkoios/numerics/linalg/
 ```
 
 The NumPy module owns exact dense-array validation and direct magnitude reduction. The
-SciPy module owns the concrete CSR boundary, private-copy canonicalization, and stored-
-value reduction. `NumpyMaximumAbsoluteEntryNorm` and
+SciPy module consumes the single private CSR canonicalization operation in
+`scipy/_csr.py` and owns stored-value reduction. `NumpyMaximumAbsoluteEntryNorm` and
 `ScipyCsrMaximumAbsoluteEntryNorm` retain the matrix supplied at construction and
-implement their representation-specific validation and reduction directly when
-`result()` is called. No parallel function API, factory,
-dispatcher, static method, class method, or additional helper layer is present. Package
-initializers remain import-empty.
+implement their representation-specific reduction when `result()` is called. No parallel
+function API, factory, dispatcher, static method, class method, or public helper layer is
+present. Package initializers remain import-empty.
 
 ## Mapped tests
 
