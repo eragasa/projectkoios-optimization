@@ -3,7 +3,7 @@
 `projectkoios.optimization.alignment` owns reusable capabilities that select
 transformations by minimizing unit-free alignment objectives.
 
-## Current capability
+## Current capabilities
 
 `procrustes.py` owns one-pair complex-unitary right alignment:
 
@@ -22,6 +22,12 @@ because the data do not identify its null-space action. A distinct NumPy batch c
 retains SVD-selected diagnostic completions for homogeneous array processing while
 marking every item's effective rank and full-rank status explicitly.
 
+The closed-loop transport owner, NumPy contract, and SciPy executor repeatedly compose
+that full-rank scalar right-action behavior over an immutable complex128 frame inventory. It retains all
+neighbor and sewn-closure rank diagnostics, stops without null-space completion, and
+uses validated complex Schur factors plus an explicit principal-phase branch to
+distribute the inverse endpoint mismatch over all loop edges.
+
 ## Public vocabulary
 
 - `ComplexUnitaryProcrustesMatrix`
@@ -38,22 +44,31 @@ marking every item's effective rank and full-rank status explicitly.
 - `NumpyBatchedComplexUnitaryProcrustesDefinition`
 - `NumpyBatchedComplexUnitaryProcrustesResult`
 - `NumpyBatchedComplexUnitaryProcrustesSolver`
+- `ClosedLoopPolarFrameTransportPrincipalPhaseBranch`
+- `ClosedLoopPolarFrameTransportLinkDiagnostic`
+- `ClosedLoopPolarFrameTransportBackendFailureReason`
+- `ClosedLoopPolarFrameTransportBackendFailure`
+- `NumpyClosedLoopPolarFrameTransportDefinition`
+- `NumpyClosedLoopPolarFrameTransportResult`
+- `ScipyClosedLoopPolarFrameTransportSolver`
 
 ## Excluded scope
 
-This slice does not own real-orthogonal, partial-isometry, aggregate, frame-path,
-transport, closure, synchronization, assignment, or scientific null-space acceptance
-behavior. Batched rectangular source/target arrays are supported only with square
-right-unitary completions; rectangular transformations remain outside scope.
+This slice does not own real-orthogonal, partial-isometry, aggregate, assignment, or
+scientific null-space acceptance behavior. Batched rectangular source/target arrays are
+supported only with square right-unitary completions; rectangular transformations remain
+outside scope.
 
-Consumers own frame meaning, path ordering, retained-frame protocols, scientific rank
-thresholds, periodic closure, meshes, failure policy, and acceptance. The numerical-rank
-tolerances here are software controls and do not establish scientific identifiability.
+Consumers own frame meaning, path ordering, the meaning and construction of endpoint
+sewing maps, retained-frame protocols, scientific thresholds, meshes, protocol statuses,
+failure policy, acceptance, and claims. The numerical-rank tolerances here are software
+controls and do not establish scientific identifiability.
 
 ## Pages
 
 - [Complex-unitary Procrustes alignment](procrustes/index.md)
 - [Batched Procrustes alignment](batched_procrustes/index.md)
+- [Closed-loop polar frame transport](closed_loop_polar_transport/index.md)
 - [Numerics](numerics.md)
 - [Consumer needs](scientific.md)
 - [Schematics](schematics.md)

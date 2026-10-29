@@ -25,6 +25,7 @@ belong to [`projectkoios.numerics`](../numerics/index.md).
 | Probability | [`probability/`](../../../../src/python/projectkoios/optimization/probability/) | dependency-free distributions and sampling plus capability-local NumPy/SciPy implementations |
 | Affine residuals | [`affine/`](../../../../src/python/projectkoios/optimization/affine/) | immutable weighted affine residuals, checked quadratic inputs, and capability-local NumPy/SciPy constructors |
 | Linear least squares | [`least_squares/`](../../../../src/python/projectkoios/optimization/least_squares/) | ordinary and positive-weight real/complex dense solving with one or multiple right-hand sides |
+| Alignment | [`alignment/`](../../../../src/python/projectkoios/optimization/alignment/) | complex-unitary Procrustes selection and rank-generic closed-loop polar frame transport |
 | Quadratic loss | [`quadratic/`](../../../../src/python/projectkoios/optimization/quadratic/) | completed-square losses, exact 2-D rectangle minima, and full-ellipsoid support with dense/sparse implementations |
 | Finite selection | [`selection/`](../../../../src/python/projectkoios/optimization/selection/) | ordered exact minimum, inclusive ceiling, and absolute ambiguity selection |
 | Metric geometry | [`metric/`](../../../../src/python/projectkoios/optimization/metric/) | positive diagonal unit-free primal and dual geometry over ordered tuples |
@@ -65,7 +66,8 @@ behaviors are provenance- and license-bound under their owning capabilities.
 See [multi-objective optimization](multiobjective/index.md),
 [engines](engines/index.md), [parameter spaces](spaces/index.md),
 [clustering](clustering/index.md), [affine residuals](affine/index.md),
-[least squares](least_squares/index.md), [quadratic loss](quadratic/index.md),
+[least squares](least_squares/index.md), [alignment](alignment/index.md),
+[quadratic loss](quadratic/index.md),
 [periodic-1D constrained quadratics](quadratic/constrained/index.md),
 [diagonal metric geometry](metric/index.md), and
 [source mapping](../../../provenance/source-mapping.md) for detailed contracts and
