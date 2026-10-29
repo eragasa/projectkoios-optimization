@@ -221,8 +221,12 @@ contracts before implementation.
 
 - `FrameAlignmentResult`, `FrameAlignmentSolver`, and
   `NumpyFrameAlignmentSolver`;
-- `FrameTransportResult`, `FrameTransportSolver`, and `NumpyFrameTransportSolver`; and
-- `PhaseSynchronizationResult` and `NumpyPhaseSynchronizationSolver`.
+- implemented `ClosedLoopPolarFrameTransportPrincipalPhaseBranch`,
+  `NumpyClosedLoopPolarFrameTransportDefinition`,
+  `NumpyClosedLoopPolarFrameTransportResult`, and the explicitly composed
+  `ScipyClosedLoopPolarFrameTransportSolver`; and
+- future `PhaseSynchronizationResult` and `NumpyPhaseSynchronizationSolver` for
+  synchronization behavior beyond one closed loop.
 
 These operations select transforms or phases by optimizing explicit alignment or
 synchronization objectives.
@@ -504,7 +508,7 @@ from projectkoios.optimization.least_squares.numpy.linear import (
     NumpyLinearLeastSquaresSolver,
 )
 from projectkoios.optimization.alignment.numpy.procrustes import (
-    NumpyComplexProcrustesSolver,
+    NumpyComplexUnitaryProcrustesSolver,
 )
 from projectkoios.optimization.quadratic.numpy.constrained import (
     NumpyRectangleQuadraticMinimizer2D,
@@ -515,8 +519,14 @@ from projectkoios.optimization.quadratic.numpy.constrained import (
 from projectkoios.numerics.finite_periodic.numpy.sewing import (
     NumpyReciprocalSewingConstructor,
 )
-from projectkoios.optimization.alignment.numpy.transport import (
-    NumpyFrameTransportSolver,
+from projectkoios.optimization.alignment.closed_loop_polar_transport import (
+    ClosedLoopPolarFrameTransportPrincipalPhaseBranch,
+)
+from projectkoios.optimization.alignment.numpy.closed_loop_polar_transport import (
+    NumpyClosedLoopPolarFrameTransportDefinition,
+)
+from projectkoios.optimization.alignment.scipy.closed_loop_polar_transport import (
+    ScipyClosedLoopPolarFrameTransportSolver,
 )
 from projectkoios.numerics.finite_periodic.numpy.wilson import (
     NumpyWilsonLoopCalculator,

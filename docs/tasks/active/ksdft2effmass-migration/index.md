@@ -288,7 +288,7 @@ all completed behavior before assigning the final repository owner.
 - Semantic constraint: projection, basis transformation, and truncation remain distinct
   operations.
 
-### Reciprocal-frame transport and closure-holonomy distribution
+### Reciprocal-frame transport and endpoint-mismatch distribution
 
 - Producer types:
   `python/src/ksdft2effmass/solid_state/band_frames.py::ReciprocalBandFramePath1D`,
@@ -304,22 +304,27 @@ all completed behavior before assigning the final repository owner.
 - Completed gate: reject paths whose minimum singular value does not exceed the declared
   threshold.
 - Completed closure: compare the final frame with the sewn first frame.
-- Completed behavior: polar-project the closure overlap to a unitary holonomy.
-- Completed behavior: obtain closure eigenphases and eigenvectors by complex Schur
-  decomposition.
-- Completed behavior: distribute a fractional unitary root continuously over the ordered
-  mesh.
+- Completed behavior: polar-project the closure overlap to a unitary endpoint mismatch.
+- Completed behavior: obtain endpoint-mismatch eigenphases and eigenvectors by complex
+  Schur decomposition on the declared principal-phase branch.
+- Completed behavior: distribute the negative fractional phase continuously over the
+  ordered mesh.
 - Completed result: closed transported path, minimum singular value, threshold, and
   closure eigenphase multiset.
 - Completed scalar specialization: rank-one phase parallel transport and closure-phase
   distribution.
 - Completed composite specialization: rank-r non-Abelian polar transport.
 - Shared numerical kernel: local complex Procrustes/polar solve.
-- Optimization status: Procrustes core and objective-selected reciprocal-frame transport
-  solver missing.
+- Optimization status: square complex-unitary Procrustes and rank-generic closed-loop
+  polar frame transport are implemented. The owner definition requires an explicit
+  principal-phase branch, retains closure-action and endpoint-mismatch orientations
+  separately, uses deterministic phase storage without scientific ordering, and names
+  maximum-absolute-entry evidence by metric. Aggregate and rectangular variants remain
+  missing.
 - Numerics status: direct frame, sewing, closure, and holonomy records and diagnostics
   missing.
-- Consumer responsibility: physical meaning assigned to the path and holonomy.
+- Consumer responsibility: physical meaning assigned to the path and endpoint mismatch,
+  phase-multiset semantics, and separate raw or rank-normalized Frobenius diagnostics.
 - Distinction: this transport is separate from sewing-map construction, pointwise
   candidate alignment, Wilson link products, and spread minimization.
 
@@ -572,7 +577,8 @@ all completed behavior before assigning the final repository owner.
 - [ ] Constrained positive-quadratic minimization and exact finite-family selection.
 - [ ] Positive-weight complex multiple-right-hand-side linear least squares.
 - [ ] Complex square and rectangular Procrustes/polar optimization.
-- [ ] Objective-selected reciprocal-frame transport and phase synchronization.
+- [x] Objective-selected reciprocal-frame transport and closure-holonomy distribution.
+- [ ] General phase synchronization beyond one closed-loop transport route.
 - [ ] Explicit real linear and matrix-subspace fitting.
 - [ ] Tolerance-aware finite-candidate ambiguity selection.
 - [ ] Linear-sum and minimax assignment.

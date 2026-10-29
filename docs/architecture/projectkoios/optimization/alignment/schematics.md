@@ -18,5 +18,7 @@ flowchart LR
 ```
 
 The deficient branch deliberately does not use the SVD's arbitrary null-space bases to
-construct a public unitary completion. Path ordering, closure, and frame interpretation
-remain outside this capability.
+construct a public unitary completion. Closed-loop transport reuses this branch for every
+ordered neighbor and closure link; its separate
+[schematic](closed_loop_polar_transport/schematics.md) shows progression,
+endpoint-mismatch orientation, and branch-explicit correction distribution. Consumers retain frame interpretation and path/sewing meaning.

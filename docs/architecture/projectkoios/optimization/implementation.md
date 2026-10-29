@@ -50,7 +50,8 @@ Optimization. Algorithms that select an optimum remain entirely in this namespac
 
 ## Status
 
-Dense linear least squares, constrained quadratics, and finite selection are implemented.
-Alignment, matrix-subspace fitting, assignment, and SciPy-specific least squares remain
-planned. Current implemented packages and public paths remain authoritative until each
-later migration slice passes its acceptance gate.
+Dense linear least squares, complex-unitary Procrustes, closed-loop polar frame
+transport, constrained quadratics, and finite selection are implemented.
+Matrix-subspace fitting, assignment, and SciPy-specific least squares remain planned.
+Current implemented packages and public paths remain authoritative until each later
+migration slice passes its acceptance gate.
