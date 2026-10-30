@@ -210,7 +210,7 @@ class NumpyCenteredUniformMeshMatrixFourierTransformResult:
 
 @final
 class NumpyCenteredUniformMeshMatrixFourierTransformer:
-    """Transform complete centered uniform matrix samples into integer modes.
+    """Transform constructor-bound centered uniform matrix samples into modes.
 
     Notes
     -----
@@ -223,19 +223,25 @@ class NumpyCenteredUniformMeshMatrixFourierTransformer:
     applied.
     """
 
-    __slots__ = ()
+    __slots__ = ("_definition",)
 
-    def transform(
+    def __init__(
         self,
+        *,
         definition: NumpyCenteredUniformMeshMatrixFourierTransformDefinition,
-        /,
-    ) -> NumpyCenteredUniformMeshMatrixFourierTransformResult:
-        """Execute one complete normalized forward transform.
+    ) -> None:
+        if (
+            type(definition)
+            is not NumpyCenteredUniformMeshMatrixFourierTransformDefinition
+        ):
+            raise TypeError(
+                "definition must be "
+                "NumpyCenteredUniformMeshMatrixFourierTransformDefinition"
+            )
+        self._definition = definition
 
-        Parameters
-        ----------
-        definition
-            Canonical complete mesh and matrix samples.
+    def result(self) -> NumpyCenteredUniformMeshMatrixFourierTransformResult:
+        """Execute one complete normalized forward transform.
 
         Returns
         -------
@@ -245,19 +251,10 @@ class NumpyCenteredUniformMeshMatrixFourierTransformer:
 
         Raises
         ------
-        TypeError
-            If ``definition`` has the wrong exact nominal type.
         FloatingPointError
             If FFT or origin-phase arithmetic becomes nonfinite.
         """
-        if (
-            type(definition)
-            is not NumpyCenteredUniformMeshMatrixFourierTransformDefinition
-        ):
-            raise TypeError(
-                "definition must be "
-                "NumpyCenteredUniformMeshMatrixFourierTransformDefinition"
-            )
+        definition = self._definition
         mesh = definition.mesh
         axes = tuple(range(mesh.dimension))
         with np.errstate(over="raise", invalid="raise", divide="raise"):

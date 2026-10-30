@@ -82,7 +82,9 @@ definition = NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array
     mesh,
     samples,
 )
-transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(definition)
+transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+    definition=definition
+).result()
 coordinates = (-0.5 + (np.arange(3, dtype=np.float64) + 0.5) / 3.0)[:, None]
 evaluated = NumpyFiniteFourierMatrixSeriesEvaluator().evaluate(
     NumpyFiniteFourierMatrixEvaluationDefinition.from_array(
@@ -92,16 +94,19 @@ evaluated = NumpyFiniteFourierMatrixSeriesEvaluator().evaluate(
     )
 )
 assert np.allclose(evaluated.matrix_values, samples, rtol=0.0, atol=1.0e-15)
-tensor_evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(
-    NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
+tensor_evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator(
+    definition=NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
         mesh,
         transformed.series,
         (coordinates[:, 0],),
         maximum_working_elements=4,
     )
-)
+).result()
 assert np.allclose(tensor_evaluated.matrix_values, samples, rtol=0.0, atol=1.0e-15)
-parseval = NumpyFinitePeriodicParsevalAnalyzer().analyze(definition, transformed)
+parseval = NumpyFinitePeriodicParsevalAnalyzer(
+        definition=definition,
+        transform_result=transformed,
+    ).result()
 assert parseval.absolute_defect == 0.0
 assert transformed.backend_identifier == "numpy.fft.fftn"
 assert "numpy" in sys.modules

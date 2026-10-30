@@ -43,12 +43,12 @@ def test_odd_transform_recovers_positive_centered_endpoint_mode(size: int) -> No
         np.exp(2.0j * np.pi * coordinates * float(mode))[:, None, None] * _COEFFICIENT
     )
 
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
             mesh,
             np.asarray(samples, dtype=np.complex128),
         )
-    )
+    ).result()
 
     modes = transformed.series.integer_modes[:, 0]
     coefficients = transformed.series.matrix_coefficients
@@ -94,12 +94,12 @@ def test_multidimensional_odd_transform_recovers_declared_mode(
         * _COEFFICIENT
     )
 
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
             mesh,
             np.asarray(samples, dtype=np.complex128),
         )
-    )
+    ).result()
 
     selected = np.all(transformed.series.integer_modes == mode_array, axis=1)
     assert np.count_nonzero(selected) == 1
@@ -138,12 +138,12 @@ def test_odd_transform_matches_independent_negative_sign_normalized_sum() -> Non
             axis=0,
         ) / float(size)
 
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=NumpyCenteredUniformMeshMatrixFourierTransformDefinition.from_array(
             mesh,
             samples,
         )
-    )
+    ).result()
 
     np.testing.assert_array_equal(
         transformed.series.integer_modes[:, 0],
@@ -172,12 +172,17 @@ def test_odd_parseval_and_ordinary_hermiticity_cover_complete_inventory(
         mesh,
         samples,
     )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
 
-    parseval = NumpyFinitePeriodicParsevalAnalyzer().analyze(definition, transformed)
-    hermiticity = NumpyCenteredUniformMeshHermiticityAnalyzer().analyze(transformed)
+    parseval = NumpyFinitePeriodicParsevalAnalyzer(
+        definition=definition,
+        transform_result=transformed,
+    ).result()
+    hermiticity = NumpyCenteredUniformMeshHermiticityAnalyzer(
+        transform_result=transformed
+    ).result()
 
     assert parseval.absolute_defect <= (
         2.0e-15 * parseval.sample_mean_squared_frobenius_norm
@@ -207,7 +212,9 @@ def test_odd_tensor_evaluation_covers_required_shifted_axis_scale() -> None:
         maximum_working_elements=1_000_000,
     )
 
-    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(definition)
+    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator(
+        definition=definition
+    ).result()
 
     expected = (
         np.exp(2.0j * np.pi * evaluation_axis * float(mode))[:, None, None]

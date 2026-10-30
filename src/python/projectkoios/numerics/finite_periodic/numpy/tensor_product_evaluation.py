@@ -276,21 +276,23 @@ class NumpyTensorProductFourierMatrixEvaluationDefinition:
 
 @final
 class NumpyTensorProductFourierMatrixSeriesEvaluator:
-    """Evaluate matrix series on tensor grids by separable contractions."""
+    """Evaluate one constructor-bound matrix series on a tensor grid."""
 
-    __slots__ = ()
+    __slots__ = ("_definition",)
 
-    def evaluate(
+    def __init__(
         self,
+        *,
         definition: NumpyTensorProductFourierMatrixEvaluationDefinition,
-        /,
-    ) -> NumpyFiniteFourierMatrixEvaluationResult:
-        """Evaluate a complete or selected series on a Cartesian-product point grid.
+    ) -> None:
+        if type(definition) is not NumpyTensorProductFourierMatrixEvaluationDefinition:
+            raise TypeError(
+                "definition must be NumpyTensorProductFourierMatrixEvaluationDefinition"
+            )
+        self._definition = definition
 
-        Parameters
-        ----------
-        definition
-            Canonical construction mesh, series, coordinate axes, and working bound.
+    def result(self) -> NumpyFiniteFourierMatrixEvaluationResult:
+        """Evaluate a complete or selected series on a Cartesian-product point grid.
 
         Returns
         -------
@@ -299,15 +301,10 @@ class NumpyTensorProductFourierMatrixSeriesEvaluator:
 
         Raises
         ------
-        TypeError
-            If ``definition`` has the wrong exact nominal type.
         FloatingPointError
             If phase construction or a contraction becomes nonfinite.
         """
-        if type(definition) is not NumpyTensorProductFourierMatrixEvaluationDefinition:
-            raise TypeError(
-                "definition must be NumpyTensorProductFourierMatrixEvaluationDefinition"
-            )
+        definition = self._definition
         mesh = definition.source_mesh
         series = definition.series
         size = mesh.size

@@ -16,12 +16,12 @@ Dependency-free records:
 - `FinitePeriodicHermiticityDiagnostics` records twisted cyclic and ordinary
   non-Nyquist coefficient defects.
 
-NumPy records and operations:
+NumPy records and constructor-bound actions:
 
 - `NumpyCenteredUniformMeshMatrixFourierTransformDefinition` stores complete matrix
   samples;
-- `NumpyCenteredUniformMeshMatrixFourierTransformer` performs the normalized forward
-  transform;
+- `NumpyCenteredUniformMeshMatrixFourierTransformer` binds one transform definition
+  and performs the normalized forward transform through zero-argument `result()`;
 - `NumpyCenteredUniformMeshMatrixFourierTransformResult` correlates the complete
   centered inventory and backend evidence;
 - `NumpyFiniteFourierMatrixSeries` stores a complete or selected ordered matrix series;
@@ -30,14 +30,14 @@ NumPy records and operations:
   outputs;
 - `NumpyFiniteFourierMatrixSeriesEvaluator` evaluates selected modes without an
   unbounded point-by-mode phase matrix;
-- `NumpyTensorProductFourierMatrixEvaluationDefinition` and
+- `NumpyTensorProductFourierMatrixEvaluationDefinition` and the constructor-bound
   `NumpyTensorProductFourierMatrixSeriesEvaluator` evaluate complete or selected
-  construction-box inventories on Cartesian-product grids by bounded separable
-  contractions;
-- `NumpyFinitePeriodicParsevalAnalyzer` computes complete-transform Parseval evidence;
-  and
-- `NumpyCenteredUniformMeshHermiticityAnalyzer` computes origin-aware cyclic
-  Hermiticity evidence.
+  construction-box inventories on Cartesian-product grids through zero-argument
+  `result()` and bounded separable contractions;
+- `NumpyFinitePeriodicParsevalAnalyzer` binds a complete definition/result pair and
+  computes Parseval evidence through zero-argument `result()`; and
+- `NumpyCenteredUniformMeshHermiticityAnalyzer` binds one complete transform and
+  computes origin-aware cyclic Hermiticity evidence through zero-argument `result()`.
 
 ## Ownership boundary
 

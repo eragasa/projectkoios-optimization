@@ -42,7 +42,8 @@ or replace frozen fields after construction.
 
 ## Forward transform
 
-`NumpyCenteredUniformMeshMatrixFourierTransformer.transform(...)`:
+`NumpyCenteredUniformMeshMatrixFourierTransformer` binds one exact transform
+definition at construction; its zero-argument `result()` method:
 
 1. validates the exact nominal definition;
 2. calls `numpy.fft.fftn(..., norm="forward")` on the first `d` tensor axes;
@@ -76,8 +77,10 @@ and one dense reduction.
 
 ## Separable tensor-grid evaluation
 
-`NumpyTensorProductFourierMatrixSeriesEvaluator` embeds the declared selected inventory
-into the centered construction grid. Duplicate modes are accumulated in declared order.
+`NumpyTensorProductFourierMatrixSeriesEvaluator` binds one exact tensor-product
+evaluation definition at construction. Its zero-argument `result()` method embeds the
+declared selected inventory into the centered construction grid. Duplicate modes are
+accumulated in declared order.
 It then contracts one coordinate axis at a time with `numpy.einsum`, batching the first
 evaluation axis. The definition exposes the coefficient-grid, nonleading-phase,
 per-leading-point, batch-size, and maximum-temporary element counts. Every retained
@@ -103,12 +106,14 @@ separate demonstrated contracts and dependency review.
 
 ## Diagnostics
 
-`NumpyFinitePeriodicParsevalAnalyzer` accepts a complete definition/result pair and
-reports the sample-mean and coefficient-sum squared Frobenius energies.
+`NumpyFinitePeriodicParsevalAnalyzer` binds a complete definition/result pair at
+construction. Its zero-argument `result()` reports the sample-mean and coefficient-sum
+squared Frobenius energies.
 
-`NumpyCenteredUniformMeshHermiticityAnalyzer` reshapes a complete result to its tensor
-inventory. It pairs every mode with its centered cyclic negative, derives signed wrap
-counts per axis, and applies the exact phase implied by the retained coordinate origin.
+`NumpyCenteredUniformMeshHermiticityAnalyzer` binds one complete transform result at
+construction. Its zero-argument `result()` reshapes that result to its tensor inventory,
+pairs every mode with its centered cyclic negative, derives signed wrap counts per axis,
+and applies the exact phase implied by the retained coordinate origin.
 For even sizes, the ordinary diagnostic excludes every lower Nyquist boundary
 hyperplane. Odd sizes have no Nyquist mode, so ordinary inversion covers the complete
 inventory and no mode is excluded.

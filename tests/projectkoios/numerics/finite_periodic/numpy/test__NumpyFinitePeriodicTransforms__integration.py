@@ -62,7 +62,9 @@ def test_forward_transform_recovers_one_declared_integer_mode(
         mesh,
         samples,
     )
-    result = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(definition)
+    result = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
 
     selected = np.all(result.series.integer_modes == mode_array, axis=1)
     assert np.count_nonzero(selected) == 1
@@ -93,9 +95,9 @@ def test_complete_transform_reconstructs_its_source_mesh(dimension: int) -> None
         mesh,
         samples,
     )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
 
     evaluated = NumpyFiniteFourierMatrixSeriesEvaluator().evaluate(
         NumpyFiniteFourierMatrixEvaluationDefinition.from_array(
@@ -124,12 +126,17 @@ def test_parseval_and_origin_aware_hermiticity_hold_for_hermitian_samples(
         mesh,
         samples,
     )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
 
-    parseval = NumpyFinitePeriodicParsevalAnalyzer().analyze(definition, transformed)
-    hermiticity = NumpyCenteredUniformMeshHermiticityAnalyzer().analyze(transformed)
+    parseval = NumpyFinitePeriodicParsevalAnalyzer(
+        definition=definition,
+        transform_result=transformed,
+    ).result()
+    hermiticity = NumpyCenteredUniformMeshHermiticityAnalyzer(
+        transform_result=transformed
+    ).result()
 
     scale = parseval.sample_mean_squared_frobenius_norm
     assert parseval.absolute_defect <= 2.0e-15 * scale
@@ -157,7 +164,9 @@ def test_hermiticity_analyzer_reports_independently_declared_defect() -> None:
         "1",
     )
 
-    diagnostics = NumpyCenteredUniformMeshHermiticityAnalyzer().analyze(result)
+    diagnostics = NumpyCenteredUniformMeshHermiticityAnalyzer(
+        transform_result=result
+    ).result()
 
     assert diagnostics.twisted_cyclic_maximum_frobenius_defect == pytest.approx(
         0.25,

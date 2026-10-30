@@ -39,9 +39,9 @@ def test_separable_tensor_evaluation_matches_bounded_selected_mode_evaluation(
         mesh,
         samples,
     )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
     axes = tuple(
         np.linspace(-0.43, 0.41, 5, dtype=np.float64) for _ in range(dimension)
     )
@@ -60,9 +60,9 @@ def test_separable_tensor_evaluation_matches_bounded_selected_mode_evaluation(
         axes,
         maximum_working_elements=1_000,
     )
-    separable = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(
-        tensor_definition
-    )
+    separable = NumpyTensorProductFourierMatrixSeriesEvaluator(
+        definition=tensor_definition
+    ).result()
 
     assert tensor_definition.maximum_temporary_elements <= 1_000
     assert separable.matrix_values == pytest.approx(
@@ -98,14 +98,14 @@ def test_selected_cartesian_product_inventory_matches_bounded_evaluation() -> No
             maximum_phase_elements=9,
         )
     )
-    separable = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(
-        NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
+    separable = NumpyTensorProductFourierMatrixSeriesEvaluator(
+        definition=NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
             mesh,
             series,
             axes,
             maximum_working_elements=100,
         )
-    )
+    ).result()
 
     assert separable.matrix_values == pytest.approx(
         bounded.matrix_values,
@@ -123,14 +123,14 @@ def test_duplicate_modes_accumulate_in_declared_order() -> None:
     )
     axis = np.array([-0.25, 0.0, 0.25], dtype=np.float64)
 
-    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(
-        NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
+    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator(
+        definition=NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
             mesh,
             series,
             (axis,),
             maximum_working_elements=16,
         )
-    )
+    ).result()
 
     expected = (4.0 + 1.0j) * np.exp(2.0j * np.pi * axis)
     assert evaluated.matrix_values[:, 0, 0] == pytest.approx(
@@ -154,9 +154,9 @@ def test_separable_tensor_evaluation_covers_retained_three_dimensional_scale() -
         mesh,
         samples,
     )
-    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer().transform(
-        definition
-    )
+    transformed = NumpyCenteredUniformMeshMatrixFourierTransformer(
+        definition=definition
+    ).result()
     evaluation_axis = -0.5 + (np.arange(65, dtype=np.float64) + 0.25) / 65.0
     tensor_definition = NumpyTensorProductFourierMatrixEvaluationDefinition.from_arrays(
         mesh,
@@ -165,9 +165,9 @@ def test_separable_tensor_evaluation_covers_retained_three_dimensional_scale() -
         maximum_working_elements=1_000_000,
     )
 
-    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator().evaluate(
-        tensor_definition
-    )
+    evaluated = NumpyTensorProductFourierMatrixSeriesEvaluator(
+        definition=tensor_definition
+    ).result()
 
     assert tensor_definition.coefficient_grid_elements == 131_072
     assert tensor_definition.maximum_temporary_elements <= 1_000_000
