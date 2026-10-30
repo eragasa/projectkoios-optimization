@@ -10,8 +10,8 @@ import numpy as np
 from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
 from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.numerics.numpy.validation import (
-    immutable_float64_array,
-    validate_immutable_float64_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.numerics.validation import exact_positive_integer
 
@@ -90,7 +90,11 @@ class NumpyTensorProductFourierMatrixEvaluationDefinition:
             source_mesh,
             series,
             tuple(
-                immutable_float64_array(axis, f"coordinate_axes[{index}]")
+                NumpyImmutableArrayConstructor(
+                    axis,
+                    f"coordinate_axes[{index}]",
+                    np.dtype(np.float64),
+                ).execute()
                 for index, axis in enumerate(coordinate_axes)
             ),
             maximum_working_elements,
@@ -153,7 +157,11 @@ class NumpyTensorProductFourierMatrixEvaluationDefinition:
         if len(self.coordinate_axes) != self.source_mesh.dimension:
             raise ValueError("one coordinate axis is required per mesh dimension")
         validated_axes = tuple(
-            validate_immutable_float64_array(axis, f"coordinate_axes[{index}]")
+            NumpyImmutableArrayValidator(
+                axis,
+                f"coordinate_axes[{index}]",
+                np.dtype(np.float64),
+            ).execute()
             for index, axis in enumerate(self.coordinate_axes)
         )
         if not all(axis.ndim == 1 and axis.size > 0 for axis in validated_axes):

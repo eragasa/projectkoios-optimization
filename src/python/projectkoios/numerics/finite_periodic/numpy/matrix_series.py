@@ -5,15 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Self, final
 
+import numpy as np
+
 from projectkoios.numerics.finite_periodic.finite_series import (
     _MAX_EXACT_BINARY64_INTEGER,
 )
 from projectkoios.numerics.numpy.typing import Complex128Array, Int64Array
 from projectkoios.numerics.numpy.validation import (
-    immutable_complex128_array,
-    immutable_int64_array,
-    validate_immutable_complex128_array,
-    validate_immutable_int64_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.numerics.validation import exact_positive_integer
 
@@ -70,11 +70,16 @@ class NumpyFiniteFourierMatrixSeries:
         """
         return cls(
             dimension,
-            immutable_int64_array(integer_modes, "integer_modes"),
-            immutable_complex128_array(
+            NumpyImmutableArrayConstructor(
+                integer_modes,
+                "integer_modes",
+                np.dtype(np.int64),
+            ).execute(),
+            NumpyImmutableArrayConstructor(
                 matrix_coefficients,
                 "matrix_coefficients",
-            ),
+                np.dtype(np.complex128),
+            ).execute(),
         )
 
     @classmethod
@@ -116,11 +121,16 @@ class NumpyFiniteFourierMatrixSeries:
         dimension = exact_positive_integer(self.dimension, "dimension")
         if dimension not in (1, 2, 3):
             raise ValueError("dimension must be one, two, or three")
-        modes = validate_immutable_int64_array(self.integer_modes, "integer_modes")
-        coefficients = validate_immutable_complex128_array(
+        modes = NumpyImmutableArrayValidator(
+            self.integer_modes,
+            "integer_modes",
+            np.dtype(np.int64),
+        ).execute()
+        coefficients = NumpyImmutableArrayValidator(
             self.matrix_coefficients,
             "matrix_coefficients",
-        )
+            np.dtype(np.complex128),
+        ).execute()
         if modes.ndim != 2 or modes.shape[1] != dimension:
             raise ValueError("integer_modes must have shape (term_count, dimension)")
         if bool(

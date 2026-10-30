@@ -22,9 +22,9 @@ from projectkoios.numerics.numpy.typing import (
     IntpArray,
 )
 from projectkoios.numerics.numpy.validation import (
-    finite_nonnegative_float64_array,
-    immutable_array,
-    validate_immutable_array,
+    NumpyFiniteNonnegativeFloat64ArrayValidator,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.numerics.validation import exact_positive_integer
 from projectkoios.optimization.alignment.procrustes import (
@@ -95,16 +95,16 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
             Frozen definition owning independent immutable arrays.
         """
         return cls(
-            immutable_array(
+            NumpyImmutableArrayConstructor(
                 source_matrices,
                 "source_matrices",
                 np.dtype(np.complex128),
-            ),
-            immutable_array(
+            ).execute(),
+            NumpyImmutableArrayConstructor(
                 target_matrices,
                 "target_matrices",
                 np.dtype(np.complex128),
-            ),
+            ).execute(),
             tolerance,
         )
 
@@ -143,16 +143,16 @@ class NumpyBatchedComplexUnitaryProcrustesDefinition:
         ValueError
             If shapes are invalid or an array contains a nonfinite value.
         """
-        source = validate_immutable_array(
+        source = NumpyImmutableArrayValidator(
             self.source_matrices,
             "source_matrices",
             np.dtype(np.complex128),
-        )
-        target = validate_immutable_array(
+        ).execute()
+        target = NumpyImmutableArrayValidator(
             self.target_matrices,
             "target_matrices",
             np.dtype(np.complex128),
-        )
+        ).execute()
         if source.ndim < 3:
             raise ValueError(
                 "source_matrices must have at least one leading batch dimension"
@@ -341,56 +341,56 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
         return cls(
             row_count=row_count,
             tolerance=tolerance,
-            right_unitary_completions=immutable_array(
+            right_unitary_completions=NumpyImmutableArrayConstructor(
                 right_unitary_completions,
                 "right_unitary_completions",
                 np.dtype(np.complex128),
-            ),
-            cross_singular_values=immutable_array(
+            ).execute(),
+            cross_singular_values=NumpyImmutableArrayConstructor(
                 cross_singular_values,
                 "cross_singular_values",
                 np.dtype(np.float64),
-            ),
-            numerical_ranks=immutable_array(
+            ).execute(),
+            numerical_ranks=NumpyImmutableArrayConstructor(
                 numerical_ranks,
                 "numerical_ranks",
                 np.dtype(np.intp),
-            ),
-            full_rank=immutable_array(
+            ).execute(),
+            full_rank=NumpyImmutableArrayConstructor(
                 full_rank,
                 "full_rank",
                 np.dtype(np.bool_),
-            ),
-            applied_rank_cutoffs=immutable_array(
+            ).execute(),
+            applied_rank_cutoffs=NumpyImmutableArrayConstructor(
                 applied_rank_cutoffs,
                 "applied_rank_cutoffs",
                 np.dtype(np.float64),
-            ),
-            source_squared_frobenius_norms=immutable_array(
+            ).execute(),
+            source_squared_frobenius_norms=NumpyImmutableArrayConstructor(
                 source_squared_frobenius_norms,
                 "source_squared_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            target_squared_frobenius_norms=immutable_array(
+            ).execute(),
+            target_squared_frobenius_norms=NumpyImmutableArrayConstructor(
                 target_squared_frobenius_norms,
                 "target_squared_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            optimal_squared_residuals=immutable_array(
+            ).execute(),
+            optimal_squared_residuals=NumpyImmutableArrayConstructor(
                 optimal_squared_residuals,
                 "optimal_squared_residuals",
                 np.dtype(np.float64),
-            ),
-            optimal_residual_frobenius_norms=immutable_array(
+            ).execute(),
+            optimal_residual_frobenius_norms=NumpyImmutableArrayConstructor(
                 optimal_residual_frobenius_norms,
                 "optimal_residual_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            applied_residual_roundoff_cutoffs=immutable_array(
+            ).execute(),
+            applied_residual_roundoff_cutoffs=NumpyImmutableArrayConstructor(
                 applied_residual_roundoff_cutoffs,
                 "applied_residual_roundoff_cutoffs",
                 np.dtype(np.float64),
-            ),
+            ).execute(),
             backend_identifier=backend_identifier,
             backend_version=backend_version,
         )
@@ -494,54 +494,56 @@ class NumpyBatchedComplexUnitaryProcrustesResult:
             If an input is nonfinite or lacks canonical immutable storage.
         """
         return ResultArrays(
-            completions=validate_immutable_array(
+            completions=NumpyImmutableArrayValidator(
                 self.right_unitary_completions,
                 "right_unitary_completions",
                 np.dtype(np.complex128),
-            ),
-            spectra=validate_immutable_array(
+            ).execute(),
+            spectra=NumpyImmutableArrayValidator(
                 self.cross_singular_values,
                 "cross_singular_values",
                 np.dtype(np.float64),
-            ),
-            ranks=validate_immutable_array(
+            ).execute(),
+            ranks=NumpyImmutableArrayValidator(
                 self.numerical_ranks,
                 "numerical_ranks",
                 np.dtype(np.intp),
-            ),
-            full_rank=validate_immutable_array(
-                self.full_rank, "full_rank", np.dtype(np.bool_)
-            ),
-            rank_cutoffs=validate_immutable_array(
+            ).execute(),
+            full_rank=NumpyImmutableArrayValidator(
+                self.full_rank,
+                "full_rank",
+                np.dtype(np.bool_),
+            ).execute(),
+            rank_cutoffs=NumpyImmutableArrayValidator(
                 self.applied_rank_cutoffs,
                 "applied_rank_cutoffs",
                 np.dtype(np.float64),
-            ),
-            source_powers=validate_immutable_array(
+            ).execute(),
+            source_powers=NumpyImmutableArrayValidator(
                 self.source_squared_frobenius_norms,
                 "source_squared_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            target_powers=validate_immutable_array(
+            ).execute(),
+            target_powers=NumpyImmutableArrayValidator(
                 self.target_squared_frobenius_norms,
                 "target_squared_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            squared_residuals=validate_immutable_array(
+            ).execute(),
+            squared_residuals=NumpyImmutableArrayValidator(
                 self.optimal_squared_residuals,
                 "optimal_squared_residuals",
                 np.dtype(np.float64),
-            ),
-            residual_norms=validate_immutable_array(
+            ).execute(),
+            residual_norms=NumpyImmutableArrayValidator(
                 self.optimal_residual_frobenius_norms,
                 "optimal_residual_frobenius_norms",
                 np.dtype(np.float64),
-            ),
-            residual_cutoffs=validate_immutable_array(
+            ).execute(),
+            residual_cutoffs=NumpyImmutableArrayValidator(
                 self.applied_residual_roundoff_cutoffs,
                 "applied_residual_roundoff_cutoffs",
                 np.dtype(np.float64),
-            ),
+            ).execute(),
         )
 
     @staticmethod
@@ -907,10 +909,10 @@ class BatchedComplexUnitaryProcrustesSolver(ComplexUnitaryProcrustesSolver, ABC)
             If cutoff arithmetic becomes nonfinite.
         """
         validated_tolerance = cls.validate_tolerance(tolerance)
-        largest = finite_nonnegative_float64_array(
+        largest = NumpyFiniteNonnegativeFloat64ArrayValidator(
             largest_singular_values,
             "largest_singular_values",
-        )
+        ).execute()
         with np.errstate(over="ignore", invalid="ignore"):
             relative_cutoffs = validated_tolerance.rank_relative * largest
             if (

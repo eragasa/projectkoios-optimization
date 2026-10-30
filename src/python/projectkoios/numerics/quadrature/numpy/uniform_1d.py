@@ -14,10 +14,8 @@ import numpy as np
 
 from projectkoios.numerics.numpy.typing import Float64Array, Int64Array
 from projectkoios.numerics.numpy.validation import (
-    immutable_float64_array,
-    immutable_int64_array,
-    validate_immutable_float64_array,
-    validate_immutable_int64_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.numerics.quadrature.uniform_1d import (
     UniformClosedIntervalTrapezoidalRuleDefinition,
@@ -53,11 +51,21 @@ class NumpyDiagonalQuadratureMassMatrix:
     @classmethod
     def from_array(cls, diagonal: Float64Array, /) -> Self:
         """Construct from an exact float64 vector using a defensive copy."""
-        return cls(immutable_float64_array(diagonal, "diagonal"))
+        return cls(
+            NumpyImmutableArrayConstructor(
+                diagonal,
+                "diagonal",
+                np.dtype(np.float64),
+            ).execute()
+        )
 
     def __post_init__(self) -> None:
         """Validate canonical one-dimensional positive diagonal storage."""
-        diagonal = validate_immutable_float64_array(self.diagonal, "diagonal")
+        diagonal = NumpyImmutableArrayValidator(
+            self.diagonal,
+            "diagonal",
+            np.dtype(np.float64),
+        ).execute()
         if diagonal.ndim != 1 or diagonal.size == 0:
             raise ValueError("diagonal must be a nonempty one-dimensional array")
         if bool((diagonal <= 0.0).any()):
@@ -71,7 +79,11 @@ class NumpyDiagonalQuadratureMassMatrix:
     def to_dense(self) -> Float64Array:
         """Return a defensive immutable dense representation of ``diag(diagonal)``."""
         dense = np.diag(self.diagonal)
-        return immutable_float64_array(dense, "dense_mass_matrix")
+        return NumpyImmutableArrayConstructor(
+            dense,
+            "dense_mass_matrix",
+            np.dtype(np.float64),
+        ).execute()
 
 
 @final
@@ -115,8 +127,16 @@ class NumpyHomogeneousDirichletInteriorQuadrature1D:
         """Construct from exact arrays using independent defensive copies."""
         return cls(
             full_rule,
-            immutable_int64_array(full_grid_indices, "full_grid_indices"),
-            immutable_float64_array(interior_weights, "interior_weights"),
+            NumpyImmutableArrayConstructor(
+                full_grid_indices,
+                "full_grid_indices",
+                np.dtype(np.int64),
+            ).execute(),
+            NumpyImmutableArrayConstructor(
+                interior_weights,
+                "interior_weights",
+                np.dtype(np.float64),
+            ).execute(),
         )
 
     def __post_init__(self) -> None:
@@ -131,14 +151,16 @@ class NumpyHomogeneousDirichletInteriorQuadrature1D:
                 "homogeneous-Dirichlet interior restriction requires at least three "
                 "full-grid points"
             )
-        indices = validate_immutable_int64_array(
+        indices = NumpyImmutableArrayValidator(
             self.full_grid_indices,
             "full_grid_indices",
-        )
-        weights = validate_immutable_float64_array(
+            np.dtype(np.int64),
+        ).execute()
+        weights = NumpyImmutableArrayValidator(
             self.interior_weights,
             "interior_weights",
-        )
+            np.dtype(np.float64),
+        ).execute()
         expected_shape = (definition.interior_point_count,)
         if indices.shape != expected_shape:
             raise ValueError("full_grid_indices must contain every interior node")
@@ -228,7 +250,11 @@ class NumpyUniformClosedIntervalTrapezoidalRuleResult:
         return cls(
             definition,
             spacing,
-            immutable_float64_array(full_weights, "full_weights"),
+            NumpyImmutableArrayConstructor(
+                full_weights,
+                "full_weights",
+                np.dtype(np.float64),
+            ).execute(),
         )
 
     def __post_init__(self) -> None:
@@ -240,7 +266,11 @@ class NumpyUniformClosedIntervalTrapezoidalRuleResult:
         spacing = exact_finite_float(self.spacing, "spacing")
         if spacing != self.definition.spacing:
             raise ValueError("spacing must equal the definition spacing")
-        weights = validate_immutable_float64_array(self.full_weights, "full_weights")
+        weights = NumpyImmutableArrayValidator(
+            self.full_weights,
+            "full_weights",
+            np.dtype(np.float64),
+        ).execute()
         if weights.shape != (self.definition.point_count,):
             raise ValueError("full_weights must contain one weight per full-grid node")
         expected = np.full(

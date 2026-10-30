@@ -14,8 +14,8 @@ from projectkoios.numerics.numpy.typing import (
     Float64Array,
 )
 from projectkoios.numerics.numpy.validation import (
-    immutable_array,
-    validate_immutable_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.optimization.alignment.closed_loop_polar_transport import (
     ClosedLoopPolarFrameTransportLinkDiagnostic,
@@ -65,18 +65,16 @@ class NumpyClosedLoopPolarFrameTransportDefinition:
         ),
     ) -> Self:
         """Construct from exact complex128 arrays using defensive copies."""
-        immutable_frames = cast(
-            ClosedLoopPolarFrameInventory,
-            immutable_array(frames, "frames", np.dtype(np.complex128)),
-        )
-        immutable_sewing = cast(
-            Complex128Matrix,
-            immutable_array(
-                endpoint_sewing_map,
-                "endpoint_sewing_map",
-                np.dtype(np.complex128),
-            ),
-        )
+        immutable_frames = NumpyImmutableArrayConstructor(
+            frames,
+            "frames",
+            np.dtype(np.complex128),
+        ).execute()
+        immutable_sewing = NumpyImmutableArrayConstructor(
+            endpoint_sewing_map,
+            "endpoint_sewing_map",
+            np.dtype(np.complex128),
+        ).execute()
         return cls(
             immutable_frames,
             immutable_sewing,
@@ -98,16 +96,16 @@ class NumpyClosedLoopPolarFrameTransportDefinition:
         return cls(frames, endpoint_sewing_map, principal_phase_branch, tolerance)
 
     def __post_init__(self) -> None:
-        frames = validate_immutable_array(
+        frames = NumpyImmutableArrayValidator(
             self.frames,
             "frames",
             np.dtype(np.complex128),
-        )
-        sewing = validate_immutable_array(
+        ).execute()
+        sewing = NumpyImmutableArrayValidator(
             self.endpoint_sewing_map,
             "endpoint_sewing_map",
             np.dtype(np.complex128),
-        )
+        ).execute()
         if frames.ndim != 3:
             raise ValueError("frames must have shape (M, ambient, rank)")
         point_count, ambient_dimension, rank = frames.shape
@@ -227,54 +225,36 @@ class NumpyClosedLoopPolarFrameTransportResult:
             link_diagnostics=link_diagnostics,
             deficient_link_indices=deficient_link_indices,
             unattempted_link_indices=unattempted_link_indices,
-            transported_frames=cast(
-                ClosedLoopPolarFrameInventory,
-                immutable_array(
-                    transported_frames,
-                    "transported_frames",
-                    np.dtype(np.complex128),
-                ),
-            ),
-            frame_right_actions=cast(
-                ClosedLoopPolarFrameRightActions,
-                immutable_array(
-                    frame_right_actions,
-                    "frame_right_actions",
-                    np.dtype(np.complex128),
-                ),
-            ),
-            closure_alignment_right_action=cast(
-                Complex128Matrix,
-                immutable_array(
-                    closure_alignment_right_action,
-                    "closure_alignment_right_action",
-                    np.dtype(np.complex128),
-                ),
-            ),
-            closure_endpoint_mismatch=cast(
-                Complex128Matrix,
-                immutable_array(
-                    closure_endpoint_mismatch,
-                    "closure_endpoint_mismatch",
-                    np.dtype(np.complex128),
-                ),
-            ),
-            distributed_closure_correction_step=cast(
-                Complex128Matrix,
-                immutable_array(
-                    distributed_closure_correction_step,
-                    "distributed_closure_correction_step",
-                    np.dtype(np.complex128),
-                ),
-            ),
-            closure_schur_vectors=cast(
-                Complex128Matrix,
-                immutable_array(
-                    closure_schur_vectors,
-                    "closure_schur_vectors",
-                    np.dtype(np.complex128),
-                ),
-            ),
+            transported_frames=NumpyImmutableArrayConstructor(
+                transported_frames,
+                "transported_frames",
+                np.dtype(np.complex128),
+            ).execute(),
+            frame_right_actions=NumpyImmutableArrayConstructor(
+                frame_right_actions,
+                "frame_right_actions",
+                np.dtype(np.complex128),
+            ).execute(),
+            closure_alignment_right_action=NumpyImmutableArrayConstructor(
+                closure_alignment_right_action,
+                "closure_alignment_right_action",
+                np.dtype(np.complex128),
+            ).execute(),
+            closure_endpoint_mismatch=NumpyImmutableArrayConstructor(
+                closure_endpoint_mismatch,
+                "closure_endpoint_mismatch",
+                np.dtype(np.complex128),
+            ).execute(),
+            distributed_closure_correction_step=NumpyImmutableArrayConstructor(
+                distributed_closure_correction_step,
+                "distributed_closure_correction_step",
+                np.dtype(np.complex128),
+            ).execute(),
+            closure_schur_vectors=NumpyImmutableArrayConstructor(
+                closure_schur_vectors,
+                "closure_schur_vectors",
+                np.dtype(np.complex128),
+            ).execute(),
             maximum_absolute_entry_closure_alignment_residual=(
                 maximum_absolute_entry_closure_alignment_residual
             ),
@@ -397,54 +377,36 @@ class NumpyClosedLoopPolarFrameTransportResult:
             or phases is None
         ):
             raise ValueError("qualified routes require complete array output")
-        transported = cast(
-            ClosedLoopPolarFrameInventory,
-            validate_immutable_array(
-                transported,
-                "transported_frames",
-                np.dtype(np.complex128),
-            ),
-        )
-        actions = cast(
-            ClosedLoopPolarFrameRightActions,
-            validate_immutable_array(
-                actions,
-                "frame_right_actions",
-                np.dtype(np.complex128),
-            ),
-        )
-        closure_action = cast(
-            Complex128Matrix,
-            validate_immutable_array(
-                closure_action,
-                "closure_alignment_right_action",
-                np.dtype(np.complex128),
-            ),
-        )
-        endpoint_mismatch = cast(
-            Complex128Matrix,
-            validate_immutable_array(
-                endpoint_mismatch,
-                "closure_endpoint_mismatch",
-                np.dtype(np.complex128),
-            ),
-        )
-        correction_step = cast(
-            Complex128Matrix,
-            validate_immutable_array(
-                correction_step,
-                "distributed_closure_correction_step",
-                np.dtype(np.complex128),
-            ),
-        )
-        schur_vectors = cast(
-            Complex128Matrix,
-            validate_immutable_array(
-                schur_vectors,
-                "closure_schur_vectors",
-                np.dtype(np.complex128),
-            ),
-        )
+        transported = NumpyImmutableArrayValidator(
+            transported,
+            "transported_frames",
+            np.dtype(np.complex128),
+        ).execute()
+        actions = NumpyImmutableArrayValidator(
+            actions,
+            "frame_right_actions",
+            np.dtype(np.complex128),
+        ).execute()
+        closure_action = NumpyImmutableArrayValidator(
+            closure_action,
+            "closure_alignment_right_action",
+            np.dtype(np.complex128),
+        ).execute()
+        endpoint_mismatch = NumpyImmutableArrayValidator(
+            endpoint_mismatch,
+            "closure_endpoint_mismatch",
+            np.dtype(np.complex128),
+        ).execute()
+        correction_step = NumpyImmutableArrayValidator(
+            correction_step,
+            "distributed_closure_correction_step",
+            np.dtype(np.complex128),
+        ).execute()
+        schur_vectors = NumpyImmutableArrayValidator(
+            schur_vectors,
+            "closure_schur_vectors",
+            np.dtype(np.complex128),
+        ).execute()
         if transported.shape != self.definition.frames.shape:
             raise ValueError("transported_frames shape is inconsistent")
         action_shape = (self.point_count, self.rank, self.rank)

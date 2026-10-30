@@ -18,10 +18,8 @@ from projectkoios.numerics.finite_periodic.batched_finite_series import (
 )
 from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.numerics.numpy.validation import (
-    immutable_complex128_array,
-    immutable_float64_array,
-    validate_immutable_complex128_array,
-    validate_immutable_float64_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 from projectkoios.numerics.validation import exact_positive_integer
 
@@ -79,7 +77,11 @@ class NumpyFiniteFourierMatrixEvaluationDefinition:
         """
         return cls(
             series,
-            immutable_float64_array(coordinates, "coordinates"),
+            NumpyImmutableArrayConstructor(
+                coordinates,
+                "coordinates",
+                np.dtype(np.float64),
+            ).execute(),
             maximum_phase_elements,
         )
 
@@ -120,10 +122,11 @@ class NumpyFiniteFourierMatrixEvaluationDefinition:
         """
         if type(self.series) is not NumpyFiniteFourierMatrixSeries:
             raise TypeError("series must be NumpyFiniteFourierMatrixSeries")
-        coordinates = validate_immutable_float64_array(
+        coordinates = NumpyImmutableArrayValidator(
             self.coordinates,
             "coordinates",
-        )
+            np.dtype(np.float64),
+        ).execute()
         if coordinates.ndim < 2 or coordinates.shape[-1] != self.series.dimension:
             raise ValueError("coordinates must have shape (..., series.dimension)")
         exact_positive_integer(self.maximum_phase_elements, "maximum_phase_elements")
@@ -208,7 +211,11 @@ class NumpyFiniteFourierMatrixEvaluationResult:
             dimension,
             point_shape,
             term_count,
-            immutable_complex128_array(matrix_values, "matrix_values"),
+            NumpyImmutableArrayConstructor(
+                matrix_values,
+                "matrix_values",
+                np.dtype(np.complex128),
+            ).execute(),
             backend_identifier,
             backend_version,
         )
@@ -236,10 +243,11 @@ class NumpyFiniteFourierMatrixEvaluationResult:
             raise TypeError("term_count must be an exact built-in integer")
         if self.term_count < 0:
             raise ValueError("term_count must be nonnegative")
-        values = validate_immutable_complex128_array(
+        values = NumpyImmutableArrayValidator(
             self.matrix_values,
             "matrix_values",
-        )
+            np.dtype(np.complex128),
+        ).execute()
         if values.ndim != len(self.point_shape) + 2:
             raise ValueError("matrix_values rank is inconsistent with point_shape")
         if values.shape[:-2] != self.point_shape:
