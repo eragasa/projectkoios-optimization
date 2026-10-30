@@ -1,6 +1,6 @@
 # NumPy numerical validation
 
-`projectkoios.numerics.numpy.validation` owns exact NumPy array representation checks and immutable defensive copies.
+`projectkoios.numerics.numpy.validation` owns exact NumPy array representation checks and immutable defensive copies through nominal constructor and validator actions.
 
 NumPy remains capability-local and is not imported by dependency-free Numerics modules.
 

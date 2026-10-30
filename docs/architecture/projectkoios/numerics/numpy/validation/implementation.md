@@ -1,14 +1,25 @@
 # Implementation
 
-The module requires exact `numpy.ndarray` objects and exact requested dtypes. `immutable_array` validates finiteness and copies through immutable bytes backing so callers cannot re-enable writes with `setflags`.
+The module exposes four nominal action owners:
 
-`validate_immutable_array` is the zero-copy canonical-storage boundary. It requires C-contiguous, read-only storage whose NumPy base chain terminates in exact built-in `bytes`; a merely read-only view over mutable storage is rejected.
+- `NumpyFiniteArrayValidator` validates an exact `numpy.ndarray`, its exact requested
+  dtype, and elementwise finiteness without copying;
+- `NumpyImmutableArrayConstructor` validates the same representation and copies it
+  through immutable `bytes` backing;
+- `NumpyImmutableArrayValidator` is the zero-copy canonical-storage boundary; and
+- `NumpyFiniteNonnegativeFloat64ArrayValidator` validates exact finite,
+  nonnegative `float64` arithmetic input without copying.
 
-Typed wrappers preserve the repository's exact array-alias nomenclature:
+Each action binds its complete input at construction and exposes zero-argument
+`execute()`. The generic owners retain their input array's static array type. Consumers
+therefore use the same nominal owners for complex128, float64, int64, bool, and other
+exact dtypes instead of function wrappers for individual dtype aliases.
 
-- `immutable_complex128_array`, `immutable_float64_array`, and
-  `immutable_int64_array` return their corresponding canonical aliases; and
-- `validate_immutable_complex128_array`, `validate_immutable_float64_array`, and
-  `validate_immutable_int64_array` retain the same alias and object identity.
+`NumpyImmutableArrayConstructor` produces a C-contiguous, read-only array whose NumPy
+base chain terminates in exact built-in `bytes`, so callers cannot re-enable writes with
+`setflags`. `NumpyImmutableArrayValidator` requires that same representation and rejects
+a merely read-only view over mutable storage.
 
-Specialized validators may validate without copying when a consumer only needs checked arithmetic input rather than retained immutable ownership.
+The actions validate rather than coerce dtype, shape, or values. Specialized validators
+may validate without copying when a consumer needs checked arithmetic input rather than
+retained immutable ownership.

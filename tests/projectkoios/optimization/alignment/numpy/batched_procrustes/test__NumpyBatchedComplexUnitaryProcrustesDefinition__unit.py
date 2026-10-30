@@ -7,7 +7,7 @@ from dataclasses import FrozenInstanceError
 import numpy as np
 import pytest
 
-from projectkoios.numerics.numpy.validation import immutable_array
+from projectkoios.numerics.numpy.validation import NumpyImmutableArrayConstructor
 from projectkoios.optimization.alignment.numpy.batched_procrustes import (
     NumpyBatchedComplexUnitaryProcrustesDefinition,
 )
@@ -73,16 +73,16 @@ def test_definition_preserves_shape_and_owns_read_only_copies() -> None:
 
 
 def test_definition_zero_copy_factory_retains_canonical_arrays_by_identity() -> None:
-    source = immutable_array(
+    source = NumpyImmutableArrayConstructor(
         np.ones((2, 1, 1), dtype=np.complex128),
         "source_matrices",
         np.dtype(np.complex128),
-    )
-    target = immutable_array(
+    ).execute()
+    target = NumpyImmutableArrayConstructor(
         np.ones((2, 1, 1), dtype=np.complex128),
         "target_matrices",
         np.dtype(np.complex128),
-    )
+    ).execute()
 
     definition = NumpyBatchedComplexUnitaryProcrustesDefinition.from_immutable_arrays(
         source,

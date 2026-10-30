@@ -18,8 +18,8 @@ from projectkoios.numerics.finite_periodic.batched_finite_series import (
 from projectkoios.numerics.finite_periodic.meshes import CenteredUniformMesh
 from projectkoios.numerics.numpy.typing import Complex128Array, Int64Array
 from projectkoios.numerics.numpy.validation import (
-    immutable_complex128_array,
-    validate_immutable_complex128_array,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 
 from .matrix_series import NumpyFiniteFourierMatrixSeries
@@ -95,7 +95,11 @@ class NumpyCenteredUniformMeshMatrixFourierTransformDefinition:
         """
         return cls(
             mesh,
-            immutable_complex128_array(matrix_samples, "matrix_samples"),
+            NumpyImmutableArrayConstructor(
+                matrix_samples,
+                "matrix_samples",
+                np.dtype(np.complex128),
+            ).execute(),
         )
 
     @classmethod
@@ -133,10 +137,11 @@ class NumpyCenteredUniformMeshMatrixFourierTransformDefinition:
         """
         if type(self.mesh) is not CenteredUniformMesh:
             raise TypeError("mesh must be CenteredUniformMesh")
-        samples = validate_immutable_complex128_array(
+        samples = NumpyImmutableArrayValidator(
             self.matrix_samples,
             "matrix_samples",
-        )
+            np.dtype(np.complex128),
+        ).execute()
         if samples.ndim != self.mesh.dimension + 2:
             raise ValueError("matrix_samples rank is inconsistent with mesh dimension")
         if (

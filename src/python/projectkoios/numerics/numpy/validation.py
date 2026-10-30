@@ -1,339 +1,207 @@
-"""Validate exact NumPy array representations used by numerical capabilities.
+"""Nominal owners for exact NumPy array construction and validation.
 
 Notes
 -----
-NumPy remains capability-local. These functions validate software representation and
-finite arithmetic only; they assign no optimization or scientific meaning.
+NumPy remains capability-local. These actions own software representation and finite
+arithmetic only; they assign no optimization or scientific meaning.
 """
 
 from __future__ import annotations
 
-from typing import cast
+from dataclasses import dataclass
+from typing import final, overload
 
 import numpy as np
+import numpy.typing as npt
 
-from .typing import Complex128Array, Float64Array, Int64Array
+from .typing import BoolArray, Complex128Array, Float64Array, Int64Array
 
-
-def _validate_exact_finite_array(
-    value: np.ndarray,
-    name: str,
-    dtype: np.dtype[np.generic],
-    /,
-) -> np.ndarray:
-    """Validate one exact finite NumPy array and dtype.
-
-    Parameters
-    ----------
-    value
-        Candidate exact NumPy array.
-    name
-        Field name included in failure messages.
-    dtype
-        Required exact NumPy dtype.
-
-    Returns
-    -------
-    numpy.ndarray
-        Original validated array.
-
-    Raises
-    ------
-    TypeError
-        If the value is not an exact ndarray or has the wrong exact dtype.
-    ValueError
-        If any entry is nonfinite.
-    """
-    if type(value) is not np.ndarray:
-        raise TypeError(f"{name} must be an exact numpy.ndarray")
-    if value.dtype != dtype:
-        raise TypeError(f"{name} must have exact dtype {dtype.name}")
-    finite = np.isfinite(value)
-    if not bool(finite.all()):
-        first = tuple(int(component) for component in np.argwhere(~finite)[0])
-        raise ValueError(f"{name} contains a nonfinite entry at index {first}")
-    return value
+type NumpyArray = npt.NDArray[np.generic]
 
 
-def _has_immutable_bytes_backing(value: np.ndarray, /) -> bool:
-    """Return whether an array's ultimate backing owner is immutable bytes.
+@final
+@dataclass(frozen=True, slots=True, eq=False)
+class NumpyFiniteArrayValidator[ArrayT: np.ndarray]:
+    """Validate one exact finite NumPy array representation without copying."""
 
-    Parameters
-    ----------
-    value
-        Exact NumPy array whose base chain is inspected.
+    value: ArrayT
+    name: str
+    dtype: np.dtype[np.generic]
 
-    Returns
-    -------
-    bool
-        Whether the base chain terminates in exact built-in ``bytes``.
-    """
-    backing = cast(np.ndarray | bytes | None, value.base)
-    while type(backing) is np.ndarray:
-        backing = cast(np.ndarray | bytes | None, backing.base)
-    return type(backing) is bytes
+    def __post_init__(self) -> None:
+        """Validate immutable action metadata without inspecting array values."""
+        if type(self.name) is not str:
+            raise TypeError("name must be a built-in string")
+        if not self.name:
+            raise ValueError("name must be nonempty")
+        if not isinstance(self.dtype, np.dtype):
+            raise TypeError("dtype must be numpy.dtype")
 
+    @overload
+    def execute(self: NumpyFiniteArrayValidator[BoolArray]) -> BoolArray: ...
 
-def immutable_array(
-    value: np.ndarray,
-    name: str,
-    dtype: np.dtype[np.generic],
-    /,
-) -> np.ndarray:
-    """Return an immutable byte-backed copy of one exact NumPy array.
+    @overload
+    def execute(
+        self: NumpyFiniteArrayValidator[Complex128Array],
+    ) -> Complex128Array: ...
 
-    Parameters
-    ----------
-    value
-        Candidate exact NumPy array.
-    name
-        Field name included in failure messages.
-    dtype
-        Required exact NumPy dtype.
+    @overload
+    def execute(self: NumpyFiniteArrayValidator[Float64Array]) -> Float64Array: ...
 
-    Returns
-    -------
-    numpy.ndarray
-        C-order array whose immutable bytes backing prevents write re-enablement.
+    @overload
+    def execute(self: NumpyFiniteArrayValidator[Int64Array]) -> Int64Array: ...
 
-    Raises
-    ------
-    TypeError
-        If the value is not an exact ndarray or has the wrong exact dtype.
-    ValueError
-        If any entry is nonfinite.
-    """
-    validated = _validate_exact_finite_array(value, name, dtype)
-    backing = validated.tobytes(order="C")
-    return np.frombuffer(backing, dtype=dtype).reshape(validated.shape)
+    @overload
+    def execute(self) -> NumpyArray: ...
 
+    def execute(self) -> NumpyArray:
+        """Return the original array after exact dtype and finiteness validation.
 
-def validate_immutable_array(
-    value: np.ndarray,
-    name: str,
-    dtype: np.dtype[np.generic],
-    /,
-) -> np.ndarray:
-    """Validate one canonical immutable byte-backed NumPy array.
-
-    Parameters
-    ----------
-    value
-        Candidate exact NumPy array.
-    name
-        Field name included in failure messages.
-    dtype
-        Required exact NumPy dtype.
-
-    Returns
-    -------
-    numpy.ndarray
-        Original validated array without copying.
-
-    Raises
-    ------
-    TypeError
-        If the value is not an exact ndarray or has the wrong exact dtype.
-    ValueError
-        If entries are nonfinite or storage is not canonical immutable C order.
-    """
-    validated = _validate_exact_finite_array(value, name, dtype)
-    if not validated.flags.c_contiguous:
-        raise ValueError(f"{name} must be C-contiguous")
-    if validated.flags.writeable:
-        raise ValueError(f"{name} must be read-only")
-    if not _has_immutable_bytes_backing(validated):
-        raise ValueError(f"{name} must have immutable bytes backing")
-    return validated
+        Raises
+        ------
+        TypeError
+            The value is not an exact ndarray or has the wrong exact dtype.
+        ValueError
+            An entry is nonfinite.
+        """
+        if type(self.value) is not np.ndarray:
+            raise TypeError(f"{self.name} must be an exact numpy.ndarray")
+        if self.value.dtype != self.dtype:
+            raise TypeError(f"{self.name} must have exact dtype {self.dtype.name}")
+        finite = np.isfinite(self.value)
+        if not bool(finite.all()):
+            first = tuple(int(component) for component in np.argwhere(~finite)[0])
+            raise ValueError(f"{self.name} contains a nonfinite entry at index {first}")
+        return self.value
 
 
-def immutable_complex128_array(
-    value: Complex128Array,
-    name: str,
-    /,
-) -> Complex128Array:
-    """Return a canonical immutable copy of an exact complex128 array.
+@final
+@dataclass(frozen=True, slots=True, eq=False)
+class NumpyImmutableArrayConstructor[ArrayT: np.ndarray]:
+    """Construct canonical immutable byte-backed storage for one exact array."""
 
-    Parameters
-    ----------
-    value
-        Candidate exact finite complex128 array.
-    name
-        Field name included in failures.
+    value: ArrayT
+    name: str
+    dtype: np.dtype[np.generic]
 
-    Returns
-    -------
-    numpy.ndarray
-        Immutable byte-backed complex128 copy.
-    """
-    return cast(
-        Complex128Array,
-        immutable_array(value, name, np.dtype(np.complex128)),
-    )
+    def __post_init__(self) -> None:
+        """Validate immutable action metadata without copying the candidate."""
+        NumpyFiniteArrayValidator(self.value, self.name, self.dtype)
 
+    @overload
+    def execute(self: NumpyImmutableArrayConstructor[BoolArray]) -> BoolArray: ...
 
-def immutable_float64_array(
-    value: Float64Array,
-    name: str,
-    /,
-) -> Float64Array:
-    """Return a canonical immutable copy of an exact float64 array.
+    @overload
+    def execute(
+        self: NumpyImmutableArrayConstructor[Complex128Array],
+    ) -> Complex128Array: ...
 
-    Parameters
-    ----------
-    value
-        Candidate exact finite float64 array.
-    name
-        Field name included in failures.
+    @overload
+    def execute(self: NumpyImmutableArrayConstructor[Float64Array]) -> Float64Array: ...
 
-    Returns
-    -------
-    numpy.ndarray
-        Immutable byte-backed float64 copy.
-    """
-    return cast(Float64Array, immutable_array(value, name, np.dtype(np.float64)))
+    @overload
+    def execute(self: NumpyImmutableArrayConstructor[Int64Array]) -> Int64Array: ...
+
+    @overload
+    def execute(self) -> NumpyArray: ...
+
+    def execute(self) -> NumpyArray:
+        """Return an independent C-order array with immutable bytes backing."""
+        validated = NumpyFiniteArrayValidator(
+            self.value,
+            self.name,
+            self.dtype,
+        ).execute()
+        backing = validated.tobytes(order="C")
+        return np.frombuffer(backing, dtype=self.dtype).reshape(validated.shape)
 
 
-def immutable_int64_array(
-    value: Int64Array,
-    name: str,
-    /,
-) -> Int64Array:
-    """Return a canonical immutable copy of an exact int64 array.
+@final
+@dataclass(frozen=True, slots=True, eq=False)
+class NumpyImmutableArrayValidator[ArrayT: np.ndarray]:
+    """Validate canonical immutable byte-backed storage without copying."""
 
-    Parameters
-    ----------
-    value
-        Candidate exact int64 array.
-    name
-        Field name included in failures.
+    value: ArrayT
+    name: str
+    dtype: np.dtype[np.generic]
 
-    Returns
-    -------
-    numpy.ndarray
-        Immutable byte-backed int64 copy.
-    """
-    return cast(Int64Array, immutable_array(value, name, np.dtype(np.int64)))
+    def __post_init__(self) -> None:
+        """Validate immutable action metadata without inspecting array storage."""
+        NumpyFiniteArrayValidator(self.value, self.name, self.dtype)
 
+    @overload
+    def execute(self: NumpyImmutableArrayValidator[BoolArray]) -> BoolArray: ...
 
-def validate_immutable_complex128_array(
-    value: Complex128Array,
-    name: str,
-    /,
-) -> Complex128Array:
-    """Validate canonical immutable complex128 storage without copying.
+    @overload
+    def execute(
+        self: NumpyImmutableArrayValidator[Complex128Array],
+    ) -> Complex128Array: ...
 
-    Parameters
-    ----------
-    value
-        Candidate exact finite complex128 array.
-    name
-        Field name included in failures.
+    @overload
+    def execute(self: NumpyImmutableArrayValidator[Float64Array]) -> Float64Array: ...
 
-    Returns
-    -------
-    numpy.ndarray
-        Original validated complex128 array.
-    """
-    return cast(
-        Complex128Array,
-        validate_immutable_array(value, name, np.dtype(np.complex128)),
-    )
+    @overload
+    def execute(self: NumpyImmutableArrayValidator[Int64Array]) -> Int64Array: ...
 
+    @overload
+    def execute(self) -> NumpyArray: ...
 
-def validate_immutable_float64_array(
-    value: Float64Array,
-    name: str,
-    /,
-) -> Float64Array:
-    """Validate canonical immutable float64 storage without copying.
+    def execute(self) -> NumpyArray:
+        """Return the original canonical immutable array without copying.
 
-    Parameters
-    ----------
-    value
-        Candidate exact finite float64 array.
-    name
-        Field name included in failures.
-
-    Returns
-    -------
-    numpy.ndarray
-        Original validated float64 array.
-    """
-    return cast(
-        Float64Array,
-        validate_immutable_array(value, name, np.dtype(np.float64)),
-    )
+        Raises
+        ------
+        TypeError
+            The value is not an exact ndarray or has the wrong exact dtype.
+        ValueError
+            Entries are nonfinite or storage is not canonical immutable C order.
+        """
+        validated = NumpyFiniteArrayValidator(
+            self.value,
+            self.name,
+            self.dtype,
+        ).execute()
+        if not validated.flags.c_contiguous:
+            raise ValueError(f"{self.name} must be C-contiguous")
+        if validated.flags.writeable:
+            raise ValueError(f"{self.name} must be read-only")
+        backing: np.ndarray | bytes | None = validated.base
+        while type(backing) is np.ndarray:
+            backing = backing.base
+        if type(backing) is not bytes:
+            raise ValueError(f"{self.name} must have immutable bytes backing")
+        return validated
 
 
-def validate_immutable_int64_array(
-    value: Int64Array,
-    name: str,
-    /,
-) -> Int64Array:
-    """Validate canonical immutable int64 storage without copying.
+@final
+@dataclass(frozen=True, slots=True, eq=False)
+class NumpyFiniteNonnegativeFloat64ArrayValidator:
+    """Validate one exact finite nonnegative float64 array without copying."""
 
-    Parameters
-    ----------
-    value
-        Candidate exact int64 array.
-    name
-        Field name included in failures.
+    value: Float64Array
+    name: str
 
-    Returns
-    -------
-    numpy.ndarray
-        Original validated int64 array.
-    """
-    return cast(
-        Int64Array,
-        validate_immutable_array(value, name, np.dtype(np.int64)),
-    )
+    def __post_init__(self) -> None:
+        """Validate immutable action metadata without inspecting array values."""
+        if type(self.name) is not str:
+            raise TypeError("name must be a built-in string")
+        if not self.name:
+            raise ValueError("name must be nonempty")
 
-
-def finite_nonnegative_float64_array(
-    value: Float64Array,
-    name: str,
-    /,
-) -> Float64Array:
-    """Validate one exact finite nonnegative float64 array.
-
-    Parameters
-    ----------
-    value
-        Candidate exact float64 ndarray.
-    name
-        Field name included in failure messages.
-
-    Returns
-    -------
-    numpy.ndarray
-        Original validated array without copying.
-
-    Raises
-    ------
-    TypeError
-        If the value is not an exact ndarray or does not have exact float64 dtype.
-    ValueError
-        If any entry is nonfinite or negative.
-    """
-    if type(value) is not np.ndarray:
-        raise TypeError(f"{name} must be an exact numpy.ndarray")
-    if value.dtype != np.dtype(np.float64):
-        raise TypeError(f"{name} must have exact dtype float64")
-    if not bool(np.isfinite(value).all()) or bool((value < 0.0).any()):
-        raise ValueError(f"{name} must be finite and nonnegative")
-    return value
+    def execute(self) -> Float64Array:
+        """Return the original array after finite nonnegative validation."""
+        if type(self.value) is not np.ndarray:
+            raise TypeError(f"{self.name} must be an exact numpy.ndarray")
+        if self.value.dtype != np.dtype(np.float64):
+            raise TypeError(f"{self.name} must have exact dtype float64")
+        if not bool(np.logical_and(np.isfinite(self.value), self.value >= 0.0).all()):
+            raise ValueError(f"{self.name} must be finite and nonnegative")
+        return self.value
 
 
 __all__ = [
-    "finite_nonnegative_float64_array",
-    "immutable_array",
-    "immutable_complex128_array",
-    "immutable_float64_array",
-    "immutable_int64_array",
-    "validate_immutable_array",
-    "validate_immutable_complex128_array",
-    "validate_immutable_float64_array",
-    "validate_immutable_int64_array",
+    "NumpyFiniteArrayValidator",
+    "NumpyFiniteNonnegativeFloat64ArrayValidator",
+    "NumpyImmutableArrayConstructor",
+    "NumpyImmutableArrayValidator",
 ]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import FrozenInstanceError, dataclass
 from typing import cast
 
 import numpy as np
@@ -8,15 +8,10 @@ import pytest
 
 from projectkoios.numerics.numpy.typing import Complex128Array, Float64Array
 from projectkoios.numerics.numpy.validation import (
-    finite_nonnegative_float64_array,
-    immutable_array,
-    immutable_complex128_array,
-    immutable_float64_array,
-    immutable_int64_array,
-    validate_immutable_array,
-    validate_immutable_complex128_array,
-    validate_immutable_float64_array,
-    validate_immutable_int64_array,
+    NumpyFiniteArrayValidator,
+    NumpyFiniteNonnegativeFloat64ArrayValidator,
+    NumpyImmutableArrayConstructor,
+    NumpyImmutableArrayValidator,
 )
 
 
@@ -29,6 +24,29 @@ class Float64ArrayFailureCase:
     message_pattern: str
 
 
+def test_validation_module_exposes_nominal_owners_without_function_facades() -> None:
+    import projectkoios.numerics.numpy.validation as module
+
+    assert module.__all__ == [
+        "NumpyFiniteArrayValidator",
+        "NumpyFiniteNonnegativeFloat64ArrayValidator",
+        "NumpyImmutableArrayConstructor",
+        "NumpyImmutableArrayValidator",
+    ]
+    for legacy_name in (
+        "finite_nonnegative_float64_array",
+        "immutable_array",
+        "immutable_complex128_array",
+        "immutable_float64_array",
+        "immutable_int64_array",
+        "validate_immutable_array",
+        "validate_immutable_complex128_array",
+        "validate_immutable_float64_array",
+        "validate_immutable_int64_array",
+    ):
+        assert not hasattr(module, legacy_name)
+
+
 @pytest.fixture
 def mutable_complex_array() -> Complex128Array:
     """Return one mutable exact complex128 array."""
@@ -36,50 +54,89 @@ def mutable_complex_array() -> Complex128Array:
     return np.array([[original_value]], dtype=np.complex128)
 
 
-def test_immutable_array_returns_independent_byte_backed_copy(
+def test_immutable_array_owner_binding_is_frozen(
+    mutable_complex_array: Complex128Array,
+) -> None:
+    owner = NumpyImmutableArrayConstructor(
+        mutable_complex_array,
+        "source",
+        np.dtype(np.complex128),
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        owner.name = "replacement"  # type: ignore[misc]
+
+
+def test_immutable_array_constructor_returns_independent_byte_backed_copy(
     mutable_complex_array: Complex128Array,
 ) -> None:
     expected = mutable_complex_array.copy()
     replacement_value = -complex(mutable_complex_array[0, 0])
 
-    result = immutable_array(
+    result = NumpyImmutableArrayConstructor(
         mutable_complex_array,
         "source",
         np.dtype(np.complex128),
-    )
+    ).execute()
     mutable_complex_array[0, 0] = replacement_value
 
     np.testing.assert_array_equal(result, expected)
     assert not result.flags.writeable
-    assert validate_immutable_array(result, "result", np.dtype(np.complex128)) is result
+    assert (
+        NumpyImmutableArrayValidator(
+            result,
+            "result",
+            np.dtype(np.complex128),
+        ).execute()
+        is result
+    )
     with pytest.raises(ValueError):
         result.setflags(write=True)
 
 
-def test_typed_immutable_array_operations_preserve_exact_dtype_aliases() -> None:
-    complex_values = np.array([1.0 + 2.0j], dtype=np.complex128)
-    float_values = np.array([1.0], dtype=np.float64)
-    integer_values = np.array([1], dtype=np.int64)
+@pytest.mark.parametrize(
+    ("values", "dtype"),
+    [
+        pytest.param(
+            np.array([1.0 + 2.0j], dtype=np.complex128),
+            np.dtype(np.complex128),
+            id="complex128",
+        ),
+        pytest.param(
+            np.array([1.0], dtype=np.float64),
+            np.dtype(np.float64),
+            id="float64",
+        ),
+        pytest.param(
+            np.array([1], dtype=np.int64),
+            np.dtype(np.int64),
+            id="int64",
+        ),
+    ],
+)
+def test_immutable_array_owners_preserve_exact_dtype(
+    values: np.ndarray[tuple[int], np.dtype[np.generic]],
+    dtype: np.dtype[np.generic],
+) -> None:
+    immutable_copy = NumpyImmutableArrayConstructor(
+        values,
+        "values",
+        dtype,
+    ).execute()
 
-    complex_copy = immutable_complex128_array(complex_values, "complex_values")
-    float_copy = immutable_float64_array(float_values, "float_values")
-    integer_copy = immutable_int64_array(integer_values, "integer_values")
-
-    assert complex_copy.dtype == complex_values.dtype
-    assert float_copy.dtype == float_values.dtype
-    assert integer_copy.dtype == integer_values.dtype
-    assert not complex_copy.flags.writeable
-    assert not float_copy.flags.writeable
-    assert not integer_copy.flags.writeable
+    assert immutable_copy.dtype == values.dtype
+    assert not immutable_copy.flags.writeable
     assert (
-        validate_immutable_complex128_array(complex_copy, "complex_copy")
-        is complex_copy
+        NumpyImmutableArrayValidator(
+            immutable_copy,
+            "immutable_copy",
+            dtype,
+        ).execute()
+        is immutable_copy
     )
-    assert validate_immutable_float64_array(float_copy, "float_copy") is float_copy
-    assert validate_immutable_int64_array(integer_copy, "integer_copy") is integer_copy
 
 
-def test_validate_immutable_array_rejects_non_canonical_order() -> None:
+def test_immutable_array_validator_rejects_non_canonical_order() -> None:
     dimension = 2
     backing = np.arange(dimension * dimension, dtype=np.float64).tobytes()
     fortran_order = np.frombuffer(backing, dtype=np.float64).reshape(
@@ -90,24 +147,24 @@ def test_validate_immutable_array_rejects_non_canonical_order() -> None:
     assert fortran_order.flags.f_contiguous
     assert not fortran_order.flags.c_contiguous
     with pytest.raises(ValueError, match="C-contiguous"):
-        validate_immutable_array(
+        NumpyImmutableArrayValidator(
             fortran_order,
             "values",
             np.dtype(np.float64),
-        )
+        ).execute()
 
 
-def test_validate_immutable_array_rejects_read_only_mutable_backing() -> None:
+def test_immutable_array_validator_rejects_read_only_mutable_backing() -> None:
     owner = np.ones((2, 2), dtype=np.float64)
     read_only_view = owner.view()
     read_only_view.setflags(write=False)
 
     with pytest.raises(ValueError, match="immutable bytes backing"):
-        validate_immutable_array(
+        NumpyImmutableArrayValidator(
             read_only_view,
             "values",
             np.dtype(np.float64),
-        )
+        ).execute()
 
 
 @pytest.fixture(
@@ -156,18 +213,32 @@ def float64_array_failure_case(
     return cast(Float64ArrayFailureCase, request.param)
 
 
-def test_finite_nonnegative_float64_array_rejects_invalid_values(
+def test_finite_nonnegative_float64_array_validator_rejects_invalid_values(
     float64_array_failure_case: Float64ArrayFailureCase,
 ) -> None:
     case = float64_array_failure_case
 
     with pytest.raises(case.error, match=case.message_pattern):
-        finite_nonnegative_float64_array(case.value, "values")
+        NumpyFiniteNonnegativeFloat64ArrayValidator(
+            case.value,
+            "values",
+        ).execute()
 
 
-def test_finite_nonnegative_float64_array_returns_original_array() -> None:
+def test_finite_nonnegative_float64_array_validator_returns_original_array() -> None:
     lower_boundary = 0.0
     positive_value = 1.0
     values = np.array([lower_boundary, positive_value], dtype=np.float64)
 
-    assert finite_nonnegative_float64_array(values, "values") is values
+    assert (
+        NumpyFiniteNonnegativeFloat64ArrayValidator(values, "values").execute()
+        is values
+    )
+    assert (
+        NumpyFiniteArrayValidator(
+            values,
+            "values",
+            np.dtype(np.float64),
+        ).execute()
+        is values
+    )
